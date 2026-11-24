@@ -9,6 +9,7 @@ import Pending from '../components/Pending.astro';
 import { plans, brl } from '../data/plans';
 import { novidades, ORIGENS } from '../data/novidades';
 import { tutoriais } from '../data/tutoriais';
+import { contact } from '../data/site';
 
 const dataBr = (iso: string) => iso.split('-').reverse().join('/');
 
@@ -26,6 +27,7 @@ const tabs = [
   { id: 'resumo', label: 'Resumo semanal', max: true },
   { id: 'plano', label: 'Plano e pagamento' },
   { id: 'cancelar', label: 'Cancelar ou reembolso' },
+  { id: 'suporte', label: 'Suporte' },
   { id: 'conta', label: 'Conta' },
 ];
 ---
@@ -247,6 +249,35 @@ const tabs = [
         <p class="small mute">Regras completas na <a href="/reembolso">Política de reembolso</a> e nos <a href="/termos#cancelamento">Termos de uso</a>.</p>
       </section>
 
+      <section id="p-suporte" role="tabpanel" aria-labelledby="tab-suporte" class="panel" data-panel="suporte" hidden>
+        <div class="kv">
+          <div>
+            <span>E-mail do suporte</span>
+            <strong class="copy-inline">
+              <span data-support-email>{contact.email}</span><Pending kind="confirmar" />
+              <button type="button" class="link-btn" data-copy-email>Copiar</button>
+            </strong>
+          </div>
+          <div><span>Prazo de resposta</span><strong data-sla></strong></div>
+          <div><span>Atendimento</span><strong>Dias úteis<Pending kind="confirmar" /></strong></div>
+        </div>
+        <p class="small mute">Para agilizar, diga em qual IA você usa a Órbita e, se houver, a mensagem de erro que apareceu.</p>
+        <div class="row-actions">
+          <a class="btn-main" href="/#contato">Escrever para a equipe</a>
+          <a class="btn-alt" href="/ajuda">Ver a Ajuda</a>
+        </div>
+
+        <article class="action-card" data-onboarding hidden>
+          <h2 class="title">Conversa de implantação</h2>
+          <p class="small">No Max, uma conversa curta com a equipe para configurar a Órbita no seu escritório e mostrar as pesquisas que mais rendem no dia a dia.</p>
+          <a class="btn-alt" href="/#contato">Pedir a conversa</a>
+        </article>
+        <article class="locked" data-onboarding-pro hidden>
+          <p class="small"><strong>No Max, o suporte é prioritário</strong> e inclui uma conversa de implantação com a equipe.</p>
+          <a class="btn-alt" href="/assinar/max">Conhecer o Max</a>
+        </article>
+      </section>
+
       <section id="p-conta" role="tabpanel" aria-labelledby="tab-conta" class="panel" data-panel="conta" hidden>
         <form class="account-form" data-name-form novalidate>
           <div class="field">
@@ -438,6 +469,28 @@ const tabs = [
   .max-tag {
     background: var(--soft);
     color: var(--ink);
+  }
+
+  /* Suporte */
+  .copy-inline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 4px 8px;
+  }
+  .link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font: var(--text-small);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .locked .btn-alt {
+    width: auto;
   }
 
   /* Alertas e Resumo (Max) */
@@ -833,6 +886,22 @@ const tabs = [
     }),
   );
 
+  // Suporte: copiar o e-mail (cai para seleção do texto se a área de transferência não estiver disponível).
+  $('[data-copy-email]').addEventListener('click', async (e) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    const email = $('[data-support-email]').textContent ?? '';
+    try {
+      await navigator.clipboard.writeText(email);
+      b.textContent = 'Copiado';
+      setTimeout(() => (b.textContent = 'Copiar'), 2000);
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents($('[data-support-email]'));
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(range);
+    }
+  });
+
   // Tutoriais: um por vez, escolhido pela IA.
   const iaBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-ia-pick]'));
   function pickIa(id: string) {
@@ -893,6 +962,11 @@ const tabs = [
     root.querySelectorAll<HTMLElement>('[data-locked]').forEach((el) => (el.hidden = isMax));
     root.querySelectorAll<HTMLElement>('[data-unlocked]').forEach((el) => (el.hidden = !isMax));
     renderThemes();
+
+    // Suporte: prazos ainda a confirmar; o Max é prioritário e tem conversa de implantação.
+    $('[data-sla]').textContent = isMax ? 'Prioritário: no mesmo dia útil (a confirmar)' : 'Até 2 dias úteis (a confirmar)';
+    $('[data-onboarding]').hidden = !isMax;
+    $('[data-onboarding-pro]').hidden = isMax;
 
     // Status do plugin. Consultas e última consulta virão da API; na demonstração, ainda não há nenhuma.
     $('[data-access]').textContent = sub.reembolso ? 'Encerrado' : 'Ativo';
