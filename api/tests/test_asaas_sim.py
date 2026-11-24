@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.asaas.client import AsaasClient, AsaasError
 from app.asaas_sim.store import Store
 from app.config import get_settings
+from app.db import Banco
 from app.main import create_app
 
 CHAVE = get_settings().asaas_api_key
@@ -15,7 +16,7 @@ TITULAR = {"name": "Teste Silva", "email": "teste@exemplo.com", "cpfCnpj": "5299
 
 
 @pytest.fixture
-def ctx():
+def ctx(tmp_path):
     entregues: list[tuple[str, dict, dict]] = []
 
     def enviar(url: str, corpo: dict, headers: dict) -> int:
@@ -23,7 +24,8 @@ def ctx():
         return 200
 
     store = Store(enviar=enviar)
-    http = TestClient(create_app(store))
+    http = TestClient(create_app(store, banco=Banco(str(tmp_path / "t.db"))))
+    store.webhooks.clear()  # aqui só a simulação: sem o webhook da Órbita cadastrado pela API
     asaas = AsaasClient("http://testserver/asaas-sim/v3", CHAVE, http=http)
     return asaas, store, http, entregues
 

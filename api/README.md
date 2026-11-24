@@ -2,7 +2,11 @@
 
 Backend em Python com FastAPI (decisão de 24/11/2026). Fica nesta pasta enquanto o projeto não vai ao ar; na publicação, vai para o servidor.
 
-**Etapa atual (3):** só a **simulação do Asaas** e o **cliente** que fala com ela. As rotas de cobrança da Órbita e o webhook de liberação do acesso são a etapa 4.
+**Etapas prontas:**
+- **Etapa 3:** simulação do Asaas e o cliente que fala com ela.
+- **Etapa 4:** rotas de cobrança da Órbita (`/billing`) e o webhook que libera e corta o acesso (`/webhooks/asaas`).
+
+O site ainda não chama essas rotas; ligar o Checkout e o Portal à API é uma etapa futura.
 
 ## Por que uma simulação
 
@@ -29,6 +33,31 @@ cd api
 ```
 
 Os testes usam o próprio cliente (`app/asaas/client.py`) contra a simulação: autenticação, cliente, assinatura no Pix, no boleto e no cartão (aprovado e recusado), confirmação, estorno total e parcial, troca de forma de pagamento, cancelamento, vencimento e entrega de webhooks (com token e pausa depois de 15 falhas).
+
+## Rotas da Órbita (para o site)
+
+Hoje o usuário vem no corpo da requisição; quando houver login, virá da sessão.
+
+| Rota | O que faz |
+| --- | --- |
+| `POST /billing/assinaturas` | Cria o cliente no Asaas (se ainda não existir) e a assinatura mensal. Corpo: `usuario_id`, `nome`, `email`, `cpf_cnpj`, `plano` (`pro` ou `max`), `forma` (`cartao`, `pix` ou `boleto`), `cartao` (só no cartão: `titular`, `numero`, `mes`, `ano`, `cvv`) e `ip`. Responde 201 com o resumo, 409 se já houver assinatura, 400 com a mensagem do Asaas se o cartão for recusado. |
+| `GET /billing/assinaturas/{usuario_id}` | Resumo: plano, valor, forma, `status_acesso` e cobranças. No Pix vem o copia e cola e a imagem do QR; no boleto, a linha digitável, o código de barras e o PDF. |
+| `PUT /billing/assinaturas/{usuario_id}/forma` | Troca para `pix` ou `boleto` (as cobranças pendentes também mudam). O cartão espera a decisão entre a página segura do Asaas e o formulário próprio. |
+| `DELETE /billing/assinaturas/{usuario_id}` | Cancela a assinatura. Depois disso, a pessoa pode assinar de novo. |
+| `POST /billing/assinaturas/{usuario_id}/reembolso` | Estorna tudo o que foi pago e encerra, só até 7 dias do primeiro pagamento (CDC, art. 49). Fora do prazo: 400 `fora_do_prazo`. |
+| `POST /webhooks/asaas` | Recebe os eventos do Asaas. Exige o cabeçalho `asaas-access-token`; cada evento é processado uma vez só (o repetido responde 200 com `duplicado: true`). |
+
+**Status do acesso** (`status_acesso`):
+- `pendente`: assinatura criada, pagamento ainda não confirmado. O plugin não funciona.
+- `ativo`: liberado por `PAYMENT_CONFIRMED` (cartão) ou `PAYMENT_RECEIVED` (Pix e boleto). Nunca por `PAYMENT_CREATED`.
+- `suspenso`: `PAYMENT_OVERDUE`, `PAYMENT_CHARGEBACK_REQUESTED` ou `PAYMENT_REPROVED_BY_RISK_ANALYSIS`.
+- `reembolsado` e `cancelado`: finais; eventos atrasados não reabrem o acesso.
+
+Erros saem como `{"detail": {"codigo", "mensagem"}}`. Asaas fora do ar vira 502 `asaas_indisponivel`.
+
+**Variáveis** (ver `.env.example`): `ASAAS_BASE_URL`, `ASAAS_API_KEY`, `ASAAS_SIM_ENABLED`, `ASAAS_WEBHOOK_TOKEN`, `API_PUBLIC_URL` (endereço desta API, para cadastrar o webhook) e `DATABASE_PATH` (SQLite).
+
+**Com o Asaas real:** cadastre o webhook no painel do Asaas (Integrações > Webhooks) apontando para `{API_PUBLIC_URL}/webhooks/asaas`, com o mesmo token de `ASAAS_WEBHOOK_TOKEN` e os eventos listados em `app/main.py`. Na simulação, ele já nasce cadastrado.
 
 ## O que a simulação cobre
 

@@ -28,7 +28,11 @@ class AsaasClient:
         self.http = http or httpx.Client(timeout=20)
 
     def _req(self, metodo: str, caminho: str, json: dict | None = None, params: dict | None = None) -> Any:
-        r = self.http.request(metodo, f"{self.base_url}{caminho}", json=json, params=params, headers=self.headers)
+        try:
+            r = self.http.request(metodo, f"{self.base_url}{caminho}", json=json, params=params, headers=self.headers)
+        except httpx.HTTPError as e:
+            # Asaas fora do ar ou endereço errado: vira um erro claro em vez de um 500 genérico.
+            raise AsaasError(503, [{"code": "asaas_indisponivel", "description": f"Não foi possível falar com o Asaas agora ({type(e).__name__}). Tente de novo em instantes."}])
         if r.status_code >= 400:
             try:
                 erros = r.json().get("errors") or []
