@@ -6,7 +6,7 @@ O que está feito e o que falta: [PROGRESSO.md](PROGRESSO.md).
 
 ## Rodar
 
-Requer Node 20 ou mais novo.
+Requer Node 22 ou mais novo (exigência do Astro 6 em diante).
 
 ```powershell
 npm install
@@ -16,6 +16,12 @@ npm run preview  # serve o dist/
 ```
 
 Copie `.env.example` para `.env` quando houver servidor. Sem as variáveis, Entrar, Checkout, Instalar e Portal rodam em **modo de demonstração** (avisado na tela) e guardam a “assinatura” só no navegador (`src/scripts/demo.ts`). Para testar o Checkout: `4242 4242 4242 4242` aprova, `4000 0000 0000 0002` é recusado.
+
+## Arquitetura (decidida em 24/11/2026)
+
+- **Frontend:** o site inteiro fica em Astro. As páginas públicas continuam estáticas. As abas do assinante vão ser renderizadas no servidor, com ilhas React só nas partes muito interativas. Pesquisa: [artefatos/astro-ou-react.html](artefatos/astro-ou-react.html).
+- **Backend:** todo em **Python**, com **FastAPI** como biblioteca principal. Login, assinatura, pagamento, portal e a base jurídica do plugin ficam nessa API. O Astro só chama a API por HTTP, sem regra de negócio própria: o servidor do Astro apenas protege as rotas e repassa as chamadas.
+- Os endpoints do `.env.example` (`PUBLIC_AUTH_ENDPOINT`, `PUBLIC_CONTACT_ENDPOINT` e os próximos) apontam para essa API.
 
 ## Páginas
 

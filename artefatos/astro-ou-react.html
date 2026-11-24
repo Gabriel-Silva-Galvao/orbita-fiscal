@@ -1,0 +1,211 @@
+<title>Astro ou React na Órbita Fiscal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+<style>
+  /* Layout: memorando de decisão em uma coluna, com tabelas de comparação que rolam sozinhas no celular. Paleta Limiar Esmeralda do site. */
+  :root {
+    --bg: #f2f6ef;
+    --surface: #fafcf8;
+    --ink: #102f31;
+    --mute: #53665e;
+    --brand: #10634f;
+    --soft: #c5dfa4;
+    --line: #cfd9cb;
+    --good: #10634f;
+    --warn: #8a5a00;
+    --bad: #9b2c2c;
+    --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+    --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #102b28; --surface: #16352f; --ink: #f0f5e8; --mute: #b2c8bc; --brand: #83d3a9;
+      --soft: #385744; --line: #2d4c45; --good: #83d3a9; --warn: #e8c27a; --bad: #f0a3a3; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #102b28; --surface: #16352f; --ink: #f0f5e8; --mute: #b2c8bc; --brand: #83d3a9;
+    --soft: #385744; --line: #2d4c45; --good: #83d3a9; --warn: #e8c27a; --bad: #f0a3a3; color-scheme: dark;
+  }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 860px; margin: 0 auto; padding-block: 48px 72px; display: grid; gap: 48px; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 500; line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(32px, 5vw, 46px); }
+  h2 { font-size: clamp(24px, 3.4vw, 30px); }
+  h3 { font-size: 20px; }
+  p { margin: 0; max-width: 68ch; }
+  a { color: var(--brand); }
+  a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  section { display: grid; gap: 16px; }
+  .label { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+  .lead { font-size: 18px; color: var(--mute); }
+  .verdict {
+    background: var(--surface); border: 1px solid var(--brand); border-radius: 14px; padding: 24px;
+    display: grid; gap: 12px;
+  }
+  .verdict p.big { font-family: var(--font-display); font-size: 22px; line-height: 1.35; }
+  ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 68ch; }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 13px; font-weight: 600; color: var(--mute); background: var(--bg); }
+  td:first-child { font-weight: 600; }
+  .pick { background: color-mix(in srgb, var(--soft) 35%, transparent); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; }
+  .g { color: var(--good); } .w { color: var(--warn); } .b { color: var(--bad); }
+  .cols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .box { border: 1px solid var(--line); border-radius: 12px; padding: 18px; background: var(--surface); display: grid; gap: 8px; min-width: 0; }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9em; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+  .diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-x: auto; }
+  .src { font-size: 14px; color: var(--mute); }
+  .src ul { gap: 4px; }
+  footer { font-size: 14px; color: var(--mute); border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:12px">
+    <p class="label">Pesquisa de arquitetura · 24/11/2026</p>
+    <h1>Astro ou React para a área do assinante?</h1>
+    <p class="lead">A landing capta e converte. Depois da compra, a pessoa ganha abas novas, que ainda não existem. Aqui está a comparação entre manter tudo em Astro, padronizar em React ou dividir o site, e com quais backends o Astro conversa.</p>
+  </header>
+
+  <section class="verdict" aria-labelledby="v">
+    <p class="label" id="v">Recomendação</p>
+    <p class="big">Fique no Astro para o site inteiro. Faça as abas do assinante como páginas Astro renderizadas no servidor e use componentes React só nas partes muito interativas.</p>
+    <p>Um projeto só mantém o mesmo domínio, o mesmo login por cookie, os mesmos tokens da marca e um deploy só. A landing continua leve, porque só carrega JavaScript onde precisa. Separar em dois projetos só vale a pena se a área logada virar um aplicativo grande, com equipe própria.</p>
+  </section>
+
+  <section class="verdict" aria-labelledby="dec">
+    <p class="label" id="dec">Decisão tomada em 24/11/2026</p>
+    <p class="big">O backend vai ser todo em Python, com FastAPI como biblioteca principal.</p>
+    <p>Login, assinatura, pagamento, portal e a base jurídica do plugin ficam nessa API. O Astro chama a API por HTTP e não guarda regra de negócio: o servidor do Astro só protege as rotas do assinante e repassa as chamadas.</p>
+  </section>
+
+  <section aria-labelledby="hoje">
+    <h2 id="hoje">Como o site está hoje</h2>
+    <ul>
+      <li>Astro 7.4, todo estático (sem adaptador de servidor), sem React. A interação é feita com scripts TypeScript simples, GSAP e Lenis.</li>
+      <li>As telas de Entrar, Checkout, Instalar e Portal (<code>/conta</code>) já existem em modo de demonstração e guardam a "assinatura" no navegador.</li>
+      <li>O <code>.env.example</code> já prevê endpoints externos para login, pagamento e contato. Ou seja, o projeto já foi pensado para conversar com um backend à parte.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="opcoes">
+    <h2 id="opcoes">As três opções</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Critério</th><th scope="col" class="pick">A. Tudo em Astro, com ilhas React</th><th scope="col">B. Tudo em React</th><th scope="col">C. Landing em Astro, área em React separada</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Velocidade e SEO da landing</td><td class="pick"><span class="tag g">Ótimo</span> HTML pronto, JS só nas ilhas</td><td><span class="tag w">Depende</span> SPA puro perde SEO; precisaria de Next.js ou similar</td><td><span class="tag g">Ótimo</span> Landing continua igual</td></tr>
+          <tr><td>Área logada muito interativa</td><td class="pick"><span class="tag g">Bom</span> Ilhas React; dá para montar um app React inteiro numa rota</td><td><span class="tag g">Ótimo</span> Feito para isso</td><td><span class="tag g">Ótimo</span> SPA dedicado</td></tr>
+          <tr><td>Login e cookies</td><td class="pick"><span class="tag g">Simples</span> Mesmo domínio, middleware protege as rotas</td><td><span class="tag g">Simples</span> Um app só</td><td><span class="tag w">Mais trabalho</span> Dois apps dividindo sessão, CORS e subdomínio</td></tr>
+          <tr><td>Design system</td><td class="pick"><span class="tag g">Um só</span> Os mesmos <code>tokens.css</code></td><td><span class="tag b">Refazer</span> Reescrever as 11 páginas e o movimento</td><td><span class="tag w">Duplicado</span> Dois lugares para manter a marca</td></tr>
+          <tr><td>Deploy e manutenção</td><td class="pick"><span class="tag g">Um</span> repositório e um deploy</td><td><span class="tag g">Um</span> mas com retrabalho agora</td><td><span class="tag w">Dois</span> repositórios ou um monorepo</td></tr>
+          <tr><td>Custo de mudar hoje</td><td class="pick"><span class="tag g">Baixo</span> Adicionar <code>@astrojs/react</code> e um adaptador</td><td><span class="tag b">Alto</span> Reescrever o que está pronto</td><td><span class="tag w">Médio</span> Novo projeto e integração</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>React puro (B) só faria sentido se o site inteiro fosse um app. Ele não é: a parte que vende precisa ser rápida e encontrada no Google, e essa é justamente a força do Astro. A opção C resolve um problema que vocês ainda não têm, e cobra o preço de dividir login e marca em dois lugares.</p>
+  </section>
+
+  <section aria-labelledby="como">
+    <h2 id="como">Como a opção A fica na prática</h2>
+    <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  V[Visitante] --> L["Landing, Ajuda, Legais<br/>Astro estático"]
+  L --> E["Entrar e Checkout"]
+  E --> M{"Middleware:<br/>tem sessão?"}
+  M -- não --> E
+  M -- sim --> A["Abas do assinante<br/>Astro no servidor + ilhas React"]
+  A -- "HTTP" --> B[("API em Python<br/>FastAPI + banco")]
+  E -- "HTTP" --> B
+  B --> P["Pagamento, e-mail,<br/>base jurídica do plugin"]
+</pre>
+    </div>
+    <ol>
+      <li><strong>Páginas públicas continuam estáticas.</strong> Landing, Ajuda e textos legais são gerados no build, como hoje.</li>
+      <li><strong>Abas do assinante rodam no servidor.</strong> Com um adaptador instalado, cada rota logada recebe <code>export const prerender = false</code> e passa a ser montada a cada acesso, já com os dados da pessoa.</li>
+      <li><strong>Middleware guarda a porta.</strong> Ele confere a sessão antes de abrir qualquer rota em <code>/conta</code> e redireciona para <code>/entrar</code> quem não está logado.</li>
+      <li><strong>React só onde há interação pesada.</strong> Tabelas com filtro, histórico de pesquisas e editores entram como ilhas (<code>client:load</code> ou <code>client:visible</code>). O menu e o layout continuam em Astro.</li>
+      <li><strong>Formulários vão para a API em FastAPI.</strong> Cancelar plano, trocar e-mail e pedir reembolso viram rotas da API, com validação pelo Pydantic. O Astro chama essas rotas pelo servidor ou direto do React.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="gatilhos">
+    <h2 id="gatilhos">Quando reavaliar</h2>
+    <div class="cols">
+      <div class="box">
+        <h3>Ainda no mesmo projeto</h3>
+        <p>Se as abas virarem um app com muito estado no navegador, como navegação sem recarregar, tempo real ou editor de peças, monte um app React inteiro em <code>/app</code> com <code>client:only="react"</code>. Ele continua dentro do Astro, com o mesmo login e a mesma marca.</p>
+      </div>
+      <div class="box">
+        <h3>Separar de verdade</h3>
+        <p>Só se houver uma equipe dedicada à área logada, com ciclo de deploy próprio, ou um app mobile que reaproveite o mesmo código React. Nesse caso, a opção C passa a compensar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="backend">
+    <h2 id="backend">Com quais backends o Astro se conecta</h2>
+    <p>São duas camadas. O <strong>servidor do próprio Astro</strong> roda só JavaScript ou TypeScript. Ele cuida das páginas, do middleware, das Actions e dos endpoints. Já o <strong>backend de negócio</strong> pode ser escrito em qualquer linguagem: o Astro conversa com ele por HTTP (REST ou GraphQL), usando <code>fetch</code> no servidor.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th scope="col">Onde o servidor do Astro roda</th><th scope="col">Adaptador</th><th scope="col">Observação</th></tr></thead>
+        <tbody>
+          <tr><td>Node.js</td><td>Oficial: <code>@astrojs/node</code></td><td>Servidor próprio, VPS, Docker. Exige Node 22 ou mais novo desde o Astro 6.</td></tr>
+          <tr><td>Cloudflare Workers</td><td>Oficial: <code>@astrojs/cloudflare</code></td><td>A Cloudflare comprou a empresa do Astro em jan/2026. O projeto continua open source, sob licença MIT.</td></tr>
+          <tr><td>Vercel e Netlify</td><td>Oficiais</td><td>Funções serverless, sem servidor para administrar.</td></tr>
+          <tr><td>Deno, AWS e outros</td><td>Da comunidade</td><td>Listados no diretório de integrações.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th scope="col">Backend de negócio</th><th scope="col">Como liga</th><th scope="col">Quando escolher</th></tr></thead>
+        <tbody>
+          <tr><td>TypeScript no próprio Astro</td><td>Actions e endpoints, no mesmo projeto</td><td>MVP: login, assinatura e portal sem um segundo serviço</td></tr>
+          <tr class="pick"><td>Python com FastAPI <span class="tag g">Escolhido</span></td><td>HTTP</td><td>Todo o backend: login, assinatura, pagamento, portal e a base jurídica do plugin</td></tr>
+          <tr><td>Node separado (NestJS, Fastify)</td><td>HTTP</td><td>Mesma linguagem, mas com API isolada para o plugin e o site</td></tr>
+          <tr><td>Go, Java/Kotlin (Spring), C#/.NET</td><td>HTTP</td><td>Equipe já domina, ou há requisitos fortes de desempenho</td></tr>
+          <tr><td>PHP (Laravel), Ruby (Rails), Elixir</td><td>HTTP</td><td>Mesmo raciocínio: o Astro não depende da linguagem</td></tr>
+          <tr><td>Supabase, Firebase e afins</td><td>SDK em JS no servidor</td><td>Banco, login e arquivos prontos. O Supabase tem guia oficial no Astro, que exige renderização no servidor.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Um detalhe sobre sessões: as sessões nativas do Astro precisam de um driver de armazenamento configurado (Redis, banco ou o padrão do adaptador) e não funcionam no middleware de borda (edge).</p>
+  </section>
+
+  <section aria-labelledby="passos">
+    <h2 id="passos">Próximos passos sugeridos</h2>
+    <ol>
+      <li>Escolher onde hospedar e instalar o adaptador correspondente (<code>npx astro add node</code> ou <code>cloudflare</code>).</li>
+      <li>Adicionar React com <code>npx astro add react</code>, só para as abas novas.</li>
+      <li>Criar o middleware de login e marcar as rotas de <code>/conta</code> como renderizadas no servidor.</li>
+      <li>Criar a API em Python com FastAPI e apontar os endpoints do <code>.env</code> para ela.</li>
+      <li>README corrigido para Node 22, a versão mínima do Astro 6 em diante.</li>
+    </ol>
+  </section>
+
+  <section class="src" aria-labelledby="fontes">
+    <h2 id="fontes" style="font-size:20px">Fontes</h2>
+    <ul>
+      <li><a href="https://docs.astro.build/en/guides/on-demand-rendering/" target="_blank" rel="noopener">Astro: renderização sob demanda e adaptadores</a></li>
+      <li><a href="https://docs.astro.build/en/guides/sessions/" target="_blank" rel="noopener">Astro: sessões</a></li>
+      <li><a href="https://docs.astro.build/en/concepts/islands/" target="_blank" rel="noopener">Astro: arquitetura de ilhas</a></li>
+      <li><a href="https://docs.astro.build/en/guides/backend/" target="_blank" rel="noopener">Astro: serviços de backend</a> e <a href="https://docs.astro.build/en/guides/backend/supabase/" target="_blank" rel="noopener">guia do Supabase</a></li>
+      <li><a href="https://astro.build/blog/astro-6" target="_blank" rel="noopener">Astro 6</a> (Node 22 ou mais novo)</li>
+      <li><a href="https://astro.build/blog/joining-cloudflare/" target="_blank" rel="noopener">The Astro Technology Company joins Cloudflare</a> (16/01/2026)</li>
+      <li><a href="https://overreacted.io/rsc-for-astro-developers/" target="_blank" rel="noopener">Dan Abramov: RSC for Astro developers</a></li>
+    </ul>
+  </section>
+
+  <footer>A pesquisa usou a documentação oficial do Astro e notícias de 2026, e a análise partiu do código do repositório orbita-fiscal. Não houve teste de desempenho.</footer>
+</main>
