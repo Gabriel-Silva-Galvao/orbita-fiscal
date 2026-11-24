@@ -15,7 +15,7 @@ const planData = JSON.stringify(
   Object.fromEntries(Object.values(plans).map((p) => [p.slug, { name: p.name, price: brl(p.cents) }])),
 );
 const tabs = [
-  { id: 'plugin', label: 'Plugin' },
+  { id: 'plugin', label: 'Status do plugin' },
   { id: 'plano', label: 'Plano e pagamento' },
   { id: 'cancelar', label: 'Cancelar ou reembolso' },
   { id: 'conta', label: 'Conta' },
@@ -53,10 +53,48 @@ const tabs = [
       </div>
 
       <section id="p-plugin" role="tabpanel" aria-labelledby="tab-plugin" class="panel" data-panel="plugin">
-        <div class="kv">
-          <div><span>Versão atual</span><strong><Pending kind="definir" /></strong></div>
-          <div><span>Funciona com</span><strong>Claude</strong></div>
+        <div class="stats">
+          <article class="stat">
+            <span class="stat-k">Acesso</span>
+            <strong class="stat-v" data-access></strong>
+            <span class="stat-n" data-access-note></span>
+          </article>
+          <article class="stat">
+            <span class="stat-k">Consultas neste mês</span>
+            <strong class="stat-v" data-usage>0</strong>
+            <span class="stat-n">Limite do plano<Pending kind="definir" /></span>
+          </article>
+          <article class="stat">
+            <span class="stat-k">Última consulta</span>
+            <strong class="stat-v" data-last>Nenhuma ainda</strong>
+            <span class="stat-n">Aparece depois da primeira pergunta no Claude</span>
+          </article>
+          <article class="stat">
+            <span class="stat-k">Versão do plugin</span>
+            <strong class="stat-v"><Pending kind="definir" /></strong>
+          </article>
         </div>
+
+        <h2 class="title">Conexões</h2>
+        <ul class="conn">
+          <li>
+            <span class="conn-ia">Claude</span>
+            <span class="conn-state" data-conn-claude></span>
+            <a href="/instalar" data-conn-claude-link></a>
+          </li>
+          <li>
+            <span class="conn-ia">ChatGPT</span>
+            <span class="conn-state">Em preparação</span>
+          </li>
+          <li>
+            <span class="conn-ia">Microsoft Copilot</span>
+            <span class="conn-state">Em preparação</span>
+          </li>
+          <li>
+            <span class="conn-ia">Gemini</span>
+            <span class="conn-state">Em preparação</span>
+          </li>
+        </ul>
         <div class="row-actions">
           <a class="btn-main" href="/instalar">Baixar e instalar de novo</a>
         </div>
@@ -214,6 +252,63 @@ const tabs = [
     text-align: end;
     font-variant-numeric: tabular-nums;
   }
+  /* Status do plugin */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: var(--space-3);
+  }
+  .stat {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .stat-k {
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .stat-v {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-n {
+    font: var(--text-small);
+    font-size: 0.8125rem;
+    color: var(--mute);
+  }
+  .conn {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+  .conn li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px var(--space-3);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .conn-ia {
+    font-weight: 600;
+    flex: 1 1 160px;
+  }
+  .conn-state {
+    color: var(--mute);
+  }
+  .conn a {
+    font-size: 0.875rem;
+  }
   .row-actions {
     display: flex;
     flex-wrap: wrap;
@@ -351,6 +446,25 @@ const tabs = [
     sw.textContent = `Trocar para o ${plans[other].name} (${plans[other].price} por mês)`;
     $('[data-email]').textContent = sub.email;
     $<HTMLInputElement>('#p-nome').value = sub.nome ?? '';
+
+    // Status do plugin. Consultas e última consulta virão da API; na demonstração, ainda não há nenhuma.
+    $('[data-access]').textContent = sub.reembolso ? 'Encerrado' : 'Ativo';
+    $('[data-access-note]').textContent = sub.reembolso
+      ? 'O reembolso encerrou a assinatura.'
+      : sub.cancelada
+        ? `Cancelada: o acesso segue até ${fmtDate(next)}.`
+        : `Renova em ${fmtDate(next)}.`;
+    let passos: string[] = [];
+    try {
+      passos = JSON.parse(localStorage.getItem('of-demo-instalacao') ?? '[]');
+    } catch {}
+    const conectado = passos.includes('3');
+    $('[data-conn-claude]').textContent = conectado
+      ? 'Conectado'
+      : passos.length
+        ? `Instalação em andamento (${passos.length} de 4 passos)`
+        : 'Não conectado';
+    $('[data-conn-claude-link]').textContent = conectado ? 'Ver o passo a passo' : passos.length ? 'Continuar a instalação' : 'Instalar e conectar';
 
     // Faixa de estado
     const banner = $('[data-banner]');
