@@ -3,7 +3,7 @@
 
 Cabeçalho enxuto: logo, três links de âncora e um botão.
 
-`OrbitaFiscal.Nav` · Estrutura
+`Orbita.Nav` · Estrutura
 
 ## Use
 

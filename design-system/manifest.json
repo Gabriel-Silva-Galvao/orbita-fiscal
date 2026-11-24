@@ -1,7 +1,7 @@
 {
   "manifestVersion": 3,
-  "name": "Órbita Fiscal",
-  "namespace": "OrbitaFiscal",
+  "name": "Órbita",
+  "namespace": "Orbita",
   "files": [
     "assets/Logo/README.md",
     "assets/Prints/README.md",

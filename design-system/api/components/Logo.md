@@ -3,7 +3,7 @@
 
 O símbolo é um átomo de lítio estilizado: dois anéis inclinados em −28°, três elétrons e um núcleo de sete esferas (três prótons, quatro nêutrons).
 
-`OrbitaFiscal.Logo` · Marca
+`Orbita.Logo` · Marca
 
 ## Use
 

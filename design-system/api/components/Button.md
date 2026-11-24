@@ -3,7 +3,7 @@
 
 Botão em pílula com texto button: um principal cheio e um secundário só com contorno.
 
-`OrbitaFiscal.Button` · Ações
+`Orbita.Button` · Ações
 
 ## Use
 

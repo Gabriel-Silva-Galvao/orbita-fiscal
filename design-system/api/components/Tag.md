@@ -3,7 +3,7 @@
 
 Quatro rótulos pequenos: selo, aba, rótulo a definir e sobretítulo.
 
-`OrbitaFiscal.Tag` · Rótulos
+`Orbita.Tag` · Rótulos
 
 ## Use
 

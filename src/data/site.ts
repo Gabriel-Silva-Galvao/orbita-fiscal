@@ -10,7 +10,7 @@ export const contact = {
 };
 
 export const company = {
-  name: 'Órbita Fiscal',
+  name: 'Órbita',
   legalName: '', // razão social: a definir
   cnpj: '', // a definir
   city: 'Brasil',

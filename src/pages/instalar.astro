@@ -17,7 +17,7 @@ const testQuestion =
   'Execução fiscal parada sem bens localizados. Quando começa a correr a prescrição intercorrente? Traga o fundamento.';
 ---
 
-<Focus title="Instalar o plugin · Órbita Fiscal" description="Instale o plugin da Órbita Fiscal no Claude, conecte sua conta e faça a primeira pergunta.">
+<Focus title="Instalar o plugin · Órbita" description="Instale o plugin da Órbita no Claude, conecte sua conta e faça a primeira pergunta.">
   <div class="wrap install" data-install data-plans={planData}>
     <header class="install-head">
       <h1 class="display-lg">Seu plugin está pronto</h1>
@@ -65,7 +65,7 @@ const testQuestion =
       <li class="step" data-step="3">
         <div class="step-head">
           <span class="n">3</span>
-          <h2 class="title">Conecte sua conta Órbita Fiscal</h2>
+          <h2 class="title">Conecte sua conta Órbita</h2>
         </div>
         <div class="step-body">
           <p>Instalar o plugin não conecta o serviço sozinho. Na primeira pergunta, o Claude pede para você entrar; use o mesmo e-mail da assinatura<span data-email-hint></span>.</p>
@@ -335,7 +335,7 @@ const testQuestion =
     const strong = document.createElement('strong');
     strong.textContent = `Código: ${code.slice(0, 3)}-${code.slice(3)}`;
     const span = document.createElement('span');
-    span.textContent = 'Digite no Claude quando ele pedir para conectar a Órbita Fiscal. Vale por 10 minutos. Exemplo de demonstração.';
+    span.textContent = 'Digite no Claude quando ele pedir para conectar a Órbita. Vale por 10 minutos. Exemplo de demonstração.';
     msg.append(strong, span);
     msg.hidden = false;
   });

@@ -3,7 +3,7 @@
 
 Conversa de exemplo que mostra uma tarefa real resolvida, com as fontes ao lado da resposta.
 
-`OrbitaFiscal.ExampleCard` · Prova
+`Orbita.ExampleCard` · Prova
 
 ## Use
 

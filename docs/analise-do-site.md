@@ -1,4 +1,4 @@
-# Análise do site da Órbita Fiscal
+# Análise do site da Órbita
 
 24/11/2026. Revisão da landing com as skills **build-awwwards-quality-sites** (direção, fotos licenciadas, rolagem suave, texto acessível) e **emil-design-eng** (curvas, durações, toque, interrupção). Cada linha abaixo já foi aplicada no código.
 

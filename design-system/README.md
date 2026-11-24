@@ -1,4 +1,4 @@
-A Órbita Fiscal vende um plugin para o Claude que liga a base brasileira de jurisprudência e legislação à IA que o advogado já usa. A marca é a Limiar Esmeralda: verde profundo, tinta quase preta esverdeada, um verde-folha suave e muito ar. Este sistema serve a uma landing page curta e às páginas de compra e uso.
+A Órbita vende um plugin para o Claude que liga a base brasileira de jurisprudência e legislação à IA que o advogado já usa. A marca é a Limiar Esmeralda: verde profundo, tinta quase preta esverdeada, um verde-folha suave e muito ar. Este sistema serve a uma landing page curta e às páginas de compra e uso.
 
 ## Fundamentos de conteúdo
 

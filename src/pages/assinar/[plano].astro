@@ -4,7 +4,7 @@
  * Só a interface nesta etapa (decisão de 24/11/2026): sem PUBLIC_PAYMENT_PROVIDER, roda em modo de
  * demonstração, nada é cobrado e nenhum dado sai do navegador.
  * Na integração real, os campos do cartão devem ser os campos seguros do provedor (iframe/SDK),
- * para que o número do cartão nunca passe pelo servidor da Órbita Fiscal.
+ * para que o número do cartão nunca passe pelo servidor da Órbita.
  *
  * Conta antes da compra (decisão de 24/11/2026): só quem já criou a conta e confirmou o e-mail
  * pelo código chega aqui. Com a API, o middleware manda quem não entrou para
@@ -26,7 +26,7 @@ const price = brl(plan.cents);
 const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 ---
 
-<Focus title={`Assinar o ${plan.name} · Órbita Fiscal`} description={`Assine o plano ${plan.name} da Órbita Fiscal por ${price} por mês.`}>
+<Focus title={`Assinar o ${plan.name} · Órbita`} description={`Assine o plano ${plan.name} da Órbita por ${price} por mês.`}>
   <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider} data-session-email={accountEmail}>
     <aside class="summary" aria-labelledby="sum-title">
       <h1 id="sum-title" class="display-md">Assinar o {plan.name}</h1>

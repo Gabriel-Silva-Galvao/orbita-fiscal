@@ -3,7 +3,7 @@
 
 Cartão de passo numerado, em trio, para explicar a instalação sem treinamento.
 
-`OrbitaFiscal.Step` · Prova
+`Orbita.Step` · Prova
 
 ## Use
 

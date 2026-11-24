@@ -1,4 +1,4 @@
-/** Planos da Órbita Fiscal. Diferença por tarefa (decisão de 23/11/2026). */
+/** Planos da Órbita. Diferença por tarefa (decisão de 23/11/2026). */
 export interface Plan {
   slug: 'pro' | 'max';
   name: string;

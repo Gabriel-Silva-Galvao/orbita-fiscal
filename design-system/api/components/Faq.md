@@ -3,7 +3,7 @@
 
 Lista de perguntas em , de três a quatro itens, com filetes line e sem cartões.
 
-`OrbitaFiscal.Faq` · Prova
+`Orbita.Faq` · Prova
 
 ## Use
 

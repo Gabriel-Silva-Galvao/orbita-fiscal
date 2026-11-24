@@ -138,6 +138,54 @@
     ["Zips do projeto e dos artefatos", true],
     ["Projeto no GitHub", true]
   ]},
+  {"id": "e16", "titulo": "Entrega do plugin (loja do Claude e outras IAs)", "itens": [
+    ["Decidir o formato: conector MCP remoto + skills", true],
+    ["Pesquisar requisitos da loja do Claude, ChatGPT, Copilot e Gemini", true],
+    ["Servidor MCP na API com OAuth (PKCE, CIMD e DCR com client_secret)", false],
+    ["Ferramentas de pesquisa anotadas como leitura e testadas no MCP Inspector", false],
+    ["Conta de teste para revisão, compatível com a verificação em duas etapas", false],
+    ["Repositório público do plugin com skills, README e licença", false],
+    ["Textos, ícone, slug, documentação e suporte da listagem", false],
+    ["Submeter conector e plugin no diretório do Claude", false],
+    ["Submeter no diretório do ChatGPT", false],
+    ["Guia para o TI do cliente no Copilot Studio e no Gemini Enterprise", false]
+  ]},
+  {"id": "e17", "titulo": "Área do assinante", "itens": [
+    ["Definir as abas e as diferenças entre Pro e Max", true],
+    ["Status do plugin: conexão por IA, uso do mês, versão", false],
+    ["Novidades (painel de admin na API: integração ainda em aberto)", false],
+    ["Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini", false],
+    ["Alertas por tema (Max)", false],
+    ["Resumo semanal por área (Max)", false],
+    ["Acesso antecipado e suporte prioritário (Max)", false],
+    ["As quatro IAs na landing, com animação", false]
+  ]},
+  {"id": "e18", "titulo": "Pagamentos (Asaas)", "itens": [
+    ["Mapear a API do Asaas", true],
+    ["Integração real suspensa até haver CNPJ", true],
+    ["Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)", false],
+    ["Cartão, Pix e boleto no Checkout", false],
+    ["Formas de pagamento e faturas no Portal", false],
+    ["Liberar acesso só com pagamento confirmado (simulado)", false],
+    ["Ajustar Termos, Reembolso, Ajuda e landing para as três formas", false],
+    ["Trocar a simulação pela API real (quando houver CNPJ)", false]
+  ]},
+  {"id": "e19", "titulo": "Ranqueamento no Google", "itens": [
+    ["Pesquisa aprofundada de SEO", true],
+    ["Sitemap, robots.txt e noindex na área logada", false],
+    ["Canonical, títulos, descrições e Open Graph por página", false],
+    ["Dados estruturados: Organization, WebSite, SoftwareApplication", false],
+    ["Página 404 real e domínio único com redirecionamentos", false],
+    ["Core Web Vitals: topo sem atraso no LCP, imagens e fontes", false],
+    ["Banner de cookies LGPD e GA4 com Consent Mode v2", false],
+    ["Search Console, Bing Webmaster e IndexNow na publicação", false],
+    ["Página Sobre com autores e conteúdo revisado", false]
+  ]},
+  {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
+    ["Definir quando toca: uma vez, na confirmação do pagamento", true],
+    ["Explosão do átomo e elétrons virando as abas novas", false],
+    ["Versão para movimento reduzido e botão Pular", false]
+  ]},
   {"id": "e14", "titulo": "Publicação", "itens": [
     ["Escolher hospedagem e domínio", false],
     ["Formulário de contato enviando de verdade", false],

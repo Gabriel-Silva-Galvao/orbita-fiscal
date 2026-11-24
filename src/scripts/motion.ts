@@ -1,5 +1,5 @@
 /**
- * Motor de movimento da Órbita Fiscal.
+ * Motor de movimento da Órbita.
  * Só roda quando <html> tem .anim (a pessoa não pediu movimento reduzido).
  * Sem ele, a página fica inteira e parada: nada aqui esconde conteúdo por conta própria.
  */

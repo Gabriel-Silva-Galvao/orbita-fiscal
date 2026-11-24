@@ -4,7 +4,7 @@ Direção visual para a landing: sóbria, clara, com poucos blocos e uma animaç
 
 ## Behance: o que olhar e o que levar
 
-| Tema | Projetos que apareceram | Levar para a Órbita Fiscal | Busca |
+| Tema | Projetos que apareceram | Levar para a Órbita | Busca |
 | --- | --- | --- | --- |
 | IA jurídica em SaaS | Lexora (Legal AI SaaS, animação do site), Aurelex (workspace jurídico de IA), LexAura (identidade para escritório de IA) | Hierarquia de um produto jurídico sério com interface mostrada como prova, e tom de confiança sem excesso | [legal website design](https://www.behance.net/search/projects/legal%20website%20design?locale=en_US) |
 | Landing de produto minimalista | Orbit AI (landing de produto minimalista), AgenticAI (landing de IA) | Poucos blocos, muito espaço, uma imagem de produto grande | [saas product landing page design](https://www.behance.net/search/projects/saas%20product%20landing%20page%20design?locale=en_US) |

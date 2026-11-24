@@ -3,7 +3,7 @@
 
 Dois cartões de plano lado a lado, o Max em destaque, sem tabela de comparação.
 
-`OrbitaFiscal.PlanCard` · Planos
+`Orbita.PlanCard` · Planos
 
 ## Use
 

@@ -3,7 +3,7 @@
 
 Três movimentos permitidos.
 
-`OrbitaFiscal.Motion` · Movimento
+`Orbita.Motion` · Movimento
 
 ## Use
 

@@ -1,6 +1,6 @@
 # Movimento sofisticado
 
-A página precisa parecer viva sem ficar barulhenta. Desde 23/11/2026 a direção mudou: a Órbita Fiscal usa movimento em toda a página, com parallax e ilustrações em camadas. O movimento continua ligado ao que o produto faz, que é encontrar a fonte e trazê-la até você. A implementação de referência está no site em Astro (`src/scripts/motion.ts` e `src/scripts/orbit.ts`).
+A página precisa parecer viva sem ficar barulhenta. Desde 23/11/2026 a direção mudou: a Órbita usa movimento em toda a página, com parallax e ilustrações em camadas. O movimento continua ligado ao que o produto faz, que é encontrar a fonte e trazê-la até você. A implementação de referência está no site em Astro (`src/scripts/motion.ts` e `src/scripts/orbit.ts`).
 
 ## Princípios
 

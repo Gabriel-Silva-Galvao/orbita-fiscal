@@ -1,4 +1,4 @@
-# Órbita Fiscal: progresso do site
+# Órbita: progresso do site
 
 Atualizado em 24/11/2026. As 7 páginas do MVP existem e o fluxo completo funciona em **modo de demonstração**: nada é cobrado, nenhum e-mail é enviado e a “conta” fica só no navegador. Para ir ao ar, faltam decisões da empresa, a revisão jurídica e a parte de servidor.
 
@@ -19,7 +19,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 
 ## Passo a passo
 
-79 de 121 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
+86 de 159 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
 
 | Etapa | Feito | Situação |
 | --- | --- | --- |
@@ -36,8 +36,13 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 | 11. Ajuda | 3 de 4 | Em andamento |
 | 12. Arquitetura e servidor | 6 de 9 | Em andamento |
 | 13. Artefatos e entregas | 5 de 5 | Concluída |
-| 14. Publicação | 0 de 6 | Não iniciada |
-| 15. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
+| 14. Entrega do plugin (loja do Claude e outras IAs) | 2 de 10 | Em andamento |
+| 15. Área do assinante | 1 de 8 | Em andamento |
+| 16. Pagamentos (Asaas) | 2 de 8 | Em andamento |
+| 17. Ranqueamento no Google | 1 de 9 | Em andamento |
+| 18. Animação da explosão do átomo | 1 de 3 | Em andamento |
+| 19. Publicação | 0 de 6 | Não iniciada |
+| 20. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
 
 ### 1. Base do projeto (7 de 7)
 
@@ -259,7 +264,85 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 
 - Nada pendente.
 
-### 14. Publicação (0 de 6)
+### 14. Entrega do plugin (loja do Claude e outras IAs) (2 de 10)
+
+**Feito**
+
+- [x] Decidir o formato: conector MCP remoto + skills
+- [x] Pesquisar requisitos da loja do Claude, ChatGPT, Copilot e Gemini
+
+**Falta**
+
+- [ ] Servidor MCP na API com OAuth (PKCE, CIMD e DCR com client_secret)
+- [ ] Ferramentas de pesquisa anotadas como leitura e testadas no MCP Inspector
+- [ ] Conta de teste para revisão, compatível com a verificação em duas etapas
+- [ ] Repositório público do plugin com skills, README e licença
+- [ ] Textos, ícone, slug, documentação e suporte da listagem
+- [ ] Submeter conector e plugin no diretório do Claude
+- [ ] Submeter no diretório do ChatGPT
+- [ ] Guia para o TI do cliente no Copilot Studio e no Gemini Enterprise
+
+### 15. Área do assinante (1 de 8)
+
+**Feito**
+
+- [x] Definir as abas e as diferenças entre Pro e Max
+
+**Falta**
+
+- [ ] Status do plugin: conexão por IA, uso do mês, versão
+- [ ] Novidades (painel de admin na API: integração ainda em aberto)
+- [ ] Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini
+- [ ] Alertas por tema (Max)
+- [ ] Resumo semanal por área (Max)
+- [ ] Acesso antecipado e suporte prioritário (Max)
+- [ ] As quatro IAs na landing, com animação
+
+### 16. Pagamentos (Asaas) (2 de 8)
+
+**Feito**
+
+- [x] Mapear a API do Asaas
+- [x] Integração real suspensa até haver CNPJ
+
+**Falta**
+
+- [ ] Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)
+- [ ] Cartão, Pix e boleto no Checkout
+- [ ] Formas de pagamento e faturas no Portal
+- [ ] Liberar acesso só com pagamento confirmado (simulado)
+- [ ] Ajustar Termos, Reembolso, Ajuda e landing para as três formas
+- [ ] Trocar a simulação pela API real (quando houver CNPJ)
+
+### 17. Ranqueamento no Google (1 de 9)
+
+**Feito**
+
+- [x] Pesquisa aprofundada de SEO
+
+**Falta**
+
+- [ ] Sitemap, robots.txt e noindex na área logada
+- [ ] Canonical, títulos, descrições e Open Graph por página
+- [ ] Dados estruturados: Organization, WebSite, SoftwareApplication
+- [ ] Página 404 real e domínio único com redirecionamentos
+- [ ] Core Web Vitals: topo sem atraso no LCP, imagens e fontes
+- [ ] Banner de cookies LGPD e GA4 com Consent Mode v2
+- [ ] Search Console, Bing Webmaster e IndexNow na publicação
+- [ ] Página Sobre com autores e conteúdo revisado
+
+### 18. Animação da explosão do átomo (1 de 3)
+
+**Feito**
+
+- [x] Definir quando toca: uma vez, na confirmação do pagamento
+
+**Falta**
+
+- [ ] Explosão do átomo e elétrons virando as abas novas
+- [ ] Versão para movimento reduzido e botão Pular
+
+### 19. Publicação (0 de 6)
 
 **Feito**
 
@@ -274,7 +357,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Tirar o modo de demonstração
 - [ ] Publicar o site
 
-### 15. Para equipes (depois do MVP) (0 de 2)
+### 20. Para equipes (depois do MVP) (0 de 2)
 
 **Feito**
 

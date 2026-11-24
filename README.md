@@ -1,6 +1,6 @@
-# Órbita Fiscal: site
+# Órbita: site
 
-Site de venda do plugin da Órbita Fiscal para o Claude. Astro, GSAP + ScrollTrigger, Lenis e a marca Limiar Esmeralda (temas claro e escuro).
+Site de venda do plugin da Órbita para o Claude. Astro, GSAP + ScrollTrigger, Lenis e a marca Limiar Esmeralda (temas claro e escuro).
 
 O que está feito e o que falta: [PROGRESSO.md](PROGRESSO.md).
 

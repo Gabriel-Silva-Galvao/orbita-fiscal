@@ -3,7 +3,7 @@
 
 Campo de texto com rótulo acima, borda visível e mensagem curta abaixo, para Entrar e Checkout.
 
-`OrbitaFiscal.Field` · Formulário
+`Orbita.Field` · Formulário
 
 ## Use
 

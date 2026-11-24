@@ -1,4 +1,4 @@
-# Briefings das páginas da Órbita Fiscal
+# Briefings das páginas da Órbita
 
 Nov 23, 2026 · @Gabriel Luis
 
@@ -140,7 +140,7 @@ Esta é a página que transforma o pagamento em uso. O plugin do Claude precisa 
 1. Título “Seu plugin está pronto” e o plano contratado.
 2. Passo 1, baixar o arquivo do plugin, com botão e versão atual.
 3. Passo 2, no Claude, abrir o menu de plugins e enviar o arquivo. Uma imagem curta do caminho.
-4. Passo 3, conectar a conta Órbita Fiscal, porque instalar o plugin não conecta o serviço sozinho.
+4. Passo 3, conectar a conta Órbita, porque instalar o plugin não conecta o serviço sozinho.
 5. Passo 4, testar com uma pergunta pronta e copiável, por exemplo a do exemplo da Landing.
 6. Pergunta de fechamento, “Deu certo?”, com Sim (leva ao Portal) e Não (leva à Ajuda já no passo certo).
 
@@ -201,7 +201,7 @@ Três textos que o advogado vai ler com atenção profissional. A clareza deles 
 
 **Conteúdo**
 
-1. **Privacidade**: que dados a Órbita Fiscal guarda sobre a conta e sobre as consultas, por quanto tempo e para quê, com referência à LGPD. Responder cedo se as consultas treinam modelos.
+1. **Privacidade**: que dados a Órbita guarda sobre a conta e sobre as consultas, por quanto tempo e para quê, com referência à LGPD. Responder cedo se as consultas treinam modelos.
 2. **Termos de uso**: o que a assinatura dá, renovação, uso pessoal da licença e limites.
 3. **Reembolso**: sete dias a partir da compra, como pedir e em quanto tempo o valor volta. O prazo é o mínimo do art. 49 do CDC.
 4. Layout de leitura: coluna única, índice lateral no desktop, data de vigência no topo, sem animação.
