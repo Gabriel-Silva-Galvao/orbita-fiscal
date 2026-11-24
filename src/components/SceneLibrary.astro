@@ -3,16 +3,19 @@
  * Cena 1, “A base”: foto real de lombadas em verde (duotone com a cor da marca).
  */
 import Photo from './Photo.astro';
+import { citacoes } from '../data/citacoes';
 
+// Cartões que se revezam (virando como página; no hover, como placa): scripts/hero-chips.ts.
+const inicio = (text: string) => citacoes.findIndex((c) => c.text === text);
 const cites = [
-  { k: 'Norma', t: 'Lei 6.830/1980, art. 40', pos: 'q1', speed: 0.6 },
-  { k: 'Súmula', t: 'Súmula 314 do STJ', pos: 'q2', speed: 0.9 },
-  { k: 'Precedente', t: 'Tema 566 do STJ', pos: 'q3', speed: 0.45 },
-];
+  { i: inicio('Lei 6.830/1980, art. 40'), pos: 'q1', speed: 0.6 },
+  { i: inicio('Súmula 360 · STJ'), pos: 'q2', speed: 0.9 },
+  { i: inicio('Tema 444 · STJ'), pos: 'q3', speed: 0.45 },
+].map((c) => ({ ...c, ...citacoes[c.i] }));
 ---
 
 <section id="a-base" class="scene" data-parallax aria-labelledby="base-title">
-  <div class="scene-stage">
+  <div class="scene-stage" data-chips={JSON.stringify(citacoes)} data-chips-mode="pagina">
     <div class="lens-layer" data-speed="-0.3">
       <div class="lens-base">
         <Photo name="lombadas" sizes="100vw" />
@@ -22,10 +25,12 @@ const cites = [
     {
       cites.map((c, i) => (
         <div class:list={['cite-pos', c.pos]} data-speed={c.speed} aria-hidden="true">
-          <div class="cite" style={`--d:${6 + i * 1.4}s; --r:${i % 2 ? 3 : -4}deg`}>
-            <span class="cite-k">{c.k}</span>
-            <span class="cite-t">{c.t}</span>
-            <span class="cite-bar" />
+          <div class="cite-swap" data-chip data-chip-i={c.i}>
+            <div class="cite" style={`--d:${6 + i * 1.4}s; --r:${i % 2 ? 3 : -4}deg`}>
+              <span class="cite-k" data-chip-kind>{c.kind}</span>
+              <span class="cite-t" data-chip-text>{c.text}</span>
+              <span class="cite-bar" />
+            </div>
           </div>
         </div>
       ))
@@ -90,6 +95,15 @@ const cites = [
   .cite-pos {
     position: absolute;
     z-index: 2;
+  }
+  /* Camada só do motor de troca: o GSAP mexe aqui sem brigar com a flutuação do .cite. */
+  .cite-swap {
+    perspective: 700px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :global(.anim) .cite-swap {
+      cursor: pointer;
+    }
   }
   .q1 {
     left: 4%;

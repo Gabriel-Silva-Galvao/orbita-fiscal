@@ -314,3 +314,18 @@ html:not(.anim) .progress {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Anel das trocas de cartões de citação (scripts/hero-chips.ts). O elemento é criado pelo script,
+   por isso o estilo é global: no topo nasce no núcleo; em Brasília, onde o cartão bate. */
+.chip-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: var(--radius-round);
+  border: 1.5px solid var(--brand);
+  pointer-events: none;
+  z-index: 1;
+}

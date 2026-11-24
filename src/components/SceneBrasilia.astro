@@ -2,18 +2,21 @@
 /**
  * Cena 2, “Direito brasileiro”: foto real do Congresso Nacional, em Brasília.
  * A foto se abre como uma órbita: um círculo que cresce com a rolagem até ocupar a moldura,
- * enquanto a imagem desce em parallax. Anéis da marca giram por cima e etiquetas de
- * garantias reais (LGPD) flutuam à frente.
+ * enquanto a imagem desce em parallax. Anéis da marca giram por cima e cartões de lei flutuam à
+ * frente, em revezamento: trocam como um carimbo e, no hover, viram (scripts/hero-chips.ts).
  */
 import Photo from './Photo.astro';
+import { citacoes } from '../data/citacoes';
 
+const inicio = (text: string) => citacoes.findIndex((c) => c.text === text);
 const tags = [
-  { k: 'LGPD', t: 'Lei 13.709/2018', pos: 't1', speed: 0.9 },
-  { k: 'Em cada resposta', t: 'Fonte para conferir', pos: 't3', speed: 1.1 },
-];
+  { i: inicio('Lei 13.709/2018'), pos: 't1', speed: 0.9 },
+  { i: inicio('CF, art. 150, I'), pos: 't2', speed: 0.6 },
+  { i: inicio('Súmula 547 · STF'), pos: 't3', speed: 1.1 },
+].map((t) => ({ ...t, ...citacoes[t.i] }));
 ---
 
-<div class="br" data-parallax data-orbit-reveal>
+<div class="br" data-parallax data-orbit-reveal data-chips={JSON.stringify(citacoes)} data-chips-mode="carimbo">
   <div class="br-photo" data-speed="-0.35">
     <Photo name="congresso" sizes="(min-width: 1180px) 1100px, 100vw" />
   </div>
@@ -26,9 +29,11 @@ const tags = [
   {
     tags.map((t, i) => (
       <div class:list={['br-tag-pos', t.pos]} data-speed={t.speed} aria-hidden="true">
-        <div class="br-tag" style={`--d:${6 + i * 1.5}s; --r:${i % 2 ? 3 : -3}deg`}>
-          <span class="br-k">{t.k}</span>
-          <span class="br-t">{t.t}</span>
+        <div class="br-swap" data-chip data-chip-i={t.i}>
+          <div class="br-tag" style={`--d:${6 + i * 1.5}s; --r:${i % 2 ? 3 : -3}deg`}>
+            <span class="br-k" data-chip-kind>{t.kind}</span>
+            <span class="br-t" data-chip-text>{t.text}</span>
+          </div>
         </div>
       </div>
     ))
@@ -81,6 +86,15 @@ const tags = [
   .br-tag-pos {
     position: absolute;
     z-index: 2;
+  }
+  /* Camada só do motor de troca: o GSAP mexe aqui sem brigar com a flutuação do .br-tag. */
+  .br-swap {
+    perspective: 700px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :global(.anim) .br-swap {
+      cursor: pointer;
+    }
   }
   .t1 {
     left: 4%;
