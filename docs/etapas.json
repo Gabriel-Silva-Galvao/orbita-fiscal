@@ -5,7 +5,8 @@
     ["Criar o projeto em Astro com os tokens da marca", true],
     ["Temas claro e escuro, com escolha salva", true],
     ["Fontes Newsreader e Hanken Grotesk servidas pelo site", true],
-    ["Repositório no GitHub (privado)", true]
+    ["Repositório no GitHub (privado)", true],
+    ["Repositório movido para Gabriel-Silva-Galvao/orbita-fiscal", true]
   ]},
   {"id": "e02", "titulo": "Landing", "itens": [
     ["Cabeçalho com logo, links e botão", true],
@@ -15,10 +16,13 @@
     ["Como funciona: três passos", true],
     ["Planos Pro e Max, diferença por tarefa", true],
     ["Confiança com garantias do CDC e da LGPD", true],
-    ["Dúvidas: quatro perguntas", true],
+    ["Dúvidas: perguntas frequentes", true],
     ["Contato com formulário validado", true],
     ["Rodapé revelado ao final, com tema e cookies", true],
+    ["Reembolso só em letra miúda abaixo dos planos", true],
+    ["Logo e átomo do topo sem o disco verde", true],
     ["Revisão jurídica das 8 citações dos exemplos", false],
+    ["Revisão jurídica das 125 citações em revezamento", false],
     ["Trocar contatos provisórios pelos reais", false],
     ["Imagem de compartilhamento (Open Graph)", false]
   ]},
@@ -29,12 +33,15 @@
     ["Entradas em cascata e títulos palavra por palavra", true],
     ["Parallax nas cenas com foto", true],
     ["Página completa e parada com movimento reduzido (no código)", true],
+    ["Cartões de lei em revezamento no topo, nos livros e em Brasília", true],
+    ["Trocas automáticas a cada 6 s: órbita, página e carimbo", true],
+    ["Virada do cartão no hover", true],
     ["Conferir na tela com movimento reduzido ativado", false]
   ]},
   {"id": "e04", "titulo": "Fotos reais", "itens": [
     ["8 fotos do Unsplash escolhidas pela folha de contato", true],
     ["Créditos no código e no rodapé", true],
-    ["Lente que revela a cor na foto da base", true],
+    ["Foto da base em duotone, sem lente que segue o mouse", true],
     ["Foto de Brasília que se abre em órbita", true],
     ["Baixar as fotos para o próprio site", false]
   ]},
@@ -60,13 +67,14 @@
   {"id": "e07", "titulo": "Entrar e criar conta", "itens": [
     ["Tela com abas Entrar e Criar conta", true],
     ["Botão Continuar com Google", true],
-    ["Link de acesso por e-mail, sem senha", true],
+    ["E-mail e senha, com mostrar senha e Esqueci a senha", true],
+    ["Verificação em duas etapas por código no e-mail, no cadastro e no login", true],
     ["Faixa do plano escolhido, com troca", true],
-    ["Estados: link enviado, reenvio, já cadastrado, expirado, erro", true],
-    ["Servidor de autenticação", false],
+    ["Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro", true],
+    ["Volta para a página pedida depois de entrar", true],
+    ["Servidor de autenticação na API FastAPI", false],
     ["Login com Google de verdade (OAuth)", false],
-    ["Envio dos e-mails com o link", false],
-    ["Sessão da pessoa entre as páginas", false]
+    ["Envio dos e-mails com o código e com o link de senha nova", false]
   ]},
   {"id": "e08", "titulo": "Checkout", "itens": [
     ["Resumo do plano com próxima cobrança", true],
@@ -74,6 +82,7 @@
     ["Pix com código copia e cola e contagem", true],
     ["Dados da nota com CPF ou CNPJ validados", true],
     ["Estados: processando, recusado, aguardando Pix, aprovado", true],
+    ["Conta antes da compra: só abre com login", true],
     ["Escolher o provedor de pagamento", false],
     ["Trocar os campos do cartão pelos campos seguros do provedor", false],
     ["Confirmar pagamentos pelo provedor (webhooks)", false],
@@ -111,14 +120,25 @@
     ["Voltar à página de origem", true],
     ["Canal de suporte e prazo de resposta definitivos", false]
   ]},
-  {"id": "e12", "titulo": "Artefatos e entregas", "itens": [
+  {"id": "e12", "titulo": "Arquitetura e servidor", "itens": [
+    ["Pesquisa Astro ou React, publicada como artefato", true],
+    ["Decisão: site todo em Astro e backend em Python com FastAPI", true],
+    ["React e adaptador Node instalados (Plano A)", true],
+    ["Rotas do assinante e Checkout renderizadas no servidor", true],
+    ["Middleware que protege as rotas pela sessão da API", true],
+    ["Contrato da API de login documentado", true],
+    ["Criar a API em FastAPI", false],
+    ["GET /auth/sessao e rotas de cadastro, login e código", false],
+    ["Escolher onde hospedar o servidor Node e a API", false]
+  ]},
+  {"id": "e13", "titulo": "Artefatos e entregas", "itens": [
     ["Design system publicado e atualizado", true],
     ["Briefings e pendências publicados", true],
-    ["Painel de progresso interativo", true],
+    ["Painel de progresso interativo, republicado na conta atual", true],
     ["Zips do projeto e dos artefatos", true],
     ["Projeto no GitHub", true]
   ]},
-  {"id": "e13", "titulo": "Publicação", "itens": [
+  {"id": "e14", "titulo": "Publicação", "itens": [
     ["Escolher hospedagem e domínio", false],
     ["Formulário de contato enviando de verdade", false],
     ["sitemap.xml e robots.txt", false],
@@ -126,7 +146,7 @@
     ["Tirar o modo de demonstração", false],
     ["Publicar o site", false]
   ]},
-  {"id": "e14", "titulo": "Para equipes (depois do MVP)", "itens": [
+  {"id": "e15", "titulo": "Para equipes (depois do MVP)", "itens": [
     ["Página /equipes", false],
     ["Formulário de interesse", false]
   ]}

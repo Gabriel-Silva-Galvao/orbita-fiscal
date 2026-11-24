@@ -7,7 +7,7 @@ Cópia de todos os artefatos publicados no claude.ai, exportada em 24/11/2026.
 | `01-briefings/` | Briefings das páginas da Órbita Fiscal | https://claude.ai/artifact/RAhv8e9CD2NQ5F2DXqHs44 | Markdown + mapa de páginas (imagem) |
 | `02-pendencias-e-decisoes/` | Órbita Fiscal: pendências e decisões | https://claude.ai/artifact/LFaGLAW9EJnNm4Q1R26eTU | Markdown |
 | `03-progresso-doc/` | Órbita Fiscal: progresso do site (doc antigo, substituído pelo painel) | https://claude.ai/artifact/FvYozFYej3pkvZKoBsknqH | Markdown |
-| `04-painel-de-progresso/` | Progresso do site Órbita Fiscal (painel interativo) | https://claude.ai/artifact/Ea4BJ3bdkkshfCkQemurZu | HTML + dados em JSON |
+| `04-painel-de-progresso/` | Progresso do site Órbita Fiscal (painel interativo) | https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm | HTML + dados em JSON |
 | `05-design-system/` | Design system Órbita Fiscal (Limiar Esmeralda) | https://claude.ai/artifact/RvyazHgvww5Zk3qzojPFYA | Markdown, JSON, prévias HTML, SVG e PNG |
 
 ## Observações

@@ -2,13 +2,13 @@
 
 Atualizado em 24/11/2026. As 7 páginas do MVP existem e o fluxo completo funciona em **modo de demonstração**: nada é cobrado, nenhum e-mail é enviado e a “conta” fica só no navegador. Para ir ao ar, faltam decisões da empresa, a revisão jurídica e a parte de servidor.
 
-Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea4BJ3bdkkshfCkQemurZu
+Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm (republicado em 24/11/2026 na conta atual; o link antigo não abre mais).
 
 ## Situação das páginas
 
 | Página | Rota | Situação | O que falta |
 | --- | --- | --- | --- |
-| 1. Landing | `/` | Pronta | Revisão jurídica dos exemplos; contatos reais |
+| 1. Landing | `/` | Pronta | Revisão jurídica dos exemplos e das 125 citações em revezamento; contatos reais |
 | 2. Entrar e criar conta | `/entrar` | Tela pronta, demonstração | Servidor de autenticação (Google ou e-mail e senha + código por e-mail) |
 | 3. Checkout | `/assinar/pro`, `/assinar/max` | Tela pronta, demonstração | Provedor de pagamento, campos seguros do cartão, Pix, nota fiscal |
 | 4. Instalar o plugin | `/instalar` | Tela pronta, demonstração | Arquivo real do plugin, link expirável, código de conexão real, nomes dos menus do Claude |
@@ -19,26 +19,27 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 
 ## Passo a passo
 
-64 de 103 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
+79 de 121 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
 
 | Etapa | Feito | Situação |
 | --- | --- | --- |
-| 1. Base do projeto | 6 de 6 | Concluída |
-| 2. Landing | 10 de 13 | Em andamento |
-| 3. Movimento | 6 de 7 | Em andamento |
+| 1. Base do projeto | 7 de 7 | Concluída |
+| 2. Landing | 12 de 16 | Em andamento |
+| 3. Movimento | 9 de 10 | Em andamento |
 | 4. Fotos reais | 4 de 5 | Em andamento |
 | 5. Auditoria de traços de IA | 6 de 6 | Concluída |
 | 6. Textos legais | 4 de 9 | Em andamento |
-| 7. Entrar e criar conta | 5 de 9 | Em andamento |
-| 8. Checkout | 5 de 10 | Em andamento |
+| 7. Entrar e criar conta | 7 de 10 | Em andamento |
+| 8. Checkout | 6 de 11 | Em andamento |
 | 9. Instalar o plugin | 5 de 11 | Em andamento |
 | 10. Portal do cliente | 5 de 10 | Em andamento |
 | 11. Ajuda | 3 de 4 | Em andamento |
-| 12. Artefatos e entregas | 5 de 5 | Concluída |
-| 13. Publicação | 0 de 6 | Não iniciada |
-| 14. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
+| 12. Arquitetura e servidor | 6 de 9 | Em andamento |
+| 13. Artefatos e entregas | 5 de 5 | Concluída |
+| 14. Publicação | 0 de 6 | Não iniciada |
+| 15. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
 
-### 1. Base do projeto (6 de 6)
+### 1. Base do projeto (7 de 7)
 
 **Feito**
 
@@ -48,12 +49,13 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [x] Temas claro e escuro, com escolha salva
 - [x] Fontes Newsreader e Hanken Grotesk servidas pelo site
 - [x] Repositório no GitHub (privado)
+- [x] Repositório movido para Gabriel-Silva-Galvao/orbita-fiscal
 
 **Falta**
 
 - Nada pendente.
 
-### 2. Landing (10 de 13)
+### 2. Landing (12 de 16)
 
 **Feito**
 
@@ -64,17 +66,20 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [x] Como funciona: três passos
 - [x] Planos Pro e Max, diferença por tarefa
 - [x] Confiança com garantias do CDC e da LGPD
-- [x] Dúvidas: quatro perguntas
+- [x] Dúvidas: perguntas frequentes
 - [x] Contato com formulário validado
 - [x] Rodapé revelado ao final, com tema e cookies
+- [x] Reembolso só em letra miúda abaixo dos planos
+- [x] Logo e átomo do topo sem o disco verde
 
 **Falta**
 
 - [ ] Revisão jurídica das 8 citações dos exemplos
+- [ ] Revisão jurídica das 125 citações em revezamento
 - [ ] Trocar contatos provisórios pelos reais
 - [ ] Imagem de compartilhamento (Open Graph)
 
-### 3. Movimento (6 de 7)
+### 3. Movimento (9 de 10)
 
 **Feito**
 
@@ -84,6 +89,9 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [x] Entradas em cascata e títulos palavra por palavra
 - [x] Parallax nas cenas com foto
 - [x] Página completa e parada com movimento reduzido (no código)
+- [x] Cartões de lei em revezamento no topo, nos livros e em Brasília
+- [x] Trocas automáticas a cada 6 s: órbita, página e carimbo
+- [x] Virada do cartão no hover
 
 **Falta**
 
@@ -95,7 +103,7 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 
 - [x] 8 fotos do Unsplash escolhidas pela folha de contato
 - [x] Créditos no código e no rodapé
-- [x] Lente que revela a cor na foto da base
+- [x] Foto da base em duotone, sem lente que segue o mouse
 - [x] Foto de Brasília que se abre em órbita
 
 **Falta**
@@ -134,25 +142,25 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [ ] Decidir se as consultas são guardadas e se treinam modelos
 - [ ] Definir a data de vigência
 
-### 7. Entrar e criar conta (5 de 9)
+### 7. Entrar e criar conta (7 de 10)
 
 **Feito**
 
 - [x] Tela com abas Entrar e Criar conta
 - [x] Botão Continuar com Google
-- [x] E-mail e senha, com mostrar senha e "Esqueci a senha"
-- [x] Verificação em duas etapas por código no e-mail, no cadastro e no login (Google e senha)
+- [x] E-mail e senha, com mostrar senha e Esqueci a senha
+- [x] Verificação em duas etapas por código no e-mail, no cadastro e no login
 - [x] Faixa do plano escolhido, com troca
 - [x] Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro
+- [x] Volta para a página pedida depois de entrar
 
 **Falta**
 
-- [ ] Servidor de autenticação
+- [ ] Servidor de autenticação na API FastAPI
 - [ ] Login com Google de verdade (OAuth)
 - [ ] Envio dos e-mails com o código e com o link de senha nova
-- [ ] Sessão da pessoa entre as páginas
 
-### 8. Checkout (5 de 10)
+### 8. Checkout (6 de 11)
 
 **Feito**
 
@@ -161,6 +169,7 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [x] Pix com código copia e cola e contagem
 - [x] Dados da nota com CPF ou CNPJ validados
 - [x] Estados: processando, recusado, aguardando Pix, aprovado
+- [x] Conta antes da compra: só abre com login
 
 **Falta**
 
@@ -219,13 +228,30 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 
 - [ ] Canal de suporte e prazo de resposta definitivos
 
-### 12. Artefatos e entregas (5 de 5)
+### 12. Arquitetura e servidor (6 de 9)
+
+**Feito**
+
+- [x] Pesquisa Astro ou React, publicada como artefato
+- [x] Decisão: site todo em Astro e backend em Python com FastAPI
+- [x] React e adaptador Node instalados (Plano A)
+- [x] Rotas do assinante e Checkout renderizadas no servidor
+- [x] Middleware que protege as rotas pela sessão da API
+- [x] Contrato da API de login documentado
+
+**Falta**
+
+- [ ] Criar a API em FastAPI
+- [ ] GET /auth/sessao e rotas de cadastro, login e código
+- [ ] Escolher onde hospedar o servidor Node e a API
+
+### 13. Artefatos e entregas (5 de 5)
 
 **Feito**
 
 - [x] Design system publicado e atualizado
 - [x] Briefings e pendências publicados
-- [x] Painel de progresso interativo
+- [x] Painel de progresso interativo, republicado na conta atual
 - [x] Zips do projeto e dos artefatos
 - [x] Projeto no GitHub
 
@@ -233,7 +259,7 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 
 - Nada pendente.
 
-### 13. Publicação (0 de 6)
+### 14. Publicação (0 de 6)
 
 **Feito**
 
@@ -248,7 +274,7 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 - [ ] Tirar o modo de demonstração
 - [ ] Publicar o site
 
-### 14. Para equipes (depois do MVP) (0 de 2)
+### 15. Para equipes (depois do MVP) (0 de 2)
 
 **Feito**
 
@@ -266,8 +292,9 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 | `src/pages/` | Páginas: `index`, `entrar`, `assinar/[plano]`, `instalar`, `conta`, `ajuda`, `privacidade`, `termos`, `reembolso` |
 | `src/components/` | Peças da landing e do site (Hero, Nav, Footer, Contact, Story, cenas, PlanCard, Icon, Photo…) |
 | `src/layouts/` | `Base` (tema e movimento), `Legal` (textos legais), `Focus` (Entrar e Checkout) |
-| `src/scripts/` | `motion.ts` (GSAP, Lenis), `orbit.ts` (logo), `lens.ts`, `validate.ts` (CPF, CNPJ, cartão), `demo.ts` |
-| `src/data/` | `plans.ts`, `photos.ts` (créditos), `site.ts` (contatos provisórios), `examples.ts` |
+| `src/scripts/` | `motion.ts` (GSAP, Lenis), `orbit.ts` (logo), `hero-chips.ts` (cartões de lei em revezamento), `validate.ts` (CPF, CNPJ, cartão), `demo.ts` |
+| `src/data/` | `plans.ts`, `photos.ts` (créditos), `site.ts` (contatos provisórios), `examples.ts`, `citacoes.ts` (125 citações) |
+| `src/middleware.ts` | Porta das rotas do assinante e do Checkout, pela sessão da API FastAPI |
 | `src/styles/` | `tokens.css` (marca), `global.css`, `forms.css` |
 | `docs/` | Briefings, mapa, análise de animações, auditoria de IA, painel de progresso (`progresso.html`) |
 | `design-system/` | Design system exportado (tokens, componentes, regras) |

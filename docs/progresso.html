@@ -193,7 +193,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="summary" aria-labelledby="sum-t">
     <div>
       <h1 id="sum-t" class="big"><span id="done">–</span> <small>de <span id="total">7</span> páginas do MVP prontas</small></h1>
-      <p class="lead">A landing roda localmente e ainda não está publicada. As outras páginas esperam decisões que estão na lista de bloqueios.</p>
+      <p class="lead">O site roda localmente em modo de demonstração e ainda não está publicado. Falta a API em FastAPI e as decisões da lista de bloqueios.</p>
     </div>
     <div>
       <div class="bar" id="bar" aria-hidden="true"></div>
@@ -243,19 +243,21 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     <section class="sec" aria-labelledby="nx-t">
       <h2 id="nx-t" style="font-size:1.75rem">Próximos passos</h2>
       <ol class="steps">
-        <li>Enviar Privacidade, Termos e Reembolso para revisão de um advogado.</li>
-        <li>Escolher o provedor de pagamento e a hospedagem para ligar Entrar, Checkout e Portal de verdade.</li>
-        <li>Criar o servidor: contas, envio dos links de acesso, assinatura e notas fiscais.</li>
+        <li>Criar a API em Python com FastAPI: cadastro, login com código por e-mail, sessão (<code>/auth/sessao</code>) e assinatura.</li>
+        <li>Enviar Privacidade, Termos, Reembolso e as citações da landing para revisão de um advogado.</li>
+        <li>Escolher o provedor de pagamento e onde hospedar o servidor Node e a API.</li>
         <li>Baixar as fotos para o próprio site e publicar.</li>
       </ol>
     </section>
     <section class="sec" aria-labelledby="ln-t">
       <h2 id="ln-t" style="font-size:1.75rem">Onde está cada coisa</h2>
       <ul class="links">
-        <li><a href="https://claude.ai/artifact/RAhv8e9CD2NQ5F2DXqHs44" target="_blank" rel="noopener">Briefings das páginas</a></li>
-        <li><a href="https://claude.ai/artifact/LFaGLAW9EJnNm4Q1R26eTU" target="_blank" rel="noopener">Pendências e decisões</a></li>
-        <li><a href="https://claude.ai/artifact/RvyazHgvww5Zk3qzojPFYA" target="_blank" rel="noopener">Design system</a></li>
-        <li><span class="f">Passo a passo completo <code>PROGRESSO.md</code></span></li>
+        <li><a href="https://claude.ai/artifact/TEyZc3F21X1WFSjo5JwYRn" target="_blank" rel="noopener">Pesquisa: Astro ou React</a></li>
+        <li><a href="https://github.com/Gabriel-Silva-Galvao/orbita-fiscal" target="_blank" rel="noopener">Repositório no GitHub</a></li>
+        <li><span class="f">Briefings das páginas <code>docs/briefings.md</code></span></li>
+        <li><span class="f">Pendências e decisões <code>artefatos/02-pendencias-e-decisoes/</code></span></li>
+        <li><span class="f">Design system <code>design-system/</code></span></li>
+        <li><span class="f">Arquitetura e passo a passo <code>README.md</code>, <code>PROGRESSO.md</code></span></li>
         <li><span class="f">Código do site <code>src/</code></span></li>
         <li><span class="f">Auditoria de traços de IA <code>docs/auditoria-ia.md</code></span></li>
         <li><span class="f">Análise de animações <code>docs/analise-do-site.md</code></span></li>
@@ -266,6 +268,10 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="sec" aria-labelledby="hs-t">
     <h2 id="hs-t" style="font-size:1.75rem">Histórico</h2>
     <ol class="timeline">
+      <li><span class="d">24/11/2026</span><span class="t">Duas etapas e conta antes da compra</span><span class="x">Entrar com Google ou e-mail e senha, sempre com código de 6 dígitos no e-mail, no cadastro e no login. O Checkout só abre para quem já criou a conta; quem chega sem login vai para Criar conta com o plano escolhido.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Cartões de lei em revezamento</span><span class="x">125 citações reais se revezam no topo, na cena dos livros e em Brasília, sem repetir na tela. Trocas a cada 6 s: em órbita pelo núcleo, como página de livro e como carimbo. No hover, o cartão vira como placa.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Arquitetura</span><span class="x">Pesquisa Astro ou React. Decisão: site todo em Astro (Plano A, com React e servidor Node) e backend todo em Python com FastAPI. Middleware protege as rotas do assinante pela sessão da API.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Ajustes visuais</span><span class="x">Reembolso só em letra miúda abaixo dos planos; sai a lente que seguia o mouse na foto dos livros; sai o disco verde do hover da logo e do átomo do topo. Repositório agora em Gabriel-Silva-Galvao/orbita-fiscal.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Instalar, Portal e Ajuda</span><span class="x">Todas as páginas do MVP existem. Instalar com passos marcáveis e pergunta de teste; Portal com plano, reembolso em 7 dias, cancelamento e exclusão de conta; Ajuda com seis artigos de link direto. O fluxo completo roda em demonstração.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Entrar e Checkout</span><span class="x">Entrar com Google ou link por e-mail; Checkout com cartão, Pix, dados da nota e estados de recusa, espera e aprovação. As duas telas rodam em modo de demonstração, sem cobrança nem envio de e-mail.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Textos legais</span><span class="x">Páginas de Privacidade, Termos e Reembolso criadas, com índice lateral, vigência e aviso de rascunho. Base: LGPD, Marco Civil, CDC e Decreto 7.962/2013. Aguardam revisão por advogado.</span></li>
