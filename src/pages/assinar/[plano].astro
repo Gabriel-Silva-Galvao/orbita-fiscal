@@ -22,7 +22,7 @@ const price = brl(plan.cents);
 const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 ---
 
-<Focus title={`Assinar o ${plan.name} · Órbita Fiscal`} description={`Assine o plano ${plan.name} da Órbita Fiscal por ${price} por mês. Reembolso integral em até 7 dias.`}>
+<Focus title={`Assinar o ${plan.name} · Órbita Fiscal`} description={`Assine o plano ${plan.name} da Órbita Fiscal por ${price} por mês.`}>
   <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider}>
     <aside class="summary" aria-labelledby="sum-title">
       <h1 id="sum-title" class="display-md">Assinar o {plan.name}</h1>
@@ -41,7 +41,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
       </ul>
       <a class="swap small" href={`/assinar/${other.slug}`}>Trocar para o {other.name} ({brl(other.cents)} por mês)</a>
       <div class="terms-box">
-        <p><strong>Cobrança mensal. Reembolso integral em até 7 dias.</strong></p>
+        <p><strong>Cobrança mensal.</strong></p>
         <dl>
           <div><dt>Hoje</dt><dd>{price}</dd></div>
           <div><dt>Próxima cobrança</dt><dd data-next-date>em 1 mês</dd></div>
