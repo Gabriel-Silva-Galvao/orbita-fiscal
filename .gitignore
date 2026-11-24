@@ -19,3 +19,10 @@ dist/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# API em Python
+api/.venv/
+api/.env
+api/**/__pycache__/
+api/.pytest_cache/
+
