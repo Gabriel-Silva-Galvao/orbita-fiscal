@@ -8,6 +8,9 @@ import Focus from '../layouts/Focus.astro';
 import Pending from '../components/Pending.astro';
 import { plans, brl } from '../data/plans';
 
+// Rota do assinante: roda no servidor, atrás do middleware de sessão (src/middleware.ts).
+export const prerender = false;
+
 const planData = JSON.stringify(
   Object.fromEntries(Object.values(plans).map((p) => [p.slug, { name: p.name, price: brl(p.cents) }])),
 );

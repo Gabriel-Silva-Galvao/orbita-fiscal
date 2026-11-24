@@ -204,8 +204,11 @@ const planData = JSON.stringify(
   const stepForm = $('[data-step="form"]');
   const stepSent = $('[data-step="sent"]');
 
-  // Para onde ir depois de entrar: Checkout do plano escolhido, senão o Portal.
-  const nextUrl = () => (plan ? `/assinar/${plan}` : '/conta');
+  // Para onde ir depois de entrar: Checkout do plano escolhido; senão a rota que o middleware
+  // pediu em ?next= (só caminhos deste site); senão o Portal.
+  const askedNext = new URLSearchParams(location.search).get('next') ?? '';
+  const safeNext = askedNext.startsWith('/') && !askedNext.startsWith('//') && !askedNext.startsWith('/\\') ? askedNext : '';
+  const nextUrl = () => (plan ? `/assinar/${plan}` : safeNext || '/conta');
 
   function renderPlan() {
     const band = $('[data-plan-band]');
