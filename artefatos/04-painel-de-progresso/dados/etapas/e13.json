@@ -1,0 +1,30 @@
+{
+ "ordem": 13,
+ "titulo": "Publicação",
+ "itens": [
+  {
+   "texto": "Escolher hospedagem e domínio",
+   "feito": false
+  },
+  {
+   "texto": "Formulário de contato enviando de verdade",
+   "feito": false
+  },
+  {
+   "texto": "sitemap.xml e robots.txt",
+   "feito": false
+  },
+  {
+   "texto": "Teste com leitor de tela",
+   "feito": false
+  },
+  {
+   "texto": "Tirar o modo de demonstração",
+   "feito": false
+  },
+  {
+   "texto": "Publicar o site",
+   "feito": false
+  }
+ ]
+}

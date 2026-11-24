@@ -134,7 +134,32 @@ details.more ul b { color: var(--ink); font-weight: 600 }
 .links a::after { content: "↗"; color: var(--brand) }
 .links span.f code { font: 500 .8125rem/1.5 ui-monospace, Consolas, monospace; color: var(--mute) }
 
-/* Passo a passo */
+/* Etapas com subtarefas */
+.et-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden }
+.et-bar span { display: block; height: 100%; width: 0; background: var(--brand); transition: width 400ms var(--ease-out) }
+.etapas { list-style: none; padding: 0; border-top: 1px solid var(--line) }
+.etapa { border-bottom: 1px solid var(--line) }
+.etapa summary { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 4px 14px; padding: 16px 0; cursor: pointer; list-style: none }
+.etapa summary::-webkit-details-marker { display: none }
+.etapa .en { font-family: var(--font-display); font-size: 1.125rem; color: var(--mute); font-variant-numeric: tabular-nums }
+.etapa .et { font-family: var(--font-display); font-size: 1.1875rem; line-height: 1.3 }
+.etapa .es { display: flex; align-items: center; gap: 10px; font-size: .8125rem; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap }
+.etapa .mini { width: 70px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden }
+.etapa .mini i { display: block; height: 100%; background: var(--brand) }
+.etapa .st { grid-column: 2; font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase }
+.st-ok { color: var(--brand) } .st-meio { color: var(--ink) } .st-zero { color: var(--mute) }
+@media (max-width: 520px) { .etapa summary { grid-template-columns: 34px 1fr } .etapa .es { grid-column: 2 } }
+.etapa .body { display: grid; gap: 18px; padding: 0 0 18px 48px }
+@media (min-width: 760px) { .etapa .body { grid-template-columns: 1fr 1fr; gap: 28px } }
+@media (max-width: 520px) { .etapa .body { padding-left: 0 } }
+.grp-t { display: flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--mute); margin-bottom: 6px }
+.sub { list-style: none; padding: 0; display: grid; gap: 2px }
+.sub label { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; padding: 6px 8px; margin: 0 -8px; border-radius: 8px; font-size: .9375rem; cursor: pointer }
+@media (hover: hover) and (pointer: fine) { .sub label:hover { background: var(--surface) } }
+.sub input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--brand); cursor: pointer }
+.sub input:disabled { cursor: default }
+.sub .none { font-size: .875rem; color: var(--mute); padding: 6px 0 }
+/* Passo a passo (legado) */
 .ledger { display: grid; gap: 36px }
 @media (min-width: 760px) { .ledger { grid-template-columns: 1fr 1fr; gap: 48px } }
 .col-t { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: .9375rem; font-weight: 500; color: var(--mute); margin-bottom: 14px }
@@ -202,44 +227,16 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="sec" aria-labelledby="pp-t">
     <div class="sec-head">
       <h2 id="pp-t">Passo a passo</h2>
-      <p class="note">O mesmo conteúdo está em PROGRESSO.md, dentro do projeto.</p>
-    </div>
-    <div class="ledger">
-      <div>
-        <h3 class="col-t"><span class="tag tag-done">Feito</span> 14 etapas</h3>
-        <ol class="done-list">
-          <li><b>Base do projeto.</b> Briefings, mapa e design system importados; Astro com os tokens da marca, temas claro e escuro.</li>
-          <li><b>Landing.</b> Topo, exemplo em três abas, como funciona, planos Pro e Max, confiança e dúvidas.</li>
-          <li><b>Movimento.</b> GSAP, ScrollTrigger e Lenis; logo em órbita; tudo parado com movimento reduzido.</li>
-          <li><b>Fotos reais.</b> 8 fotos do Unsplash com crédito; lente, moldura fixa e Brasília em órbita.</li>
-          <li><b>Contato e rodapé.</b> Formulário validado; rodapé revelado com tema e cookies.</li>
-          <li><b>Logo.</b> Versão simples, 64 px no cabeçalho, só o símbolo até 400 px.</li>
-          <li><b>Auditoria de IA.</b> Sem sobretítulos, ícones decorativos ou contagem de preço; tipografia em rem.</li>
-          <li><b>Textos legais.</b> Privacidade, Termos e Reembolso em rascunho.</li>
-          <li><b>Entrar.</b> Google ou link por e-mail, com todos os estados.</li>
-          <li><b>Checkout.</b> Cartão, Pix, CPF/CNPJ, recusa, espera e aprovação.</li>
-          <li><b>Instalar.</b> Quatro passos marcáveis e pergunta de teste.</li>
-          <li><b>Portal.</b> Plano, reembolso em 7 dias, cancelamento e exclusão de conta.</li>
-          <li><b>Ajuda.</b> Seis artigos com link direto.</li>
-          <li><b>Artefatos.</b> Design system, briefings, pendências e este painel.</li>
-        </ol>
-      </div>
-      <div>
-        <h3 class="col-t"><span class="tag tag-todo">Falta</span> em 5 frentes</h3>
-        <dl class="todo-list">
-          <dt>Decisões da empresa</dt>
-          <dd>Provedor de pagamento e nota fiscal; hospedagem e domínio; serviço de e-mail; razão social, CNPJ e contatos reais; política de dados das consultas; prazos; limite do Max; formato do plugin; canal de suporte.</dd>
-          <dt>Jurídico</dt>
-          <dd>Revisão por advogado dos três textos legais e das 8 citações dos exemplos.</dd>
-          <dt>Servidor e integrações</dt>
-          <dd>Autenticação (Google e link por e-mail), cobrança com campos seguros do provedor, Pix, notas, Portal com dados reais, download do plugin, código de conexão, envio do formulário de contato. Depois, tirar o modo de demonstração.</dd>
-          <dt>Publicação</dt>
-          <dd>Fotos servidas pelo próprio site, imagem de compartilhamento, sitemap, teste com leitor de tela e com movimento reduzido, publicar no domínio.</dd>
-          <dt>Depois do MVP</dt>
-          <dd>Página Para equipes, com formulário de interesse.</dd>
-        </dl>
+      <div class="filters" id="et-filters" role="group" aria-label="Mostrar subtarefas">
+        <button type="button" aria-pressed="true" data-f="todas">Tudo</button>
+        <button type="button" aria-pressed="false" data-f="falta">Só o que falta</button>
+        <button type="button" aria-pressed="false" data-f="feito">Só o que foi feito</button>
       </div>
     </div>
+    <p class="note"><b id="et-done">–</b> de <b id="et-total">–</b> subtarefas feitas. Abra uma etapa para ver o que já foi feito e o que falta; marque quando concluir.</p>
+    <div class="et-bar" aria-hidden="true"><span id="et-bar"></span></div>
+    <ol class="etapas" id="etapas"></ol>
+    <p class="empty" id="et-empty" hidden>Carregando as etapas…</p>
   </section>
 
   <div class="two">
@@ -371,6 +368,62 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     $("bl-empty").hidden = blocks.length > 0;
   }
 
+
+  // Etapas e subtarefas
+  let etapas = [], etFilter = "todas";
+  const openSet = new Set();
+  function renderEtapas() {
+    const list = $("etapas"); list.replaceChildren();
+    let all = 0, done = 0;
+    etapas.forEach((e) => { const it = Array.isArray(e.itens) ? e.itens : []; all += it.length; done += it.filter((x) => x && x.feito).length; });
+    $("et-done").textContent = etapas.length ? done : "–";
+    $("et-total").textContent = etapas.length ? all : "–";
+    $("et-bar").style.width = all ? (done / all) * 100 + "%" : "0";
+    etapas.forEach((e, idx) => {
+      const itens = Array.isArray(e.itens) ? e.itens : [];
+      const n = itens.filter((x) => x && x.feito).length;
+      const det = el("details", "etapa"); det.open = openSet.has(e.id);
+      det.addEventListener("toggle", () => (det.open ? openSet.add(e.id) : openSet.delete(e.id)));
+      const sum = el("summary");
+      sum.append(el("span", "en", e.ordem ?? idx + 1), el("span", "et", str(e.titulo)));
+      const es = el("span", "es"); const mini = el("span", "mini"); const fill = el("i");
+      fill.style.width = itens.length ? (n / itens.length) * 100 + "%" : "0"; mini.append(fill);
+      es.append(mini, n + " de " + itens.length); sum.append(es);
+      const stTxt = n === itens.length && n > 0 ? "Concluída" : n === 0 ? "Não iniciada" : "Em andamento";
+      sum.append(el("span", "st " + (stTxt === "Concluída" ? "st-ok" : stTxt === "Em andamento" ? "st-meio" : "st-zero"), stTxt));
+      det.append(sum);
+      const body = el("div", "body");
+      const group = (label, cls, feito) => {
+        if (etFilter !== "todas" && etFilter !== (feito ? "feito" : "falta")) return;
+        const wrap = el("div"); const t = el("p", "grp-t"); t.append(el("span", "tag " + cls, label)); wrap.append(t);
+        const ul = el("ul", "sub");
+        const rows = itens.map((x, i) => [x, i]).filter((r) => !!(r[0] && r[0].feito) === feito);
+        if (!rows.length) ul.append(el("li", "none", feito ? "Nada concluído ainda." : "Nada pendente."));
+        rows.forEach((r) => {
+          const x = r[0], i = r[1];
+          const li = el("li"); const lab = el("label"); const cb = el("input"); cb.type = "checkbox"; cb.checked = feito; cb.disabled = !canWrite;
+          cb.addEventListener("change", async () => {
+            cb.disabled = true;
+            const next = itens.map((y, j) => ({ texto: str(y.texto), feito: j === i ? cb.checked : !!y.feito }));
+            try { await db.doc("etapas/" + e.id).update({ itens: next }); } catch (err) { cb.checked = feito; }
+            finally { cb.disabled = !canWrite; }
+          });
+          lab.append(cb, el("span", null, str(x.texto))); li.append(lab); ul.append(li);
+        });
+        wrap.append(ul); body.append(wrap);
+      };
+      group("Feito", "tag-done", true);
+      group("Falta", "tag-todo", false);
+      det.append(body); list.append(det);
+    });
+    $("et-empty").hidden = etapas.length > 0;
+  }
+  $("et-filters").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    etFilter = b.dataset.f;
+    $("et-filters").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderEtapas();
+  }));
+  $("et-empty").hidden = false;
   function renderAll() { renderSummary(); renderFilters(); renderPages(); renderChecks(); }
 
   $("pg-empty").hidden = false; $("bl-empty").hidden = false;
@@ -383,6 +436,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
       setLive(false, "Sem conexão");
       $("pg-empty").textContent = "O status das páginas aparece quando você abre esta página conectado ao claude.ai.";
       $("bl-empty").textContent = "Os bloqueios aparecem quando você abre esta página conectado ao claude.ai.";
+      $("et-empty").textContent = "As etapas aparecem quando você abre esta página conectado ao claude.ai. Fora dele, veja PROGRESSO.md.";
       return;
     }
     const can = user?.can ? await user.can("data.write") : null;
@@ -400,6 +454,11 @@ details.more ul b { color: var(--ink); font-weight: 600 }
       blocks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       if (!blocks.length) $("bl-empty").textContent = "Nenhum bloqueio cadastrado.";
       renderSummary(); renderChecks();
+    }, () => setLive(false, "Conexão perdida; recarregue"));
+    db.collection("etapas").orderBy("ordem").onSnapshot((snap) => {
+      etapas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (!etapas.length) $("et-empty").textContent = "Nenhuma etapa cadastrada.";
+      renderEtapas();
     }, () => setLive(false, "Conexão perdida; recarregue"));
     db.doc("meta/info").onSnapshot((s) => { const d = s.data(); if (d && typeof d.atualizadoEm === "string") $("updated").textContent = "atualizado em " + d.atualizadoEm; });
   })();

@@ -1,0 +1,46 @@
+{
+ "ordem": 8,
+ "titulo": "Checkout",
+ "itens": [
+  {
+   "texto": "Resumo do plano com próxima cobrança",
+   "feito": true
+  },
+  {
+   "texto": "Cartão com conferência de número, validade e código",
+   "feito": true
+  },
+  {
+   "texto": "Pix com código copia e cola e contagem",
+   "feito": true
+  },
+  {
+   "texto": "Dados da nota com CPF ou CNPJ validados",
+   "feito": true
+  },
+  {
+   "texto": "Estados: processando, recusado, aguardando Pix, aprovado",
+   "feito": true
+  },
+  {
+   "texto": "Escolher o provedor de pagamento",
+   "feito": false
+  },
+  {
+   "texto": "Trocar os campos do cartão pelos campos seguros do provedor",
+   "feito": false
+  },
+  {
+   "texto": "Confirmar pagamentos pelo provedor (webhooks)",
+   "feito": false
+  },
+  {
+   "texto": "Pix Automático para a renovação",
+   "feito": false
+  },
+  {
+   "texto": "Emissão de nota fiscal",
+   "feito": false
+  }
+ ]
+}

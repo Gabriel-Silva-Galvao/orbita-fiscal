@@ -1,0 +1,14 @@
+{
+ "ordem": 14,
+ "titulo": "Para equipes (depois do MVP)",
+ "itens": [
+  {
+   "texto": "Página /equipes",
+   "feito": false
+  },
+  {
+   "texto": "Formulário de interesse",
+   "feito": false
+  }
+ ]
+}

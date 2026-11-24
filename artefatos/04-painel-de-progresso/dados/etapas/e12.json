@@ -1,0 +1,26 @@
+{
+ "ordem": 12,
+ "titulo": "Artefatos e entregas",
+ "itens": [
+  {
+   "texto": "Design system publicado e atualizado",
+   "feito": true
+  },
+  {
+   "texto": "Briefings e pendências publicados",
+   "feito": true
+  },
+  {
+   "texto": "Painel de progresso interativo",
+   "feito": true
+  },
+  {
+   "texto": "Zips do projeto e dos artefatos",
+   "feito": true
+  },
+  {
+   "texto": "Projeto no GitHub",
+   "feito": true
+  }
+ ]
+}

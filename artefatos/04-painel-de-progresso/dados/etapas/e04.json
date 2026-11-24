@@ -1,0 +1,26 @@
+{
+ "ordem": 4,
+ "titulo": "Fotos reais",
+ "itens": [
+  {
+   "texto": "8 fotos do Unsplash escolhidas pela folha de contato",
+   "feito": true
+  },
+  {
+   "texto": "Créditos no código e no rodapé",
+   "feito": true
+  },
+  {
+   "texto": "Lente que revela a cor na foto da base",
+   "feito": true
+  },
+  {
+   "texto": "Foto de Brasília que se abre em órbita",
+   "feito": true
+  },
+  {
+   "texto": "Baixar as fotos para o próprio site",
+   "feito": false
+  }
+ ]
+}

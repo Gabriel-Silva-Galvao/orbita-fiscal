@@ -1,0 +1,50 @@
+{
+ "ordem": 9,
+ "titulo": "Instalar o plugin",
+ "itens": [
+  {
+   "texto": "Quatro passos marcáveis com barra de progresso",
+   "feito": true
+  },
+  {
+   "texto": "Download com estados preparando e link expirado",
+   "feito": true
+  },
+  {
+   "texto": "Código de conexão (demonstração)",
+   "feito": true
+  },
+  {
+   "texto": "Pergunta de teste com botão de copiar",
+   "feito": true
+  },
+  {
+   "texto": "Deu certo? levando ao Portal ou à Ajuda certa",
+   "feito": true
+  },
+  {
+   "texto": "Arquivo real do plugin e formato de entrega",
+   "feito": false
+  },
+  {
+   "texto": "Link de download que expira em 15 minutos",
+   "feito": false
+  },
+  {
+   "texto": "Código de conexão real",
+   "feito": false
+  },
+  {
+   "texto": "Confirmar os nomes dos menus do Claude",
+   "feito": false
+  },
+  {
+   "texto": "Confirmar quais planos do Claude aceitam plugins",
+   "feito": false
+  },
+  {
+   "texto": "Imagem curta do caminho no Claude",
+   "feito": false
+  }
+ ]
+}

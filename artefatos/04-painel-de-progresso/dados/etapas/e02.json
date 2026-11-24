@@ -1,0 +1,58 @@
+{
+ "ordem": 2,
+ "titulo": "Landing",
+ "itens": [
+  {
+   "texto": "Cabeçalho com logo, links e botão",
+   "feito": true
+  },
+  {
+   "texto": "Topo com título, frase de apoio e átomo",
+   "feito": true
+  },
+  {
+   "texto": "Exemplo em três abas, marcado como ilustrativo",
+   "feito": true
+  },
+  {
+   "texto": "O dia a dia: texto e moldura fixa que troca de foto",
+   "feito": true
+  },
+  {
+   "texto": "Como funciona: três passos",
+   "feito": true
+  },
+  {
+   "texto": "Planos Pro e Max, diferença por tarefa",
+   "feito": true
+  },
+  {
+   "texto": "Confiança com garantias do CDC e da LGPD",
+   "feito": true
+  },
+  {
+   "texto": "Dúvidas: quatro perguntas",
+   "feito": true
+  },
+  {
+   "texto": "Contato com formulário validado",
+   "feito": true
+  },
+  {
+   "texto": "Rodapé revelado ao final, com tema e cookies",
+   "feito": true
+  },
+  {
+   "texto": "Revisão jurídica das 8 citações dos exemplos",
+   "feito": false
+  },
+  {
+   "texto": "Trocar contatos provisórios pelos reais",
+   "feito": false
+  },
+  {
+   "texto": "Imagem de compartilhamento (Open Graph)",
+   "feito": false
+  }
+ ]
+}

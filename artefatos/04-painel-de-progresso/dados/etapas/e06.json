@@ -1,0 +1,42 @@
+{
+ "ordem": 6,
+ "titulo": "Textos legais",
+ "itens": [
+  {
+   "texto": "Layout com índice lateral, vigência e aviso de rascunho",
+   "feito": true
+  },
+  {
+   "texto": "Rascunho da Política de privacidade (LGPD, Marco Civil)",
+   "feito": true
+  },
+  {
+   "texto": "Rascunho dos Termos de uso (CDC)",
+   "feito": true
+  },
+  {
+   "texto": "Rascunho da Política de reembolso (CDC art. 49)",
+   "feito": true
+  },
+  {
+   "texto": "Revisão por advogado",
+   "feito": false
+  },
+  {
+   "texto": "Razão social, CNPJ, endereço e encarregado de dados",
+   "feito": false
+  },
+  {
+   "texto": "Prazos de guarda de dados e de estorno",
+   "feito": false
+  },
+  {
+   "texto": "Decidir se as consultas são guardadas e se treinam modelos",
+   "feito": false
+  },
+  {
+   "texto": "Definir a data de vigência",
+   "feito": false
+  }
+ ]
+}

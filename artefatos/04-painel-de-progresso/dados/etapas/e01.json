@@ -1,0 +1,30 @@
+{
+ "ordem": 1,
+ "titulo": "Base do projeto",
+ "itens": [
+  {
+   "texto": "Importar briefings, persona e mapa de páginas",
+   "feito": true
+  },
+  {
+   "texto": "Importar o design system Limiar Esmeralda",
+   "feito": true
+  },
+  {
+   "texto": "Criar o projeto em Astro com os tokens da marca",
+   "feito": true
+  },
+  {
+   "texto": "Temas claro e escuro, com escolha salva",
+   "feito": true
+  },
+  {
+   "texto": "Fontes Newsreader e Hanken Grotesk servidas pelo site",
+   "feito": true
+  },
+  {
+   "texto": "Repositório no GitHub (privado)",
+   "feito": true
+  }
+ ]
+}

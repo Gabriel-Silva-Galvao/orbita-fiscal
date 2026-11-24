@@ -1,0 +1,46 @@
+{
+ "ordem": 10,
+ "titulo": "Portal do cliente",
+ "itens": [
+  {
+   "texto": "Quatro abas com endereço próprio",
+   "feito": true
+  },
+  {
+   "texto": "Plano, próxima cobrança e forma de pagamento",
+   "feito": true
+  },
+  {
+   "texto": "Reembolso com prazo de 7 dias à vista e acompanhamento",
+   "feito": true
+  },
+  {
+   "texto": "Cancelar e reativar a assinatura",
+   "feito": true
+  },
+  {
+   "texto": "Nome, sair e excluir conta",
+   "feito": true
+  },
+  {
+   "texto": "Dados reais da assinatura vindos do servidor",
+   "feito": false
+  },
+  {
+   "texto": "Notas fiscais para baixar",
+   "feito": false
+  },
+  {
+   "texto": "Novidades da base com data",
+   "feito": false
+  },
+  {
+   "texto": "Regra de troca de plano no meio do mês",
+   "feito": false
+  },
+  {
+   "texto": "Aviso de pagamento atrasado",
+   "feito": false
+  }
+ ]
+}

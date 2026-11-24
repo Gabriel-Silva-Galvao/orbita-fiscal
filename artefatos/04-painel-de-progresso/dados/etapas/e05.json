@@ -1,0 +1,30 @@
+{
+ "ordem": 5,
+ "titulo": "Auditoria de traços de IA",
+ "itens": [
+  {
+   "texto": "Instalar 4 skills de auditoria de design",
+   "feito": true
+  },
+  {
+   "texto": "Relatório com achados e prioridades",
+   "feito": true
+  },
+  {
+   "texto": "Remover sobretítulos, ícones decorativos e laços de flutuação",
+   "feito": true
+  },
+  {
+   "texto": "Nada que tenha ação se move sob o cursor; preço fixo",
+   "feito": true
+  },
+  {
+   "texto": "Tipografia em rem e alturas sem unidade",
+   "feito": true
+  },
+  {
+   "texto": "Design system atualizado com as regras",
+   "feito": true
+  }
+ ]
+}

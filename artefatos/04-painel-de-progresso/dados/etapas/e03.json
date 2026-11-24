@@ -1,0 +1,34 @@
+{
+ "ordem": 3,
+ "titulo": "Movimento",
+ "itens": [
+  {
+   "texto": "GSAP e ScrollTrigger",
+   "feito": true
+  },
+  {
+   "texto": "Rolagem suave com Lenis",
+   "feito": true
+  },
+  {
+   "texto": "Logo com órbita sozinha e no mouse",
+   "feito": true
+  },
+  {
+   "texto": "Entradas em cascata e títulos palavra por palavra",
+   "feito": true
+  },
+  {
+   "texto": "Parallax nas cenas com foto",
+   "feito": true
+  },
+  {
+   "texto": "Página completa e parada com movimento reduzido (no código)",
+   "feito": true
+  },
+  {
+   "texto": "Conferir na tela com movimento reduzido ativado",
+   "feito": false
+  }
+ ]
+}

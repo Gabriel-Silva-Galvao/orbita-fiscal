@@ -1,0 +1,22 @@
+{
+ "ordem": 11,
+ "titulo": "Ajuda",
+ "itens": [
+  {
+   "texto": "Seis artigos curtos",
+   "feito": true
+  },
+  {
+   "texto": "Link direto para cada artigo",
+   "feito": true
+  },
+  {
+   "texto": "Voltar à página de origem",
+   "feito": true
+  },
+  {
+   "texto": "Canal de suporte e prazo de resposta definitivos",
+   "feito": false
+  }
+ ]
+}

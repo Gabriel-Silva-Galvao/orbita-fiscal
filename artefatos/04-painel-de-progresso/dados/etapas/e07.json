@@ -1,0 +1,42 @@
+{
+ "ordem": 7,
+ "titulo": "Entrar e criar conta",
+ "itens": [
+  {
+   "texto": "Tela com abas Entrar e Criar conta",
+   "feito": true
+  },
+  {
+   "texto": "Botão Continuar com Google",
+   "feito": true
+  },
+  {
+   "texto": "Link de acesso por e-mail, sem senha",
+   "feito": true
+  },
+  {
+   "texto": "Faixa do plano escolhido, com troca",
+   "feito": true
+  },
+  {
+   "texto": "Estados: link enviado, reenvio, já cadastrado, expirado, erro",
+   "feito": true
+  },
+  {
+   "texto": "Servidor de autenticação",
+   "feito": false
+  },
+  {
+   "texto": "Login com Google de verdade (OAuth)",
+   "feito": false
+  },
+  {
+   "texto": "Envio dos e-mails com o link",
+   "feito": false
+  },
+  {
+   "texto": "Sessão da pessoa entre as páginas",
+   "feito": false
+  }
+ ]
+}
