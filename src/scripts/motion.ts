@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { startOrbits } from './orbit';
+import { startHeroChips } from './hero-chips';
 
 declare global {
   interface Window {
@@ -29,6 +30,7 @@ if (root.classList.contains('anim')) {
   stickyNav();
   heroIntro();
   heroPointer();
+  startHeroChips();
   parallax();
   reveals();
   stepsLine();
