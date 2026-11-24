@@ -40,9 +40,7 @@ const { href = '/', size = 'md' } = Astro.props;
     width: var(--mark);
     height: var(--mark);
     border-radius: var(--radius-round);
-    transition:
-      background-color 400ms ease-out,
-      transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .logo :global(.logo-mark) {
     width: 88%;
@@ -66,19 +64,11 @@ const { href = '/', size = 'md' } = Astro.props;
     color: var(--mute);
     transition: color 300ms ease-out;
   }
-  /* Mouse em cima: o disco aparece atrás do símbolo, a assinatura respira. */
-  .logo:focus-visible .logo-mark-wrap {
-    background: var(--soft);
-  }
+  /* Mouse em cima: o símbolo respira, sem disco nem cor nova. */
   @media (hover: hover) and (pointer: fine) {
     .logo:hover .logo-mark-wrap {
-      background: var(--soft);
       transform: scale(1.08) rotate(-6deg);
     }
-  }
-  .logo:hover .logo-tag,
-  .logo:focus-visible .logo-tag {
-    color: var(--brand);
   }
   @media (max-width: 480px) {
     .logo {

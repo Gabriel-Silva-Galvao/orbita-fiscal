@@ -63,7 +63,7 @@ const chips = [
       <div class="hero-ring hero-ring-1" data-hero-in data-depth="0.5"></div>
       <div class="hero-ring hero-ring-2" data-hero-in data-depth="0.8"></div>
       <div class="hero-disc" data-hero-in data-depth="0.9" data-orbit-host>
-        <Symbol on="soft" pace={0.8} label="Símbolo da Órbita Fiscal: um átomo com elétrons em órbita" />
+        <Symbol on="bg" pace={0.8} label="Símbolo da Órbita Fiscal: um átomo com elétrons em órbita" />
       </div>
       {
         chips.map((c, i) => (
@@ -161,7 +161,6 @@ const chips = [
     position: absolute;
     inset: 0;
     border-radius: var(--radius-round);
-    background: var(--soft);
     display: grid;
     place-items: center;
     cursor: pointer;
