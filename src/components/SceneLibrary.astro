@@ -1,9 +1,6 @@
 ---
 /**
  * Cena 1, “A base”: foto real de lombadas em verde (duotone com a cor da marca).
- * Uma lente com o anel da órbita revela a foto em cores e mais nítida, como quem confere a fonte.
- * Com mouse, a lente segue o cursor; sem mouse, percorre uma órbita sozinha (scripts/lens.ts).
- * Sem movimento, a lente fica parada à direita.
  */
 import Photo from './Photo.astro';
 
@@ -15,23 +12,10 @@ const cites = [
 ---
 
 <section id="a-base" class="scene" data-parallax aria-labelledby="base-title">
-  <div class="scene-stage" data-lens>
+  <div class="scene-stage">
     <div class="lens-layer" data-speed="-0.3">
       <div class="lens-base">
         <Photo name="lombadas" sizes="100vw" />
-      </div>
-      <div class="lens-color" aria-hidden="true">
-        <Photo name="lombadas" sizes="100vw" decorative />
-      </div>
-      <div class="lens-ring" aria-hidden="true">
-        <svg viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="97" fill="none" stroke="var(--on-brand)" stroke-width="2"></circle>
-          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--on-brand)" stroke-width="1" stroke-dasharray="2 7" class="lens-dash"></circle>
-          <g transform="rotate(-28 100 100)">
-            <ellipse cx="100" cy="100" rx="128" ry="52" fill="none" stroke="var(--on-brand)" stroke-width="1.4" opacity=".8"></ellipse>
-            <circle cx="228" cy="100" r="5" fill="var(--on-brand)" class="lens-e"></circle>
-          </g>
-        </svg>
       </div>
     </div>
 
@@ -71,9 +55,6 @@ const cites = [
     height: clamp(340px, 52vw, 620px);
     overflow: hidden;
     background: var(--ink);
-    --lx: 74%;
-    --ly: 42%;
-    --lr: clamp(84px, 11vw, 150px);
   }
   .lens-layer {
     position: absolute;
@@ -83,8 +64,7 @@ const cites = [
     height: 124%;
     will-change: transform;
   }
-  .lens-base,
-  .lens-color {
+  .lens-base {
     position: absolute;
     inset: 0;
   }
@@ -105,32 +85,6 @@ const cites = [
     background: var(--brand);
     mix-blend-mode: color;
     opacity: 0.9;
-  }
-  /* A lente: a mesma foto, em cor, recortada em círculo e um pouco ampliada. */
-  .lens-color {
-    clip-path: circle(var(--lr) at var(--lx) var(--ly));
-  }
-  .lens-color :global(.photo) {
-    transform: scale(1.06);
-    transform-origin: var(--lx) var(--ly);
-  }
-  .lens-ring {
-    position: absolute;
-    left: var(--lx);
-    top: var(--ly);
-    width: calc(var(--lr) * 2 + 8px);
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .lens-ring svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  :global(.anim) .lens-dash {
-    transform-origin: 100px 100px;
-    animation: spin 30s linear infinite;
   }
 
   .cite-pos {

@@ -7,7 +7,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { startOrbits } from './orbit';
-import { startLens } from './lens';
 
 declare global {
   interface Window {
@@ -26,7 +25,6 @@ if (root.classList.contains('anim')) {
   smoothScroll();
   splitHeadings();
   startOrbits();
-  startLens();
   progressBar();
   stickyNav();
   heroIntro();
