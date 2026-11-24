@@ -73,7 +73,8 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
           <legend class="group-title">Pagamento</legend>
           <div class="methods" role="radiogroup" aria-label="Forma de pagamento">
             <label class="method"><input type="radio" name="metodo" value="cartao" checked /> <Icon name="solar:card-linear" size={18} /> Cartão de crédito</label>
-            <label class="method"><input type="radio" name="metodo" value="pix" /> <Icon name="solar:qr-code-linear" size={18} /> Pix<Pending kind="confirmar" /></label>
+            <label class="method"><input type="radio" name="metodo" value="pix" /> <Icon name="solar:qr-code-linear" size={18} /> Pix</label>
+            <label class="method"><input type="radio" name="metodo" value="boleto" /> <Icon name="solar:bill-list-linear" size={18} /> Boleto</label>
           </div>
 
           <div class="method-panel" data-panel="cartao">
@@ -102,7 +103,11 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
           </div>
 
           <div class="method-panel" data-panel="pix" hidden>
-            <p class="small mute">Ao continuar, geramos um código Pix de {price}. Ele vale por 30 minutos. A renovação mensal pelo Pix<Pending kind="definir" />.</p>
+            <p class="small mute">Ao continuar, geramos um código Pix de {price}. Ele vale por 30 minutos, e o acesso começa assim que o Pix for confirmado, normalmente em segundos. A renovação mensal pelo Pix<Pending kind="definir" />.</p>
+          </div>
+
+          <div class="method-panel" data-panel="boleto" hidden>
+            <p class="small mute">Ao continuar, geramos um boleto de {price} com vencimento em 3 dias. O acesso começa quando o banco confirmar o pagamento, o que leva até 3 dias úteis.</p>
           </div>
         </fieldset>
 
@@ -145,7 +150,28 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
           <span>O código expira em <span class="timer" data-timer>30:00</span>. Esta página se atualiza sozinha quando o Pix for confirmado.</span>
         </p>
         {!provider && <button type="button" class="btn-alt" data-pix-simulate>Simular Pix confirmado (demonstração)</button>}
-        <button type="button" class="link-btn" data-pix-back>Voltar e pagar com cartão</button>
+        <button type="button" class="link-btn" data-pix-back>Voltar e escolher outra forma</button>
+      </div>
+
+      <div class="pix-wait" data-boleto hidden tabindex="-1">
+        <h2 class="title">Pague o boleto</h2>
+        <div class="field">
+          <span class="label" id="boleto-code-label">Linha digitável</span>
+          <div class="copy-row">
+            <code aria-labelledby="boleto-code-label" data-boleto-code></code>
+            <button type="button" class="btn-alt copy" data-copy-boleto>Copiar</button>
+          </div>
+        </div>
+        <dl class="boleto-info">
+          <div><dt>Valor</dt><dd>{price}</dd></div>
+          <div><dt>Vencimento</dt><dd data-boleto-due></dd></div>
+        </dl>
+        <p class="notice" role="status">
+          <strong>Aguardando a compensação</strong>
+          <span>Depois de pago, o banco leva até 3 dias úteis para confirmar. O acesso ao plugin começa nessa hora, e avisamos por e-mail. Se esta página estiver aberta, ela se atualiza sozinha.</span>
+        </p>
+        {!provider && <button type="button" class="btn-alt" data-boleto-simulate>Simular boleto pago (demonstração)</button>}
+        <button type="button" class="link-btn" data-boleto-back>Voltar e escolher outra forma</button>
       </div>
 
       <div class="done" data-done hidden tabindex="-1">
@@ -384,6 +410,25 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
     font-variant-numeric: tabular-nums;
     font-weight: 600;
   }
+  .boleto-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin: 0;
+  }
+  .boleto-info div {
+    display: grid;
+    gap: 2px;
+  }
+  .boleto-info dt {
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .boleto-info dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
 </style>
 
 <script>
@@ -418,7 +463,8 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
   // Forma de pagamento
   const method = () => (form.querySelector<HTMLInputElement>('input[name="metodo"]:checked')?.value ?? 'cartao');
   const syncLabel = () =>
-    (label.textContent = method() === 'pix' ? `Gerar Pix de ${price}` : `Pagar ${price} e receber o plugin`);
+    (label.textContent =
+      method() === 'pix' ? `Gerar Pix de ${price}` : method() === 'boleto' ? `Gerar boleto de ${price}` : `Pagar ${price} e receber o plugin`);
   const syncMethod = () => {
     const m = method();
     root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== m));
@@ -477,6 +523,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
     } catch {}
     form.hidden = true;
     $('[data-pix]').hidden = true;
+    $('[data-boleto]').hidden = true;
     $('[data-done-email]').textContent = accountEmail;
     const done = $('[data-done]');
     done.hidden = false;
@@ -517,6 +564,36 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
       getSelection()?.addRange(range);
     }
   });
+  // Boleto: linha digitável e vencimento em 3 dias. O acesso só abre quando o pagamento compensa.
+  function showBoleto() {
+    form.hidden = true;
+    const box = $('[data-boleto]');
+    box.hidden = false;
+    const due = new Date();
+    due.setDate(due.getDate() + 3);
+    $('[data-boleto-due]').textContent = due.toLocaleDateString('pt-BR');
+    $('[data-boleto-code]').textContent = provider ? '' : '00190.00009 01234.567890 12345.678901 1 00000000000000 (DEMONSTRAÇÃO)';
+    box.focus();
+  }
+  $('[data-copy-boleto]').addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    try {
+      await navigator.clipboard.writeText(($('[data-boleto-code]').textContent ?? '').replace(/\D/g, ''));
+      btn.textContent = 'Copiado';
+      setTimeout(() => (btn.textContent = 'Copiar'), 2000);
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents($('[data-boleto-code]'));
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(range);
+    }
+  });
+  root.querySelector('[data-boleto-simulate]')?.addEventListener('click', () => showDone());
+  $('[data-boleto-back]').addEventListener('click', () => {
+    $('[data-boleto]').hidden = true;
+    form.hidden = false;
+  });
+
   root.querySelector('[data-pix-simulate]')?.addEventListener('click', () => {
     clearInterval(pixTimer);
     showDone();
@@ -525,8 +602,6 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
     clearInterval(pixTimer);
     $('[data-pix]').hidden = true;
     form.hidden = false;
-    form.querySelector<HTMLInputElement>('input[value="cartao"]')!.checked = true;
-    syncMethod();
   });
 
   form.addEventListener('submit', async (e) => {
@@ -539,6 +614,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
       return;
     }
     if (method() === 'pix') return showPix();
+    if (method() === 'boleto') return showBoleto();
 
     busy(true, 'Processando o pagamento…');
     try {
@@ -552,7 +628,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
         const strong = document.createElement('strong');
         strong.textContent = 'O banco recusou o cartão.';
         const span = document.createElement('span');
-        span.textContent = ' Nenhum valor foi cobrado. Confira os dados, use outro cartão ou pague com Pix.';
+        span.textContent = ' Nenhum valor foi cobrado. Confira os dados, use outro cartão ou pague com Pix ou boleto.';
         const pix = document.createElement('button');
         pix.type = 'button';
         pix.className = 'link-btn';

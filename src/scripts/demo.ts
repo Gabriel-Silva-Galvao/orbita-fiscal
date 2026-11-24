@@ -6,7 +6,7 @@ export interface DemoSub {
   plano: 'pro' | 'max';
   email: string;
   desde: string;
-  metodo: 'cartao' | 'pix';
+  metodo: 'cartao' | 'pix' | 'boleto';
   final?: string;
   reembolso?: string;
   cancelada?: string;

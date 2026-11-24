@@ -344,7 +344,8 @@ const tabs = [
     $('[data-plan]').textContent = `${plan.name}, ${plan.price} por mês`;
     $('[data-since]').textContent = fmtDate(since);
     $('[data-next]').textContent = sub.cancelada || sub.reembolso ? 'Nenhuma' : fmtDate(next);
-    $('[data-method]').textContent = sub.metodo === 'pix' ? 'Pix' : `Cartão final ${sub.final || '••••'}`;
+    $('[data-method]').textContent =
+      sub.metodo === 'pix' ? 'Pix' : sub.metodo === 'boleto' ? 'Boleto' : `Cartão final ${sub.final || '••••'}`;
     const sw = $<HTMLAnchorElement>('[data-switch]');
     sw.href = `/assinar/${other}`;
     sw.textContent = `Trocar para o ${plans[other].name} (${plans[other].price} por mês)`;
