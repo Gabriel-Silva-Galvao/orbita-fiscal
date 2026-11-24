@@ -1,0 +1,104 @@
+---
+import Legal from '../layouts/Legal.astro';
+import Pending from '../components/Pending.astro';
+import { contact } from '../data/site';
+
+const sections = [
+  { id: 'resumo', title: 'Em resumo' },
+  { id: 'prazo', title: 'Prazo' },
+  { id: 'como', title: 'Como pedir' },
+  { id: 'valor', title: 'Quanto volta' },
+  { id: 'quando', title: 'Em quanto tempo o dinheiro volta' },
+  { id: 'acesso', title: 'O que acontece com o acesso' },
+  { id: 'depois', title: 'Depois dos 7 dias' },
+];
+---
+
+<Legal
+  title="Política de reembolso · Órbita Fiscal"
+  description="Como pedir reembolso integral da assinatura da Órbita Fiscal em até 7 dias da compra e em quanto tempo o valor volta."
+  heading="Política de reembolso"
+  intro="Se a Órbita Fiscal não servir para você, peça o reembolso integral em até 7 dias da compra. Aqui está como pedir e em quanto tempo o valor volta."
+  updated="24/11/2026"
+  sections={sections}
+>
+  <section id="resumo">
+    <h2>Em resumo</h2>
+    <div class="box">
+      <p>
+        <strong>Até 7 dias depois da compra, você recebe o valor integral de volta, sem precisar explicar o motivo.</strong>
+        É o direito de arrependimento do art. 49 do Código de Defesa do Consumidor, que vale para compras feitas pela
+        internet.
+      </p>
+    </div>
+  </section>
+
+  <section id="prazo">
+    <h2>Prazo</h2>
+    <p>
+      O prazo é de 7 dias corridos, contados a partir da compra. Pedidos feitos dentro do prazo são aceitos mesmo que o
+      reembolso termine de ser processado depois dele.
+    </p>
+    <p>Se o direito de arrependimento vale também para cada renovação mensal<Pending kind="definir" />.</p>
+  </section>
+
+  <section id="como">
+    <h2>Como pedir</h2>
+    <ol>
+      <li>Entre no <a href="/conta">Portal do cliente</a>.</li>
+      <li>Abra a aba <strong>Cancelar ou pedir reembolso</strong>.</li>
+      <li>Escolha <strong>Pedir reembolso</strong> e confirme.</li>
+    </ol>
+    <p>
+      Você recebe um e-mail confirmando o pedido e pode acompanhar o andamento no próprio portal. Se preferir, peça por
+      e-mail: <a href={`mailto:${contact.email}`}>{contact.email}</a><Pending kind="confirmar" />. Como prevê o Decreto
+      7.962/2013, você pode desistir pelo mesmo meio usado para contratar.
+    </p>
+  </section>
+
+  <section id="valor">
+    <h2>Quanto volta</h2>
+    <p>
+      O valor integral que você pagou, sem descontos nem taxas. Pelo parágrafo único do art. 49 do CDC, a devolução é
+      imediata e com atualização monetária.
+    </p>
+  </section>
+
+  <section id="quando">
+    <h2>Em quanto tempo o dinheiro volta</h2>
+    <div class="table">
+      <table>
+        <thead><tr><th>Forma de pagamento</th><th>Como volta</th><th>Prazo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Cartão de crédito</td>
+            <td>Estorno na fatura do mesmo cartão</td>
+            <td>Pedido ao provedor em até<Pending kind="definir" />; o crédito aparece conforme o fechamento da fatura e o emissor do cartão</td>
+          </tr>
+          <tr>
+            <td>Pix<Pending kind="confirmar" /></td>
+            <td>Devolução para a conta de origem</td>
+            <td><Pending kind="definir" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="acesso">
+    <h2>O que acontece com o acesso</h2>
+    <p>
+      Quando o reembolso é aprovado, a assinatura é encerrada e o plugin deixa de consultar a base. Suas peças e textos
+      continuam com você; eles nunca ficaram presos ao plugin.
+    </p>
+  </section>
+
+  <section id="depois">
+    <h2>Depois dos 7 dias</h2>
+    <p>
+      Você pode cancelar a qualquer momento no portal, sem multa, e a assinatura não renova mais. O acesso segue até o fim
+      do período já pago<Pending kind="confirmar" />. Como tratamos pedidos de reembolso depois do prazo, por exemplo em
+      caso de falha do serviço<Pending kind="definir" />.
+    </p>
+  </section>
+</Legal>

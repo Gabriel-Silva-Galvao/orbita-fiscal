@@ -1,0 +1,28 @@
+---
+/**
+ * Rótulo tracejado “a definir” / “a confirmar”. Marca o que ainda não é promessa.
+ * Fica dentro do mesmo elemento do texto que qualifica e nunca quebra de linha.
+ */
+interface Props {
+  kind?: 'definir' | 'confirmar';
+}
+const { kind = 'definir' } = Astro.props;
+---
+
+<span class="pending">a {kind}</span>
+
+<style>
+  .pending {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 6px 2px;
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-sm);
+    color: var(--brand);
+    font: var(--text-small);
+    font-size: 13px;
+    line-height: 18px;
+    white-space: nowrap;
+    vertical-align: 1px;
+  }
+</style>

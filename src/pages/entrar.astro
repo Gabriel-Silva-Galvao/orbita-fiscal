@@ -1,0 +1,376 @@
+---
+/**
+ * Entrar e criar conta (briefing, Página 2). Acesso sem senha: Google ou link por e-mail
+ * (decisão de 24/11/2026). Mesmo layout nas duas abas.
+ * Parâmetros: ?plano=pro|max mostra a faixa do plano e segue para o Checkout;
+ * ?modo=criar abre “Criar conta”; ?erro=link-expirado avisa que o link venceu.
+ * Sem PUBLIC_AUTH_ENDPOINT, roda em modo de demonstração: nenhum e-mail sai daqui.
+ */
+import Focus from '../layouts/Focus.astro';
+import Icon from '../components/Icon.astro';
+import { plans, brl } from '../data/plans';
+
+const endpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
+const planData = JSON.stringify(
+  Object.fromEntries(Object.values(plans).map((p) => [p.slug, { name: p.name, price: brl(p.cents) }])),
+);
+---
+
+<Focus title="Entrar · Órbita Fiscal" description="Entre ou crie sua conta na Órbita Fiscal com o Google ou com um link enviado ao seu e-mail.">
+  <div class="wrap auth" data-auth data-endpoint={endpoint} data-plans={planData}>
+    <div class="auth-card">
+      <p class="plan-band" data-plan-band hidden>
+        <span>Você escolheu o <strong data-plan-name></strong>, <span data-plan-price></span> por mês.</span>
+        <button type="button" class="link-btn" data-plan-swap>Trocar para o <span data-plan-other></span></button>
+      </p>
+
+      <div class="tabs" role="tablist" aria-label="Entrar ou criar conta">
+        <button type="button" role="tab" id="tab-entrar" aria-controls="painel" aria-selected="true" data-mode="entrar">Entrar</button>
+        <button type="button" role="tab" id="tab-criar" aria-controls="painel" aria-selected="false" tabindex="-1" data-mode="criar">Criar conta</button>
+      </div>
+
+      <div id="painel" role="tabpanel" aria-labelledby="tab-entrar" class="panel">
+        <div class="step" data-step="form">
+          <h1 class="display-md" data-title>Entre na sua conta</h1>
+          <p class="mute" data-sub>Sem senha: use o Google ou receba um link no seu e-mail.</p>
+
+          {!endpoint && (
+            <p class="demo">
+              <strong>Modo de demonstração.</strong> Nenhum e-mail é enviado e nenhuma conta é criada de verdade.
+            </p>
+          )}
+
+          <p class="notice is-error" data-error role="alert" hidden></p>
+
+          <button type="button" class="btn-alt" data-google>
+            <Icon name="mdi:google" size={20} />
+            Continuar com Google
+          </button>
+
+          <p class="or">ou</p>
+
+          <form class="form" novalidate data-form>
+            <div class="field" data-name-field hidden>
+              <label for="a-nome">Nome</label>
+              <input id="a-nome" name="nome" type="text" autocomplete="name" aria-describedby="a-nome-msg" />
+              <p class="msg" id="a-nome-msg" aria-live="polite"></p>
+            </div>
+            <div class="field">
+              <label for="a-email">E-mail</label>
+              <input id="a-email" name="email" type="email" autocomplete="email" inputmode="email" aria-describedby="a-email-msg" />
+              <p class="msg" id="a-email-msg" aria-live="polite"></p>
+            </div>
+            <button type="submit" class="btn-main" data-submit>Enviar link de acesso</button>
+          </form>
+
+          <p class="legal small">
+            Ao continuar, você concorda com os <a href="/termos">Termos de uso</a> e a{' '}<a href="/privacidade">Política de privacidade</a>.
+          </p>
+        </div>
+
+        <div class="step" data-step="sent" hidden tabindex="-1">
+          <h1 class="display-md">Confira seu e-mail</h1>
+          <p class="notice is-ok" role="status">
+            <strong>Enviamos um link para <span data-sent-to></span>.</strong>
+            <span>Abra o e-mail e toque no link para entrar. Ele vale por 15 minutos<span class="pending-inline">a definir</span>.</span>
+          </p>
+          <p class="mute small">Não chegou? Veja a caixa de spam ou peça outro link.</p>
+          <div class="sent-actions">
+            <button type="button" class="btn-alt" data-resend disabled>Reenviar em <span data-count>60</span> s</button>
+            <button type="button" class="link-btn" data-other>Usar outro e-mail</button>
+          </div>
+          {!endpoint && (
+            <a class="btn-main" href="/conta" data-continue>Continuar (demonstração)</a>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</Focus>
+
+<style>
+  .auth {
+    display: grid;
+    justify-items: center;
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 440px;
+    display: grid;
+    gap: var(--space-5);
+  }
+  .plan-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    background: var(--soft);
+    font: var(--text-small);
+  }
+  .plan-band strong {
+    font-weight: 600;
+  }
+  .link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font: var(--text-small);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .plan-band .link-btn {
+    color: var(--ink);
+  }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+  }
+  .tabs button {
+    min-height: 40px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--mute);
+    font: 500 0.9375rem/1 var(--font-body);
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out);
+  }
+  .tabs button[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .tabs button:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .step {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .step:focus {
+    outline: none;
+  }
+  .form {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .legal {
+    color: var(--mute);
+  }
+  .sent-actions {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: center;
+  }
+  .pending-inline {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 6px;
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    color: var(--brand);
+  }
+</style>
+
+<script>
+  import { isEmail } from '../scripts/validate';
+
+  const root = document.querySelector<HTMLElement>('[data-auth]')!;
+  const endpoint = root.dataset.endpoint ?? '';
+  const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, { name: string; price: string }>;
+  const params = new URLSearchParams(location.search);
+  let plan = params.get('plano') && plans[params.get('plano')!] ? params.get('plano')! : '';
+  let mode: 'entrar' | 'criar' = params.get('modo') === 'criar' ? 'criar' : 'entrar';
+
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const form = $<HTMLFormElement>('[data-form]');
+  const nameField = $('[data-name-field]');
+  const nameInput = $<HTMLInputElement>('#a-nome');
+  const emailInput = $<HTMLInputElement>('#a-email');
+  const errorBox = $('[data-error]');
+  const submit = $<HTMLButtonElement>('[data-submit]');
+  const stepForm = $('[data-step="form"]');
+  const stepSent = $('[data-step="sent"]');
+
+  // Para onde ir depois de entrar: Checkout do plano escolhido, senão o Portal.
+  const nextUrl = () => (plan ? `/assinar/${plan}` : '/conta');
+
+  function renderPlan() {
+    const band = $('[data-plan-band]');
+    band.hidden = !plan;
+    if (!plan) return;
+    const other = plan === 'max' ? 'pro' : 'max';
+    $('[data-plan-name]').textContent = plans[plan].name;
+    $('[data-plan-price]').textContent = plans[plan].price;
+    $('[data-plan-other]').textContent = plans[other].name;
+    const cont = root.querySelector<HTMLAnchorElement>('[data-continue]');
+    if (cont) cont.href = nextUrl();
+  }
+  $('[data-plan-swap]').addEventListener('click', () => {
+    plan = plan === 'max' ? 'pro' : 'max';
+    params.set('plano', plan);
+    history.replaceState(null, '', `?${params}`);
+    renderPlan();
+  });
+
+  function setMode(m: 'entrar' | 'criar', focus = false) {
+    mode = m;
+    tabs.forEach((t) => {
+      const on = t.dataset.mode === m;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      if (on) $('#painel').setAttribute('aria-labelledby', t.id);
+      if (on && focus) t.focus();
+    });
+    nameField.hidden = m !== 'criar';
+    $('[data-title]').textContent = m === 'criar' ? 'Crie sua conta' : 'Entre na sua conta';
+    $('[data-sub]').textContent =
+      m === 'criar'
+        ? 'Só nome e e-mail. Você entra pelo link que enviamos, sem criar senha.'
+        : 'Sem senha: use o Google ou receba um link no seu e-mail.';
+    clearErrors();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => setMode(t.dataset.mode as 'entrar' | 'criar'));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setMode(tabs[(i + 1) % 2].dataset.mode as 'entrar' | 'criar', true);
+      }
+    });
+  });
+
+  function fieldError(input: HTMLInputElement, msg: string) {
+    const out = document.getElementById(`${input.id}-msg`)!;
+    out.textContent = msg;
+    input.setAttribute('aria-invalid', String(!!msg));
+    return !msg;
+  }
+  function clearErrors() {
+    errorBox.hidden = true;
+    [nameInput, emailInput].forEach((i) => fieldError(i, ''));
+  }
+  const showError = (msg: string) => {
+    errorBox.textContent = msg;
+    errorBox.hidden = false;
+  };
+
+  // Estados vindos do link do e-mail
+  if (params.get('erro') === 'link-expirado')
+    showError('Esse link de acesso expirou ou já foi usado. Peça um novo abaixo; ele chega em instantes.');
+
+  // Contas de demonstração (só neste navegador), para mostrar o estado “e-mail já cadastrado”.
+  const demoKey = 'of-demo-contas';
+  const demoAccounts = (): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem(demoKey) ?? '[]');
+    } catch {
+      return [];
+    }
+  };
+
+  let timer = 0;
+  function showSent(email: string, note = '') {
+    stepForm.hidden = true;
+    stepSent.hidden = false;
+    $('[data-sent-to]').textContent = email;
+    if (note) $('[data-sent-to]').textContent = `${email}. ${note}`;
+    try {
+      sessionStorage.setItem('of-demo-email', email);
+    } catch {}
+    const resend = $<HTMLButtonElement>('[data-resend]');
+    let left = 60;
+    resend.disabled = true;
+    resend.innerHTML = 'Reenviar em <span data-count>60</span> s';
+    clearInterval(timer);
+    timer = window.setInterval(() => {
+      left -= 1;
+      const c = resend.querySelector('[data-count]');
+      if (c) c.textContent = String(left);
+      if (left <= 0) {
+        clearInterval(timer);
+        resend.disabled = false;
+        resend.textContent = 'Reenviar link';
+      }
+    }, 1000);
+    stepSent.focus();
+  }
+
+  $('[data-other]').addEventListener('click', () => {
+    clearInterval(timer);
+    stepSent.hidden = true;
+    stepForm.hidden = false;
+    emailInput.focus();
+    emailInput.select();
+  });
+  $('[data-resend]').addEventListener('click', () => showSent(emailInput.value.trim()));
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+    const email = emailInput.value.trim();
+    let ok = true;
+    if (mode === 'criar' && nameInput.value.trim().length < 2)
+      ok = fieldError(nameInput, 'Escreva seu nome para sabermos como chamar você.') && ok;
+    if (!email) ok = fieldError(emailInput, 'Escreva seu e-mail para receber o link.') && ok;
+    else if (!isEmail(email)) ok = fieldError(emailInput, 'Confira o e-mail: falta algo como “@” ou o domínio.') && ok;
+    if (!ok) {
+      root.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+      return;
+    }
+
+    submit.setAttribute('aria-busy', 'true');
+    submit.disabled = true;
+    submit.textContent = 'Enviando…';
+    try {
+      if (endpoint) {
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modo: mode, nome: nameInput.value.trim(), email, plano: plan || null }),
+        });
+        if (r.status === 409) return showSent(email, 'Esse e-mail já tem conta: o link serve para entrar');
+        if (!r.ok) throw new Error(String(r.status));
+        showSent(email);
+      } else {
+        await new Promise((res) => setTimeout(res, 700));
+        const known = demoAccounts().includes(email.toLowerCase());
+        if (mode === 'criar' && !known) {
+          try {
+            localStorage.setItem(demoKey, JSON.stringify([...demoAccounts(), email.toLowerCase()]));
+          } catch {}
+        }
+        showSent(email, mode === 'criar' && known ? 'Esse e-mail já tem conta: o link serve para entrar' : '');
+      }
+    } catch {
+      showError('Não conseguimos enviar o link agora. Confira sua conexão e tente de novo em instantes.');
+    } finally {
+      submit.removeAttribute('aria-busy');
+      submit.disabled = false;
+      submit.textContent = 'Enviar link de acesso';
+    }
+  });
+
+  $('[data-google]').addEventListener('click', () => {
+    if (endpoint) {
+      location.href = `${endpoint.replace(/\/$/, '')}/google?next=${encodeURIComponent(nextUrl())}`;
+      return;
+    }
+    showError('No modo de demonstração o Google não é chamado. Use o e-mail para ver o fluxo completo.');
+  });
+
+  setMode(mode);
+  renderPlan();
+</script>

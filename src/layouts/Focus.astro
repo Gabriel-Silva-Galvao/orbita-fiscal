@@ -1,0 +1,70 @@
+---
+/**
+ * Layout de foco para Entrar e Checkout (briefing, Páginas 2 e 3): nenhum menu além do logo,
+ * que volta à landing; links legais discretos no fim. Sem rodapé completo, sem saídas extras.
+ */
+import Base from './Base.astro';
+import Logo from '../components/Logo.astro';
+import '../styles/forms.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <header class="focus-top">
+    <div class="wrap focus-top-in">
+      <Logo />
+      <span class="secure small">Conexão segura</span>
+    </div>
+  </header>
+  <main id="conteudo" class="focus">
+    <slot />
+  </main>
+  <footer class="focus-foot">
+    <div class="wrap small">
+      <a href="/termos">Termos de uso</a>
+      <a href="/privacidade">Privacidade</a>
+      <a href="/reembolso">Reembolso</a>
+      <a href="/ajuda">Ajuda</a>
+    </div>
+  </footer>
+</Base>
+
+<style>
+  .focus-top {
+    border-bottom: 1px solid var(--line);
+  }
+  .focus-top-in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 84px;
+  }
+  .secure {
+    color: var(--mute);
+  }
+  .focus {
+    padding-block: var(--space-7) var(--space-8);
+  }
+  .focus-foot {
+    border-top: 1px solid var(--line);
+    padding-block: var(--space-5);
+  }
+  .focus-foot .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .focus-foot a {
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .focus-foot a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+</style>

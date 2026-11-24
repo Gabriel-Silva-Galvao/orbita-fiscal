@@ -1,0 +1,354 @@
+---
+/**
+ * Instalar o plugin (briefing, Página 4): da compra à primeira pergunta respondida pela base.
+ * Quatro passos que a pessoa marca como feitos (lembrado neste navegador), pergunta de teste
+ * copiável e o fechamento “Deu certo?”. Formato de entrega, nomes dos menus do Claude e planos
+ * do Claude que aceitam plugins ainda estão pendentes: aparecem com rótulo tracejado.
+ */
+import Focus from '../layouts/Focus.astro';
+import Pending from '../components/Pending.astro';
+import { plans, brl } from '../data/plans';
+
+const planData = JSON.stringify(Object.fromEntries(Object.values(plans).map((p) => [p.slug, `${p.name}, ${brl(p.cents)} por mês`])));
+const testQuestion =
+  'Execução fiscal parada sem bens localizados. Quando começa a correr a prescrição intercorrente? Traga o fundamento.';
+---
+
+<Focus title="Instalar o plugin · Órbita Fiscal" description="Instale o plugin da Órbita Fiscal no Claude, conecte sua conta e faça a primeira pergunta.">
+  <div class="wrap install" data-install data-plans={planData}>
+    <header class="install-head">
+      <h1 class="display-lg">Seu plugin está pronto</h1>
+      <p class="lead" data-plan-line>Quatro passos, poucos minutos. Marque cada um quando terminar.</p>
+      <p class="demo"><strong>Modo de demonstração.</strong> Nenhum arquivo é baixado e nenhuma conta é conectada de verdade.</p>
+      <div class="meter" aria-hidden="true"><span data-meter></span></div>
+      <p class="small mute" data-meter-text>0 de 4 passos feitos</p>
+    </header>
+
+    <ol class="steps">
+      <li class="step" data-step="1">
+        <div class="step-head">
+          <span class="n">1</span>
+          <h2 class="title">Baixe o arquivo do plugin</h2>
+        </div>
+        <div class="step-body">
+          <p>Versão atual<Pending kind="definir" />. O formato do arquivo<Pending kind="definir" /> é o que o Claude aceita para plugins.</p>
+          <button type="button" class="btn-main" data-download>Baixar o plugin</button>
+          <p class="notice" data-download-msg role="status" hidden></p>
+          <label class="done"><input type="checkbox" data-done="1" /> Já baixei</label>
+        </div>
+      </li>
+
+      <li class="step" data-step="2">
+        <div class="step-head">
+          <span class="n">2</span>
+          <h2 class="title">Envie o arquivo no Claude</h2>
+        </div>
+        <div class="step-body">
+          <p>No Claude, abra o menu de plugins e envie o arquivo que você baixou.</p>
+          <p class="path" aria-label="Caminho no Claude">
+            <span>Claude</span><span>Configurações</span><span>Plugins</span><span>Enviar plugin</span>
+            <Pending kind="confirmar" />
+          </p>
+          <details class="aside">
+            <summary>Não encontro o menu de plugins</summary>
+            <p>
+              Alguns planos do Claude não permitem instalar plugins<Pending kind="confirmar" />. Veja na Ajuda{' '}<a href="/ajuda#nao-aparece">o que fazer se o plugin não aparece</a>.
+            </p>
+          </details>
+          <label class="done"><input type="checkbox" data-done="2" /> Já enviei</label>
+        </div>
+      </li>
+
+      <li class="step" data-step="3">
+        <div class="step-head">
+          <span class="n">3</span>
+          <h2 class="title">Conecte sua conta Órbita Fiscal</h2>
+        </div>
+        <div class="step-body">
+          <p>Instalar o plugin não conecta o serviço sozinho. Na primeira pergunta, o Claude pede para você entrar; use o mesmo e-mail da assinatura<span data-email-hint></span>.</p>
+          <button type="button" class="btn-alt" data-connect>Gerar código de conexão</button>
+          <p class="notice" data-connect-msg role="status" hidden></p>
+          <label class="done"><input type="checkbox" data-done="3" /> Já conectei</label>
+        </div>
+      </li>
+
+      <li class="step" data-step="4">
+        <div class="step-head">
+          <span class="n">4</span>
+          <h2 class="title">Faça a primeira pergunta</h2>
+        </div>
+        <div class="step-body">
+          <p>Cole esta pergunta no Claude. A resposta deve trazer as fontes consultadas na base.</p>
+          <div class="copy-row">
+            <p class="question" data-question>{testQuestion}</p>
+            <button type="button" class="btn-alt copy" data-copy>Copiar pergunta</button>
+          </div>
+          <label class="done"><input type="checkbox" data-done="4" /> Recebi a resposta com as fontes</label>
+        </div>
+      </li>
+    </ol>
+
+    <section class="closing" aria-labelledby="ok-t">
+      <h2 id="ok-t" class="display-md">Deu certo?</h2>
+      <div class="closing-actions">
+        <a class="btn-main" href="/conta">Sim, ir para minha conta</a>
+        <a class="btn-alt" href="/ajuda#instalar" data-help>Não, preciso de ajuda</a>
+      </div>
+    </section>
+  </div>
+</Focus>
+
+<style>
+  .install {
+    max-width: 760px;
+    display: grid;
+    gap: var(--space-7);
+  }
+  .install-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .meter {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line);
+    overflow: hidden;
+    margin-top: var(--space-2);
+  }
+  .meter span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--brand);
+    transition: width 400ms var(--ease-out);
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .step {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .n {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    color: var(--brand);
+    transition: background-color 300ms var(--ease-out), color 300ms var(--ease-out), border-color 300ms var(--ease-out);
+  }
+  .step.is-done .n {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+  }
+  .step.is-done .title {
+    color: var(--mute);
+  }
+  .step-body {
+    display: grid;
+    gap: var(--space-3);
+    padding-left: calc(36px + var(--space-3));
+    justify-items: start;
+  }
+  .step-body .btn-main,
+  .step-body .btn-alt {
+    width: auto;
+  }
+  .path {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font: var(--text-small);
+  }
+  .path span:not(.pending) {
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+  .path span:not(.pending) + span:not(.pending)::before {
+    content: '›';
+    margin: 0 10px 0 -2px;
+    color: var(--mute);
+  }
+  .aside summary {
+    cursor: pointer;
+    font: var(--text-small);
+    color: var(--brand);
+  }
+  .aside p {
+    margin-top: var(--space-2);
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .aside a {
+    color: var(--brand);
+  }
+  .done {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: var(--text-small);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .done input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--brand);
+  }
+  .copy-row {
+    width: 100%;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .question {
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    border-bottom-right-radius: 4px;
+    background: var(--soft);
+    color: var(--ink);
+    font-size: 0.9375rem;
+  }
+  .copy {
+    justify-self: start;
+  }
+  .closing {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .closing-actions {
+    display: grid;
+    gap: var(--space-3);
+  }
+  @media (min-width: 600px) {
+    .closing-actions {
+      grid-template-columns: 1fr 1fr;
+    }
+    .step-body .notice {
+      width: 100%;
+    }
+  }
+  @media (max-width: 480px) {
+    .step-body {
+      padding-left: 0;
+    }
+  }
+</style>
+
+<script>
+  import { getSub } from '../scripts/demo';
+
+  const root = document.querySelector<HTMLElement>('[data-install]')!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, string>;
+  const sub = getSub();
+  if (sub) {
+    $('[data-plan-line]').textContent = `Plano ${plans[sub.plano]}. Quatro passos, poucos minutos. Marque cada um quando terminar.`;
+    $('[data-email-hint]').textContent = ` (${sub.email})`;
+  }
+
+  // Passos marcados, lembrados neste navegador.
+  const KEY = 'of-demo-instalacao';
+  const boxes = Array.from(root.querySelectorAll<HTMLInputElement>('[data-done]'));
+  let done: string[] = [];
+  try {
+    done = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+  } catch {}
+  const paint = () => {
+    boxes.forEach((b) => {
+      b.checked = done.includes(b.dataset.done!);
+      b.closest('.step')!.classList.toggle('is-done', b.checked);
+    });
+    const n = done.length;
+    $('[data-meter]').style.width = `${(n / 4) * 100}%`;
+    $('[data-meter-text]').textContent = `${n} de 4 passos feitos`;
+    // Quem trava aqui vai para a Ajuda no passo certo.
+    const first = ['1', '2', '3', '4'].find((s) => !done.includes(s));
+    const anchors: Record<string, string> = { '1': 'instalar', '2': 'nao-aparece', '3': 'conectar', '4': 'conectar' };
+    $<HTMLAnchorElement>('[data-help]').href = `/ajuda#${anchors[first ?? '4']}`;
+  };
+  boxes.forEach((b) =>
+    b.addEventListener('change', () => {
+      done = b.checked ? [...new Set([...done, b.dataset.done!])] : done.filter((d) => d !== b.dataset.done);
+      try {
+        localStorage.setItem(KEY, JSON.stringify(done));
+      } catch {}
+      paint();
+    }),
+  );
+  paint();
+
+  // Download: estados “preparando”, “pronto” e “link expirado”.
+  const dl = $<HTMLButtonElement>('[data-download]');
+  const dlMsg = $('[data-download-msg]');
+  let generatedAt = 0;
+  dl.addEventListener('click', async () => {
+    if (generatedAt && Date.now() - generatedAt > 15 * 60 * 1000) {
+      dlMsg.textContent = 'O link de download expirou. Geramos um novo.';
+    }
+    dl.disabled = true;
+    dl.setAttribute('aria-busy', 'true');
+    dl.textContent = 'Preparando o arquivo…';
+    dlMsg.hidden = true;
+    await new Promise((r) => setTimeout(r, 1200));
+    generatedAt = Date.now();
+    dl.disabled = false;
+    dl.removeAttribute('aria-busy');
+    dl.textContent = 'Baixar de novo';
+    dlMsg.className = 'notice is-ok';
+    dlMsg.textContent = 'Arquivo pronto. Na versão real, o download começa agora e o link vale por 15 minutos.';
+    dlMsg.hidden = false;
+  });
+
+  // Conexão: código curto para digitar no Claude quando ele pedir.
+  $('[data-connect]').addEventListener('click', () => {
+    const code = Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+    const msg = $('[data-connect-msg]');
+    msg.className = 'notice';
+    msg.textContent = '';
+    const strong = document.createElement('strong');
+    strong.textContent = `Código: ${code.slice(0, 3)}-${code.slice(3)}`;
+    const span = document.createElement('span');
+    span.textContent = 'Digite no Claude quando ele pedir para conectar a Órbita Fiscal. Vale por 10 minutos. Exemplo de demonstração.';
+    msg.append(strong, span);
+    msg.hidden = false;
+  });
+
+  // Copiar a pergunta de teste
+  $('[data-copy]').addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    try {
+      await navigator.clipboard.writeText($('[data-question]').textContent ?? '');
+      btn.textContent = 'Copiada';
+      setTimeout(() => (btn.textContent = 'Copiar pergunta'), 2000);
+    } catch {
+      const r = document.createRange();
+      r.selectNodeContents($('[data-question]'));
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(r);
+    }
+  });
+</script>

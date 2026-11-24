@@ -1,0 +1,8 @@
+{
+  "falta": "Tela pronta com as 4 abas, reembolso com prazo de 7 dias, cancelamento e exclusão de conta (demonstração). Falta servidor, regra de troca de plano e novidades reais da base.",
+  "mvp": true,
+  "nome": "Portal do cliente",
+  "ordem": 5,
+  "rota": "/conta",
+  "status": "Em andamento"
+}

@@ -1,0 +1,30 @@
+---
+/** Foto real com srcset responsivo, proporção fixa e texto alternativo. */
+import { photos, src, srcset, type PhotoKey } from '../data/photos';
+
+interface Props {
+  name: PhotoKey;
+  sizes?: string;
+  eager?: boolean;
+  decorative?: boolean;
+  class?: string;
+  width?: number;
+  height?: number;
+}
+const { name, sizes = '100vw', eager = false, decorative = false, class: cls, width = 1600, height = 1067 } = Astro.props;
+const ph = photos[name];
+---
+
+<img
+  class:list={['photo', cls]}
+  src={src(name, 1200)}
+  srcset={srcset(name)}
+  sizes={sizes}
+  width={width}
+  height={height}
+  alt={decorative ? '' : ph.alt}
+  loading={eager ? 'eager' : 'lazy'}
+  decoding="async"
+  fetchpriority={eager ? 'high' : undefined}
+  data-credit={`${ph.author} / Unsplash`}
+/>

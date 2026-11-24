@@ -1,0 +1,316 @@
+/* Base da Órbita Fiscal. Tokens em tokens.css (gerado do design system). */
+@import '@fontsource/newsreader/400.css';
+@import '@fontsource/hanken-grotesk/400.css';
+@import '@fontsource/hanken-grotesk/500.css';
+@import '@fontsource/hanken-grotesk/600.css';
+@import './tokens.css';
+
+/* Tema escuro automático quando a pessoa não escolheu um. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #102b28;
+    --surface: #16352f;
+    --ink: #f0f5e8;
+    --mute: #b2c8bc;
+    --brand: #83d3a9;
+    --on-brand: #102b28;
+    --soft: #385744;
+    --line: #2d4c45;
+    --line-strong: #6a9487;
+    --nucleus: #f0f5e8;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 10;
+  padding: 12px 16px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: var(--radius-md);
+  font: var(--text-button);
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* Coluna de conteúdo */
+.wrap {
+  width: 100%;
+  max-width: calc(1100px + 2 * var(--gutter));
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+:root {
+  --gutter: 24px;
+  /* Curvas fortes (emil-design-eng): saída para entradas, ida e volta para movimento na tela. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+@media (min-width: 768px) {
+  :root {
+    --gutter: 40px;
+  }
+}
+
+/* Tipografia */
+.overline {
+  font: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+
+/* Quebras: títulos equilibrados, parágrafos sem palavra sozinha na última linha. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p,
+li {
+  text-wrap: pretty;
+}
+
+.display-xl {
+  font: var(--text-display-xl);
+  letter-spacing: -0.015em;
+}
+.display-lg {
+  font: var(--text-display-lg);
+  letter-spacing: -0.01em;
+}
+.display-md {
+  font: var(--text-display-md);
+}
+.title {
+  font: var(--text-title);
+}
+.lead {
+  font: var(--text-body-lg);
+  color: var(--mute);
+}
+.small {
+  font: var(--text-small);
+}
+.mute {
+  color: var(--mute);
+}
+
+@media (max-width: 767px) {
+  .display-xl {
+    font-size: 2.25rem;
+    line-height: 1.12;
+  }
+  .display-lg {
+    font-size: 1.875rem;
+    line-height: 1.2;
+  }
+  .lead {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+}
+
+/* Seções */
+.section {
+  padding-block: var(--space-8);
+  border-top: 1px solid var(--line);
+}
+@media (min-width: 768px) {
+  .section {
+    padding-block: var(--space-9);
+  }
+}
+
+.section-head {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  max-width: 760px;
+}
+.section-head .overline {
+  margin-bottom: var(--space-1);
+}
+
+/*
+ * Movimento. Tudo abaixo só vale com .anim (sem movimento reduzido e com o motor ativo).
+ * O motor (scripts/motion.ts) leva cada bloco ao estado final.
+ */
+.anim [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+}
+.anim [data-hero-in] {
+  visibility: hidden;
+}
+
+/* Lenis controla a rolagem: o navegador não deve suavizar por cima. */
+html.has-lenis,
+html.has-lenis body {
+  height: auto;
+}
+html.has-lenis {
+  scroll-behavior: auto;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Palavras de títulos divididos (data-split). */
+.sw {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.sw > span {
+  display: inline-block;
+}
+
+
+/* Barra de leitura no topo. */
+.progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  z-index: 20;
+  pointer-events: none;
+}
+.progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+html:not(.anim) .progress {
+  display: none;
+}
+
+/* Traço que se desenha: paths com pathLength="1". */
+.anim [data-draw] .draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.anim [data-draw] .draw:nth-of-type(2n) {
+  transition-delay: 0.15s;
+}
+.anim [data-draw] .draw:nth-of-type(3n) {
+  transition-delay: 0.3s;
+}
+.anim [data-draw].is-drawn .draw {
+  stroke-dashoffset: 0;
+}
+
+/* Flutuação lenta, para citações e folhas. */
+@keyframes float-a {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translate(4px, -10px) rotate(calc(var(--r, 0deg) + 2deg));
+  }
+}
+@keyframes float-b {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translate(-6px, 8px) rotate(calc(var(--r, 0deg) - 2deg));
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

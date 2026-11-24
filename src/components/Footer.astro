@@ -1,0 +1,731 @@
+---
+/**
+ * Rodapé no padrão de sites: marca e redes à esquerda, colunas de links, resumo legal,
+ * e uma barra final com © e configurações (tema e preferências de cookies).
+ * Revelado ao final: fica preso atrás da página e aparece quando a folha do conteúdo sobe.
+ * Só vira “revelado” quando cabe na tela (≥ 768 px de largura e mais baixo que a janela);
+ * senão, é um rodapé comum no fim da página.
+ * Sempre escuro, nos dois temas: redefine os tokens localmente.
+ */
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import Pending from './Pending.astro';
+import { contact, legalLinks } from '../data/site';
+import { photos } from '../data/photos';
+
+const year = new Date().getFullYear();
+
+const columns = [
+  {
+    title: 'Produto',
+    links: [
+      { href: '/#exemplo', label: 'Exemplo' },
+      { href: '/#dia-a-dia', label: 'O dia a dia' },
+      { href: '/#como-funciona', label: 'Como funciona' },
+      { href: '/#planos', label: 'Planos e preços' },
+      { href: '/#duvidas', label: 'Dúvidas' },
+    ],
+  },
+  {
+    title: 'Sua conta',
+    links: [
+      { href: '/entrar', label: 'Entrar' },
+      { href: '/entrar?modo=criar', label: 'Criar conta' },
+      { href: '/conta', label: 'Portal do cliente' },
+      { href: '/instalar', label: 'Instalar o plugin' },
+    ],
+  },
+  {
+    title: 'Ajuda',
+    links: [
+      { href: '/ajuda', label: 'Central de ajuda' },
+      { href: '/#contato', label: 'Fale com a equipe' },
+      { href: '/reembolso', label: 'Pedir reembolso' },
+      { href: '/equipes', label: 'Para escritórios' },
+    ],
+  },
+  { title: 'Legal', links: legalLinks },
+];
+
+const summary = [
+  { title: 'Reembolso em 7 dias', text: 'Integral, a partir da compra (CDC, art. 49).' },
+  { title: 'Seus direitos', text: 'Acesso, correção, portabilidade e exclusão (LGPD, art. 18).' },
+  { title: 'Suas consultas', text: 'Guarda e uso em modelos na política de privacidade.', pending: 'definir' as const },
+  { title: 'Uso responsável', text: 'Respostas de IA exigem revisão profissional.' },
+];
+
+const credits = Object.values(photos);
+---
+
+<div class="footer-spacer" aria-hidden="true"></div>
+<footer class="footer" id="rodape">
+  <div class="wrap footer-in">
+    <div class="f-top">
+      <div class="f-brand">
+        <Logo size="lg" />
+        <p class="small f-pitch">
+          Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças.
+        </p>
+        <div class="f-social">
+          <a class="f-ico" href={contact.instagram} target="_blank" rel="noopener" aria-label={`Instagram ${contact.instagramHandle}, abre em nova aba`}>
+            <Icon name="mdi:instagram" size={20} />
+          </a>
+          <a class="f-ico" href={`mailto:${contact.email}`} aria-label={`E-mail ${contact.email}`}>
+            <Icon name="solar:letter-linear" size={20} />
+          </a>
+          <span class="small f-handle">{contact.instagramHandle}<Pending kind="confirmar" /></span>
+        </div>
+      </div>
+
+      <nav class="f-cols" aria-label="Rodapé">
+        {
+          columns.map((c) => (
+            <div class="f-col">
+              <p class="f-col-title">{c.title}</p>
+              <ul>
+                {c.links.map((l) => (
+                  <li>
+                    <a href={l.href}>{l.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </div>
+
+    <section class="f-legal" aria-labelledby="resumo-legal">
+      <h2 id="resumo-legal" class="f-col-title">Privacidade e termos, em resumo</h2>
+      <ul>
+        {
+          summary.map((s) => (
+            <li>
+              <p class="small">
+                <strong>{s.title}.</strong> {s.text}
+                {s.pending && <Pending kind={s.pending} />}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="small f-legal-note">
+        Encarregado de dados: <a href={`mailto:${contact.privacyEmail}`}>{contact.privacyEmail}</a><Pending kind="confirmar" />
+        <span class="f-sep" aria-hidden="true">·</span> Os textos completos prevalecem sobre este resumo.
+      </p>
+    </section>
+
+    <div class="f-bottom">
+      <div class="f-copy small">
+        <span>© {year} Órbita Fiscal</span>
+        <span class="f-sep" aria-hidden="true">·</span>
+        <span>CNPJ<Pending kind="definir" /></span>
+        <span class="f-sep" aria-hidden="true">·</span>
+        <button type="button" class="f-link" data-open="dlg-creditos">Créditos das fotos</button>
+      </div>
+
+      <div class="f-settings" role="group" aria-label="Configurações">
+        <fieldset class="theme-switch">
+          <legend class="sr-only">Tema</legend>
+          <span class="theme-thumb" aria-hidden="true"></span>
+          <label title="Automático">
+            <input type="radio" name="tema" value="auto" />
+            <Icon name="solar:monitor-linear" size={16} />
+            <span>Auto</span>
+          </label>
+          <label title="Claro">
+            <input type="radio" name="tema" value="light" />
+            <Icon name="solar:sun-2-linear" size={16} />
+            <span>Claro</span>
+          </label>
+          <label title="Escuro">
+            <input type="radio" name="tema" value="dark" />
+            <Icon name="solar:moon-linear" size={16} />
+            <span>Escuro</span>
+          </label>
+        </fieldset>
+        <button type="button" class="f-pill" data-open="dlg-cookies">
+          <Icon name="solar:settings-linear" size={16} />
+          Preferências de cookies
+        </button>
+        <a class="f-pill f-top-link" href="#conteudo" aria-label="Voltar ao topo">
+          <Icon name="solar:arrow-up-linear" size={16} />
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <dialog id="dlg-cookies" class="dlg" aria-labelledby="dlg-cookies-t" data-lenis-prevent>
+    <form method="dialog" class="dlg-in">
+      <div class="dlg-head">
+        <h2 id="dlg-cookies-t" class="display-md">Preferências de cookies</h2>
+        <button class="dlg-x" value="close" aria-label="Fechar"><Icon name="solar:close-circle-linear" size={24} /></button>
+      </div>
+      <p class="small mute">Hoje este site não usa cookies de publicidade nem de medição de audiência. Se isso mudar, vamos pedir sua permissão antes, aqui.</p>
+      <ul class="dlg-list">
+        <li>
+          <div>
+            <p class="dlg-k">Essenciais</p>
+            <p class="small mute">Guardam neste navegador a sua escolha de tema. Sem eles, o site volta ao tema automático.</p>
+          </div>
+          <span class="dlg-badge is-on">Sempre ativos</span>
+        </li>
+        <li>
+          <div>
+            <p class="dlg-k">Medição de audiência</p>
+            <p class="small mute">Contagem de visitas e páginas mais lidas.</p>
+          </div>
+          <span class="dlg-badge">Não usamos</span>
+        </li>
+        <li>
+          <div>
+            <p class="dlg-k">Publicidade</p>
+            <p class="small mute">Anúncios e acompanhamento entre sites.</p>
+          </div>
+          <span class="dlg-badge">Não usamos</span>
+        </li>
+      </ul>
+      <p class="small mute">Detalhes na <a href="/privacidade#cookies">política de cookies</a><Pending kind="definir" />.</p>
+      <div class="dlg-actions">
+        <button type="button" class="dlg-btn dlg-btn-sec" data-clear-prefs>Apagar minhas preferências</button>
+        <button class="dlg-btn" value="ok">Entendi</button>
+      </div>
+      <p class="small dlg-done" role="status" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-creditos" class="dlg" aria-labelledby="dlg-creditos-t" data-lenis-prevent>
+    <form method="dialog" class="dlg-in">
+      <div class="dlg-head">
+        <h2 id="dlg-creditos-t" class="display-md">Créditos das fotos</h2>
+        <button class="dlg-x" value="close" aria-label="Fechar"><Icon name="solar:close-circle-linear" size={24} /></button>
+      </div>
+      <p class="small mute">Fotos sob a Licença Unsplash. Obrigado a quem fotografou.</p>
+      <ul class="dlg-credits small">
+        {
+          credits.map((c) => (
+            <li>
+              <a href={c.page} target="_blank" rel="noopener">{c.alt.replace(/\.$/, '')}</a>
+              <span class="mute">
+                {' '}por <a href={c.profile} target="_blank" rel="noopener">{c.author}</a>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="dlg-actions">
+        <button class="dlg-btn" value="ok">Fechar</button>
+      </div>
+    </form>
+  </dialog>
+</footer>
+
+<style>
+  /* Rodapé sempre escuro: tokens redefinidos só aqui dentro. */
+  .footer {
+    --bg: #0b201e;
+    --surface: #122e2a;
+    --ink: #f0f5e8;
+    --mute: #b2c8bc;
+    --brand: #83d3a9;
+    --on-brand: #0b201e;
+    --soft: #2f4d3d;
+    --line: #26443d;
+    --line-strong: #6a9487;
+    --nucleus: #f0f5e8;
+    position: relative;
+    background: var(--bg);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  .footer-in {
+    display: grid;
+    gap: var(--space-6);
+    padding-block: var(--space-8) var(--space-2);
+  }
+
+  /* Topo: marca + colunas */
+  .f-top {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 960px) {
+    .f-top {
+      grid-template-columns: minmax(260px, 1fr) 2.2fr;
+      gap: var(--space-8);
+    }
+  }
+  .f-brand {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    align-content: start;
+  }
+  .f-pitch {
+    max-width: 320px;
+    color: var(--mute);
+  }
+  .f-social {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .f-ico {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    transition:
+      background-color 200ms var(--ease-out),
+      color 200ms var(--ease-out),
+      scale 160ms var(--ease-out);
+  }
+  .f-ico:active {
+    scale: 0.94;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .f-ico:hover {
+      background: var(--brand);
+      color: var(--on-brand);
+      border-color: var(--brand);
+    }
+  }
+  .f-handle {
+    margin-left: var(--space-2);
+    color: var(--mute);
+  }
+
+  .f-cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-5);
+  }
+  @media (min-width: 720px) {
+    .f-cols {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .f-col-title {
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: var(--space-3);
+  }
+  .f-col ul {
+    display: grid;
+    gap: 2px;
+  }
+  .f-col a {
+    position: relative;
+    display: inline-block;
+    padding: 4px 0;
+    font: var(--text-small);
+    color: var(--mute);
+    text-decoration: none;
+    transition: color 200ms var(--ease-out);
+  }
+  .f-col a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 300ms var(--ease-out);
+  }
+  .f-col a:hover,
+  .f-col a:focus-visible {
+    color: var(--ink);
+  }
+  .f-col a:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Resumo legal em uma faixa */
+  .f-legal {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+  .f-legal ul {
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+  }
+  @media (min-width: 720px) {
+    .f-legal ul {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (min-width: 1100px) {
+    .f-legal ul {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  .f-legal li {
+    color: var(--mute);
+  }
+  .f-legal strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .f-legal-note {
+    margin-top: var(--space-3);
+    color: var(--mute);
+  }
+  .f-legal a {
+    color: var(--brand);
+  }
+  .f-sep {
+    margin-inline: 6px;
+    color: var(--line-strong);
+  }
+
+  /* Barra final: © e configurações */
+  .f-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .f-copy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    color: var(--mute);
+  }
+  .f-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mute);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .f-link:hover {
+    color: var(--ink);
+  }
+  .f-settings {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .f-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    font: var(--text-small);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      scale 160ms var(--ease-out);
+  }
+  .f-pill:active {
+    scale: 0.97;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .f-pill:hover {
+      background: var(--surface);
+    }
+  }
+  .f-top-link {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* Seletor de tema: três opções com um marcador que desliza. */
+  .theme-switch {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    padding: 3px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    min-inline-size: 0;
+  }
+  .theme-switch label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    font: var(--text-small);
+    font-size: 13px;
+    color: var(--mute);
+    cursor: pointer;
+    transition: color 250ms var(--ease-out);
+  }
+  .theme-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .theme-switch label:has(input:checked) {
+    color: var(--on-brand);
+  }
+  .theme-switch label:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+  /* Marcador: um terço da largura, desliza pela posição da opção marcada (CSS puro). */
+  .theme-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    height: calc(100% - 6px);
+    width: calc((100% - 6px) / 3);
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    transition: transform 360ms var(--ease-out);
+  }
+  .theme-switch:has(input[value='light']:checked) .theme-thumb {
+    transform: translateX(100%);
+  }
+  .theme-switch:has(input[value='dark']:checked) .theme-thumb {
+    transform: translateX(200%);
+  }
+  @media (max-width: 420px) {
+    .theme-switch label span {
+      display: none;
+    }
+  }
+
+
+  /* Diálogos (modal: centrado, entra com escala 0,96 e opacidade). */
+  .dlg {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    color: var(--ink);
+    opacity: 1;
+    scale: 1;
+    transition:
+      opacity 220ms var(--ease-out),
+      scale 220ms var(--ease-out),
+      overlay 220ms allow-discrete,
+      display 220ms allow-discrete;
+  }
+  @starting-style {
+    .dlg[open] {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+  .dlg::backdrop {
+    background: rgb(5 16 15 / 0.6);
+  }
+  .dlg-in {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+  .dlg-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .dlg-x {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin: -6px -6px 0 0;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--mute);
+    cursor: pointer;
+  }
+  .dlg-x:hover {
+    color: var(--ink);
+  }
+  .dlg-list {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .dlg-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .dlg-k {
+    font: var(--text-small);
+    font-weight: 600;
+  }
+  .dlg-badge {
+    flex: none;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    color: var(--mute);
+    white-space: nowrap;
+  }
+  .dlg-badge.is-on {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+  }
+  .dlg a {
+    color: var(--brand);
+  }
+  .dlg-credits {
+    display: grid;
+    gap: 6px;
+  }
+  .dlg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+  .dlg-btn {
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font: var(--text-button);
+    cursor: pointer;
+    transition: scale 160ms var(--ease-out);
+  }
+  .dlg-btn:active {
+    scale: 0.97;
+  }
+  .dlg-btn-sec {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+  .dlg-done:empty {
+    display: none;
+  }
+  .dlg-done {
+    color: var(--brand);
+  }
+</style>
+
+<style is:global>
+  /* Revelado ao final: a folha do conteúdo cobre o rodapé fixo e sobe para descobri-lo. */
+  .page-sheet {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+  }
+  html.footer-reveal .page-sheet {
+    border-bottom-left-radius: 36px;
+    border-bottom-right-radius: 36px;
+    border-bottom: 1px solid var(--line);
+  }
+  html.footer-reveal .footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+  .footer-spacer {
+    height: 0;
+  }
+</style>
+
+<script>
+  const root = document.documentElement;
+  const footer = document.querySelector<HTMLElement>('#rodape');
+  const spacer = document.querySelector<HTMLElement>('.footer-spacer');
+
+  // Revela ao final só quando o rodapé cabe na janela; senão fica no fluxo normal.
+  if (footer && spacer) {
+    const fit = () => {
+      root.classList.remove('footer-reveal');
+      const h = footer.offsetHeight;
+      const ok = window.innerWidth >= 768 && h < window.innerHeight - 24;
+      root.classList.toggle('footer-reveal', ok);
+      spacer.style.height = ok ? `${h}px` : '0px';
+    };
+    fit();
+    new ResizeObserver(fit).observe(footer);
+    window.addEventListener('resize', fit);
+  }
+
+  // Tema: automático, claro ou escuro, com marcador deslizante.
+  const sw = document.querySelector<HTMLFieldSetElement>('.theme-switch');
+  if (sw) {
+    const radios = Array.from(sw.querySelectorAll<HTMLInputElement>('input'));
+    const current = () => root.getAttribute('data-theme') ?? 'auto';
+    radios.forEach((r) => {
+      r.checked = r.value === current();
+      r.addEventListener('change', () => {
+        if (r.value === 'auto') root.removeAttribute('data-theme');
+        else root.setAttribute('data-theme', r.value);
+        try {
+          if (r.value === 'auto') localStorage.removeItem('of-theme');
+          else localStorage.setItem('of-theme', r.value);
+        } catch {}
+      });
+    });
+  }
+
+  // Diálogos: abrir, travar a rolagem suave enquanto abertos, devolver o foco.
+  document.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((btn) => {
+    const dlg = document.getElementById(btn.dataset.open!) as HTMLDialogElement | null;
+    if (!dlg) return;
+    btn.addEventListener('click', () => {
+      (window as any).__lenis?.stop();
+      dlg.showModal();
+    });
+    dlg.addEventListener('close', () => {
+      (window as any).__lenis?.start();
+      btn.focus();
+    });
+    dlg.addEventListener('click', (e) => e.target === dlg && dlg.close());
+  });
+
+  document.querySelector<HTMLButtonElement>('[data-clear-prefs]')?.addEventListener('click', (e) => {
+    try {
+      localStorage.removeItem('of-theme');
+    } catch {}
+    root.removeAttribute('data-theme');
+    const auto = document.querySelector<HTMLInputElement>('.theme-switch input[value="auto"]');
+    if (auto) {
+      auto.checked = true;
+      auto.dispatchEvent(new Event('change'));
+    }
+    const done = (e.currentTarget as HTMLElement).closest('form')?.querySelector('.dlg-done');
+    if (done) done.textContent = 'Preferências apagadas. O tema voltou ao automático.';
+  });
+</script>

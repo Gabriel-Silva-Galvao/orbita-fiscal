@@ -1,0 +1,8 @@
+{
+  "falta": "Tela pronta com Google e link por e-mail (modo de demonstração). Falta o servidor de autenticação e o envio dos e-mails.",
+  "mvp": true,
+  "nome": "Entrar e criar conta",
+  "ordem": 2,
+  "rota": "/entrar",
+  "status": "Em andamento"
+}

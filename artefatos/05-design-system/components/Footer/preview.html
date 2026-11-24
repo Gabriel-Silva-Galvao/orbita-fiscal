@@ -1,0 +1,42 @@
+<!-- @dsCard group="Estrutura" height=420 subtitle="Rodapé escuro com configurações" -->
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&display=swap"><style>
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);font:400 1rem/1.62 var(--font-body)}
+.sheet{height:40px;background:var(--bg);border-bottom:1px solid var(--line);border-radius:0 0 28px 28px;position:relative;z-index:1}
+.ft{--bg:#0b201e;--surface:#122e2a;--ink:#f0f5e8;--mute:#b2c8bc;--brand:#83d3a9;--on-brand:#0b201e;--line:#26443d;--line-strong:#6a9487;
+ background:var(--bg);color:var(--ink);margin-top:-28px;padding:52px 28px 0;overflow:hidden}
+.top{display:grid;grid-template-columns:1.1fr 2fr;gap:32px}
+.nm{font-family:var(--font-display);font-size:26px;line-height:1}.tg{font:600 10px/1 var(--font-body);letter-spacing:.34em;text-transform:uppercase;color:var(--mute);display:block;margin-top:4px}
+.pitch{font-size:13px;line-height:19px;color:var(--mute);margin:12px 0}
+.ico{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--line-strong);color:var(--ink);margin-right:6px;font-size:12px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.t{font:600 0.625rem/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--brand);margin:0 0 10px}
+.cols a{display:block;font-size:13px;line-height:24px;color:var(--mute);text-decoration:none}.cols a:hover{color:var(--ink);text-decoration:underline}
+.legal{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:14px;font-size:12px;line-height:17px;color:var(--mute)}
+.legal b{color:var(--ink);font-weight:600}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;padding-block:12px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);flex-wrap:wrap}
+.sw{position:relative;display:inline-grid;grid-template-columns:repeat(3,1fr);padding:3px;border:1px solid var(--line-strong);border-radius:999px;margin:0}
+.sw label{position:relative;z-index:1;padding:4px 12px;font-size:12px;color:var(--mute);cursor:pointer;text-align:center}
+.sw input{position:absolute;opacity:0}.sw label:has(input:checked){color:var(--on-brand)}
+.sw label:has(input:focus-visible){outline:3px solid var(--brand);outline-offset:2px;border-radius:999px}
+.th{position:absolute;top:3px;left:3px;height:calc(100% - 6px);width:calc((100% - 6px)/3);border-radius:999px;background:var(--brand);transition:transform .36s cubic-bezier(.23,1,.32,1)}
+.sw:has(input[value=c]:checked) .th{transform:translateX(100%)}.sw:has(input[value=e]:checked) .th{transform:translateX(200%)}
+.pill{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink);font-size:12px;margin-left:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<div class="sheet"></div>
+<footer class="ft">
+ <div class="top">
+  <div><span class="nm">Órbita</span><span class="tg">Fiscal</span><p class="pitch">Plugin para o Claude que liga a base jurídica brasileira à sua pesquisa.</p><span class="ico">IG</span><span class="ico">@</span></div>
+  <div class="cols">
+   <div><p class="t">Produto</p><a href="#">Exemplo</a><a href="#">Planos</a><a href="#">Dúvidas</a></div>
+   <div><p class="t">Sua conta</p><a href="#">Entrar</a><a href="#">Portal</a></div>
+   <div><p class="t">Ajuda</p><a href="#">Central</a><a href="#">Contato</a></div>
+   <div><p class="t">Legal</p><a href="#">Privacidade</a><a href="#">Termos</a><a href="#">Cookies</a></div>
+  </div>
+ </div>
+ <div class="legal"><span><b>Reembolso em 7 dias.</b> CDC, art. 49.</span><span><b>Seus direitos.</b> LGPD, art. 18.</span><span><b>Suas consultas.</b> Na política de privacidade.</span><span><b>Uso responsável.</b> IA exige revisão.</span></div>
+ <div class="bar"><span>© 2026 Órbita Fiscal · Créditos das fotos</span>
+  <span><fieldset class="sw"><legend style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Tema</legend><span class="th"></span><label><input type="radio" name="t" value="a" checked>Auto</label><label><input type="radio" name="t" value="c">Claro</label><label><input type="radio" name="t" value="e">Escuro</label></fieldset><span class="pill">Preferências de cookies</span></span></div>
+</footer>
+</body></html>

@@ -1,0 +1,130 @@
+---
+/**
+ * Cena 2, “Direito brasileiro”: foto real do Congresso Nacional, em Brasília.
+ * A foto se abre como uma órbita: um círculo que cresce com a rolagem até ocupar a moldura,
+ * enquanto a imagem desce em parallax. Anéis da marca giram por cima e etiquetas de
+ * garantias reais (CDC, LGPD) flutuam à frente.
+ */
+import Photo from './Photo.astro';
+
+const tags = [
+  { k: 'CDC, art. 49', t: '7 dias para desistir', pos: 't1', speed: 0.9 },
+  { k: 'LGPD', t: 'Lei 13.709/2018', pos: 't2', speed: 0.6 },
+  { k: 'Em cada resposta', t: 'Fonte para conferir', pos: 't3', speed: 1.1 },
+];
+---
+
+<div class="br" data-parallax data-orbit-reveal>
+  <div class="br-photo" data-speed="-0.35">
+    <Photo name="congresso" sizes="(min-width: 1180px) 1100px, 100vw" />
+  </div>
+  <svg class="br-rings" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g transform="rotate(-28 600 240)" fill="none" stroke="var(--on-brand)" stroke-width="1.6">
+      <ellipse cx="600" cy="240" rx="520" ry="170" opacity=".7"></ellipse>
+      <ellipse cx="600" cy="240" rx="380" ry="120" stroke-dasharray="3 10" opacity=".9" class="br-dash"></ellipse>
+    </g>
+  </svg>
+  {
+    tags.map((t, i) => (
+      <div class:list={['br-tag-pos', t.pos]} data-speed={t.speed} aria-hidden="true">
+        <div class="br-tag" style={`--d:${6 + i * 1.5}s; --r:${i % 2 ? 3 : -3}deg`}>
+          <span class="br-k">{t.k}</span>
+          <span class="br-t">{t.t}</span>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .br {
+    position: relative;
+    height: clamp(300px, 44vw, 520px);
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    background: var(--soft);
+    margin-bottom: var(--space-7);
+  }
+  .br-photo {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: -14%;
+    height: 128%;
+    will-change: transform;
+  }
+  .br-photo :global(.photo) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* A órbita que se abre: o motor anima --open de 0 a 1. */
+  :global(.anim) .br-photo {
+    --open: 0;
+    clip-path: circle(calc(18% + var(--open) * 62%) at 50% 55%);
+  }
+  .br-rings {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  :global(.anim) .br-rings {
+    transform-origin: 50% 50%;
+    animation: br-spin 80s linear infinite;
+  }
+  @keyframes br-spin {
+    to {
+      transform: rotate(360deg) scale(1.1);
+    }
+  }
+  .br-tag-pos {
+    position: absolute;
+    z-index: 2;
+  }
+  .t1 {
+    left: 4%;
+    top: 10%;
+  }
+  .t2 {
+    right: 4%;
+    bottom: 16%;
+  }
+  .t3 {
+    left: 30%;
+    bottom: 6%;
+  }
+  .br-tag {
+    display: grid;
+    gap: 4px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-lg);
+    transform: rotate(var(--r));
+  }
+  .br-k {
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+  .br-t {
+    font-family: var(--font-display);
+    font-size: 18px;
+    line-height: 22px;
+    color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    .t3 {
+      display: none;
+    }
+    .br-t {
+      font-size: 15px;
+    }
+    .br-tag {
+      padding: 8px 12px;
+    }
+  }
+</style>

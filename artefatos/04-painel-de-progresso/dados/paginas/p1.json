@@ -1,0 +1,54 @@
+{
+  "falta": "Revisão jurídica dos exemplos, contatos definitivos e publicar na internet.",
+  "mvp": true,
+  "nome": "Landing",
+  "ordem": 1,
+  "rota": "/",
+  "secoes": [
+    {
+      "nome": "Cabeçalho",
+      "texto": "logo de 64 px com órbita; só o símbolo em telas de até 400 px"
+    },
+    {
+      "nome": "Topo",
+      "texto": "título palavra por palavra, átomo em órbita e quatro citações reais"
+    },
+    {
+      "nome": "A base",
+      "texto": "foto de lombadas em verde; uma lente revela a cor"
+    },
+    {
+      "nome": "Exemplo",
+      "texto": "três abas; a pergunta se digita e as fontes chegam uma a uma"
+    },
+    {
+      "nome": "O dia a dia",
+      "texto": "texto à esquerda e moldura fixa que troca de foto"
+    },
+    {
+      "nome": "Como funciona",
+      "texto": "três passos ligados por uma linha que acende"
+    },
+    {
+      "nome": "Planos",
+      "texto": "Pro R$ 50 e Max R$ 75,90, preços fixos"
+    },
+    {
+      "nome": "Confiança",
+      "texto": "foto do Congresso que se abre em órbita, com CDC e LGPD"
+    },
+    {
+      "nome": "Dúvidas",
+      "texto": "quatro perguntas, uma aberta por vez"
+    },
+    {
+      "nome": "Contato",
+      "texto": "canais da equipe e formulário com consentimento LGPD"
+    },
+    {
+      "nome": "Rodapé",
+      "texto": "escuro, revelado ao final, com resumo legal, tema e cookies"
+    }
+  ],
+  "status": "Pronta"
+}

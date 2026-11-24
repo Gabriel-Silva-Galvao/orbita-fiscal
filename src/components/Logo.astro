@@ -1,0 +1,98 @@
+---
+import Symbol from './Symbol.astro';
+
+interface Props {
+  href?: string;
+  size?: 'md' | 'lg';
+}
+const { href = '/', size = 'md' } = Astro.props;
+---
+
+<a class:list={['logo', `logo-${size}`]} href={href} aria-label="Órbita Fiscal, página inicial">
+  <span class="logo-mark-wrap">
+    <Symbol class="logo-mark" pace={1.2} />
+  </span>
+  <span class="logo-word" aria-hidden="true">
+    <span class="logo-name">Órbita</span>
+    <span class="logo-tag">Fiscal</span>
+  </span>
+</a>
+
+<style>
+  .logo {
+    --mark: 64px;
+    --name: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+  }
+  .logo-lg {
+    --mark: 84px;
+    --name: 36px;
+    gap: 16px;
+  }
+  .logo-mark-wrap {
+    display: grid;
+    place-items: center;
+    width: var(--mark);
+    height: var(--mark);
+    border-radius: var(--radius-round);
+    transition:
+      background-color 400ms ease-out,
+      transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .logo :global(.logo-mark) {
+    width: 88%;
+    height: auto;
+  }
+  .logo-word {
+    display: grid;
+    gap: 4px;
+  }
+  .logo-name {
+    font-family: var(--font-display);
+    font-size: var(--name);
+    line-height: 1;
+  }
+  .logo-tag {
+    font: var(--text-label);
+    font-size: calc(var(--name) * 0.4);
+    line-height: 1;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--mute);
+    transition: color 300ms ease-out;
+  }
+  /* Mouse em cima: o disco aparece atrás do símbolo, a assinatura respira. */
+  .logo:focus-visible .logo-mark-wrap {
+    background: var(--soft);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .logo:hover .logo-mark-wrap {
+      background: var(--soft);
+      transform: scale(1.08) rotate(-6deg);
+    }
+  }
+  .logo:hover .logo-tag,
+  .logo:focus-visible .logo-tag {
+    color: var(--brand);
+  }
+  @media (max-width: 480px) {
+    .logo {
+      --mark: 50px;
+      --name: 23px;
+    }
+  }
+  /* Tela bem pequena: só o símbolo. O nome continua no aria-label do link. */
+  @media (max-width: 400px) {
+    .logo-word {
+      display: none;
+    }
+    .logo {
+      --mark: 48px;
+    }
+  }
+</style>

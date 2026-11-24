@@ -1,0 +1,8 @@
+{
+  "falta": "Rascunhos de Privacidade, Termos e Reembolso prontos no site. Falta revisão por advogado e preencher razão social, CNPJ, encarregado, prazos de guarda e de estorno.",
+  "mvp": true,
+  "nome": "Textos legais",
+  "ordem": 7,
+  "rota": "/privacidade, /termos, /reembolso",
+  "status": "Em andamento"
+}

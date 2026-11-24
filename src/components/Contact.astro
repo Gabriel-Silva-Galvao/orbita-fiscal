@@ -1,0 +1,474 @@
+---
+/**
+ * Fale com a equipe da Órbita.
+ * Envio: se PUBLIC_CONTACT_ENDPOINT estiver definido, o formulário faz POST (JSON) para lá.
+ * Sem endpoint, abre o e-mail da pessoa com a mensagem pronta. Canal e prazo de suporte ainda
+ * estão pendentes (briefing, Página 6), por isso os rótulos “a confirmar” / “a definir”.
+ */
+import Icon from './Icon.astro';
+import Photo from './Photo.astro';
+import Pending from './Pending.astro';
+import { contact } from '../data/site';
+
+const endpoint = import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? '';
+const subjects = ['Dúvida sobre os planos', 'Instalação e suporte', 'Cobrança e reembolso', 'Privacidade e dados', 'Escritórios e equipes', 'Imprensa e parcerias', 'Outro assunto'];
+---
+
+<section id="contato" class="section contact" aria-labelledby="contato-title">
+  <div class="wrap contact-grid">
+    <div class="contact-side">
+      <div class="section-head" data-reveal>
+        <h2 id="contato-title" class="display-lg" data-split>Fale com a equipe da Órbita.</h2>
+        <p class="lead">Dúvida sobre planos, instalação, dados ou uso no seu escritório? Escreva para nós. Uma pessoa da equipe responde.</p>
+      </div>
+
+      <ul class="channels" data-reveal>
+        <li>
+          <div>
+            <span class="ch-k">E-mail</span>
+            <span class="ch-v">
+              <a href={`mailto:${contact.email}`}>{contact.email}</a><Pending kind="confirmar" />
+            </span>
+            <button type="button" class="copy" data-copy={contact.email}>Copiar endereço</button>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="ch-k">Instagram</span>
+            <span class="ch-v">
+              <a href={contact.instagram} target="_blank" rel="noopener">{contact.instagramHandle}</a><Pending kind="confirmar" />
+            </span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="ch-k">Prazo de resposta</span>
+            <span class="ch-v">Em dias úteis<Pending kind="definir" /></span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="ch-k">Escritórios e equipes</span>
+            <span class="ch-v">Escolha “Escritórios e equipes” no assunto e conte quantas pessoas usariam.</span>
+          </div>
+        </li>
+      </ul>
+
+      <figure class="contact-photo" data-reveal data-parallax>
+        <div class="contact-photo-in" data-speed="-0.25">
+          <Photo name="mesa" sizes="(min-width: 900px) 40vw, 100vw" />
+        </div>
+      </figure>
+    </div>
+
+    <form class="form" data-contact data-endpoint={endpoint} data-mailto={contact.email} novalidate data-reveal>
+      <p class="title form-title">Sua mensagem</p>
+
+      <div class="field">
+        <label for="c-nome">Nome</label>
+        <input id="c-nome" name="nome" type="text" autocomplete="name" required minlength="2" />
+        <p class="field-msg" id="c-nome-msg" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <label for="c-email">E-mail</label>
+        <input id="c-email" name="email" type="email" autocomplete="email" required />
+        <p class="field-msg" id="c-email-msg" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <label for="c-assunto">Assunto</label>
+        <div class="select">
+          <select id="c-assunto" name="assunto" required>
+            <option value="">Escolha um assunto</option>
+            {subjects.map((s) => <option>{s}</option>)}
+          </select>
+          <Icon name="solar:alt-arrow-down-linear" size={18} />
+        </div>
+        <p class="field-msg" id="c-assunto-msg" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <label for="c-msg">Mensagem</label>
+        <textarea id="c-msg" name="mensagem" rows="5" required minlength="10" maxlength="2000"></textarea>
+        <p class="field-help"><span data-count-for="c-msg">0</span> de 2.000 caracteres</p>
+        <p class="field-msg" id="c-msg-msg" aria-live="polite"></p>
+      </div>
+      <div class="field field-check">
+        <input id="c-ok" name="consentimento" type="checkbox" required />
+        <label for="c-ok">
+          Concordo que a Órbita Fiscal use estes dados só para responder a esta mensagem, como descrito na{' '}<a href="/privacidade">Política de privacidade</a>.
+        </label>
+        <p class="field-msg" id="c-ok-msg" aria-live="polite"></p>
+      </div>
+
+      <button type="submit" class="btn-send">
+        <span class="btn-send-label">Enviar mensagem</span>
+        <Icon name="solar:plain-linear" size={18} />
+      </button>
+
+      <div class="form-status" role="status" aria-live="polite" hidden>
+        <Icon name="solar:check-circle-linear" size={28} draw />
+        <div>
+          <p class="title" data-status-title>Mensagem pronta.</p>
+          <p class="small mute" data-status-text></p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 960px) {
+    .contact-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+  }
+  .contact-side {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .contact-side .section-head {
+    margin-bottom: 0;
+  }
+
+  .channels {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .channels li {
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--line);
+  }
+  .channels div {
+    display: grid;
+    gap: 2px;
+    justify-items: start;
+  }
+  .ch-k {
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+  .ch-v {
+    font: var(--text-body);
+    font-size: 15px;
+  }
+  .ch-v a {
+    color: var(--ink);
+    text-underline-offset: 3px;
+  }
+  .copy {
+    margin-top: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    font: var(--text-small);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 200ms var(--ease-out), scale 160ms var(--ease-out);
+  }
+  .copy:active {
+    scale: 0.97;
+  }
+  .copy.is-done {
+    background: var(--soft);
+  }
+
+  .contact-photo {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+  }
+  .contact-photo-in {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: -12%;
+    height: 124%;
+  }
+  .contact-photo :global(.photo) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Formulário (componente Field do design system) */
+  .form {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+  }
+  @media (min-width: 768px) {
+    .form {
+      padding: var(--space-6);
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+  .field label {
+    font: var(--text-small);
+    font-weight: 500;
+  }
+  .field input[type='text'],
+  .field input[type='email'],
+  .field select,
+  .field textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font: var(--text-body);
+    transition: border-color 200ms var(--ease-out);
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 132px;
+  }
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+    border-color: var(--brand);
+  }
+  .select {
+    position: relative;
+  }
+  .select select {
+    appearance: none;
+    padding-right: 40px;
+  }
+  .select :global(.icon) {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--mute);
+  }
+  .field-help {
+    font: var(--text-small);
+    font-size: 13px;
+    color: var(--mute);
+  }
+  .field-msg {
+    font: var(--text-small);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .field-msg:empty {
+    display: none;
+  }
+  .field-msg::before {
+    content: '!';
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-radius: var(--radius-round);
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 600;
+    vertical-align: 1px;
+  }
+  .field.is-error input,
+  .field.is-error select,
+  .field.is-error textarea {
+    border: 2px solid var(--ink);
+  }
+  .field-check {
+    grid-template-columns: 22px 1fr;
+    align-items: start;
+    column-gap: var(--space-3);
+  }
+  .field-check input {
+    width: 20px;
+    height: 20px;
+    margin: 2px 0 0;
+    accent-color: var(--brand);
+  }
+  .field-check label {
+    font-weight: 400;
+    color: var(--mute);
+  }
+  .field-check label a {
+    color: var(--brand);
+  }
+  .field-check .field-msg {
+    grid-column: 2;
+  }
+
+  .btn-send {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-brand);
+    font: var(--text-button);
+    cursor: pointer;
+    transition: scale 160ms var(--ease-out), opacity 200ms;
+  }
+  .btn-send:active {
+    scale: 0.97;
+  }
+  .btn-send:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
+  .btn-send[aria-busy='true'] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-send :global(.icon) {
+      transition: transform 300ms var(--ease-out);
+    }
+    .btn-send:hover :global(.icon) {
+      transform: translate(3px, -3px);
+    }
+  }
+  .form-status {
+    display: flex;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--soft);
+    color: var(--ink);
+  }
+  .form-status :global(.icon) {
+    flex: none;
+    color: var(--brand);
+  }
+</style>
+
+<script>
+  const msgs: Record<string, (el: HTMLInputElement) => string> = {
+    nome: (el) => (el.value.trim().length < 2 ? 'Escreva seu nome para sabermos como chamar você.' : ''),
+    email: (el) =>
+      !el.value.trim()
+        ? 'Escreva o e-mail em que você quer receber a resposta.'
+        : !el.validity.valid
+          ? 'Confira o e-mail: falta algo como “@” ou o domínio.'
+          : '',
+    assunto: (el) => (!el.value ? 'Escolha o assunto mais próximo.' : ''),
+    mensagem: (el) => (el.value.trim().length < 10 ? 'Conte um pouco mais, com pelo menos 10 caracteres.' : ''),
+    consentimento: (el) => (!el.checked ? 'Para responder, precisamos do seu de acordo.' : ''),
+  };
+
+  document.querySelectorAll<HTMLFormElement>('[data-contact]').forEach((form) => {
+    const status = form.querySelector<HTMLElement>('.form-status')!;
+    const btn = form.querySelector<HTMLButtonElement>('.btn-send')!;
+    const label = btn.querySelector<HTMLElement>('.btn-send-label')!;
+
+    const check = (el: HTMLInputElement) => {
+      const m = msgs[el.name]?.(el) ?? '';
+      const field = el.closest('.field')!;
+      const out = field.querySelector<HTMLElement>('.field-msg');
+      field.classList.toggle('is-error', !!m);
+      el.setAttribute('aria-invalid', String(!!m));
+      if (out) {
+        out.textContent = m;
+        el.setAttribute('aria-describedby', out.id);
+      }
+      return !m;
+    };
+
+    form.querySelectorAll<HTMLInputElement>('input, select, textarea').forEach((el) => {
+      el.addEventListener('blur', () => el.value && check(el));
+      el.addEventListener('input', () => el.closest('.field')?.classList.contains('is-error') && check(el));
+    });
+
+    const counter = form.querySelector<HTMLElement>('[data-count-for]');
+    const area = form.querySelector<HTMLTextAreaElement>('textarea');
+    area?.addEventListener('input', () => counter && (counter.textContent = area.value.length.toLocaleString('pt-BR')));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const els = Array.from(form.querySelectorAll<HTMLInputElement>('input, select, textarea'));
+      const ok = els.map(check).every(Boolean);
+      if (!ok) {
+        els.find((el) => el.getAttribute('aria-invalid') === 'true')?.focus();
+        return;
+      }
+      const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
+      const endpoint = form.dataset.endpoint;
+      btn.setAttribute('aria-busy', 'true');
+      btn.disabled = true;
+      label.textContent = 'Enviando…';
+      const title = status.querySelector<HTMLElement>('[data-status-title]')!;
+      const text = status.querySelector<HTMLElement>('[data-status-text]')!;
+      try {
+        if (endpoint) {
+          const r = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+          if (!r.ok) throw new Error(String(r.status));
+          title.textContent = 'Mensagem enviada.';
+          text.textContent = 'Obrigado. A equipe responde no e-mail que você informou.';
+          form.reset();
+        } else {
+          // Sem servidor de envio ainda: abre o e-mail da pessoa com tudo preenchido.
+          const body = `${data.mensagem}\n\n— ${data.nome} (${data.email})`;
+          location.href = `mailto:${form.dataset.mailto}?subject=${encodeURIComponent(`[Site] ${data.assunto}`)}&body=${encodeURIComponent(body)}`;
+          title.textContent = 'Abrimos seu e-mail com a mensagem pronta.';
+          text.textContent = `Se ele não abriu, escreva para ${form.dataset.mailto} e cole sua mensagem.`;
+        }
+        status.hidden = false;
+        status.querySelector('[data-draw]')?.classList.add('is-drawn');
+      } catch {
+        title.textContent = 'Não conseguimos enviar agora.';
+        text.textContent = `A conexão falhou do nosso lado. Tente de novo em instantes ou escreva para ${form.dataset.mailto}.`;
+        status.hidden = false;
+      } finally {
+        btn.removeAttribute('aria-busy');
+        btn.disabled = false;
+        label.textContent = 'Enviar mensagem';
+      }
+    });
+  });
+
+  // Copiar e-mail
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.dataset.copy ?? '');
+        b.textContent = 'Copiado';
+        b.classList.add('is-done');
+        setTimeout(() => {
+          b.textContent = 'Copiar endereço';
+          b.classList.remove('is-done');
+        }, 2000);
+      } catch {
+        b.textContent = b.dataset.copy ?? '';
+      }
+    }),
+  );
+</script>

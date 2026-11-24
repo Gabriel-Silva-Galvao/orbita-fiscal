@@ -1,0 +1,58 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#f2f6ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#102b28" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <!--
+      Tema e movimento antes de pintar.
+      .anim só entra se a pessoa não pediu movimento reduzido. Se o motor de movimento
+      não confirmar em 2,5 s, .anim sai e a página aparece inteira, parada.
+    -->
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var t = localStorage.getItem('of-theme');
+          if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+        } catch (e) {}
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('anim');
+          setTimeout(function () {
+            if (!window.__ofMotion) d.classList.remove('anim');
+          }, 2500);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    <div class="progress" aria-hidden="true"><span class="progress-bar"></span></div>
+    <slot />
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>

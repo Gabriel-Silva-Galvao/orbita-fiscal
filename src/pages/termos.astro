@@ -1,0 +1,179 @@
+---
+import Legal from '../layouts/Legal.astro';
+import Pending from '../components/Pending.astro';
+import { contact } from '../data/site';
+
+const sections = [
+  { id: 'aceite', title: 'Sobre estes termos' },
+  { id: 'servico', title: 'O que é o serviço' },
+  { id: 'conta', title: 'Sua conta' },
+  { id: 'planos', title: 'Planos e preços' },
+  { id: 'cobranca', title: 'Cobrança e renovação' },
+  { id: 'cancelamento', title: 'Cancelamento' },
+  { id: 'reembolso', title: 'Reembolso' },
+  { id: 'licenca', title: 'Licença de uso' },
+  { id: 'uso', title: 'Uso permitido' },
+  { id: 'conteudo', title: 'Conteúdo e propriedade' },
+  { id: 'disponibilidade', title: 'Disponibilidade' },
+  { id: 'responsabilidade', title: 'Responsabilidade' },
+  { id: 'alteracoes', title: 'Alterações' },
+  { id: 'foro', title: 'Lei aplicável e foro' },
+];
+---
+
+<Legal
+  title="Termos de uso · Órbita Fiscal"
+  description="O que a assinatura da Órbita Fiscal inclui, como funcionam cobrança, renovação, cancelamento e o uso do plugin."
+  heading="Termos de uso"
+  intro="Estes termos explicam o que a assinatura da Órbita Fiscal inclui, como funcionam cobrança, renovação e cancelamento, e o que você pode e não pode fazer com o plugin."
+  updated="24/11/2026"
+  sections={sections}
+>
+  <section id="aceite">
+    <h2>Sobre estes termos</h2>
+    <p>
+      Estes termos são um contrato entre você e a Órbita Fiscal, razão social<Pending kind="definir" />, CNPJ<Pending
+        kind="definir"
+      />. Ao criar uma conta ou assinar, você declara que leu e concorda com eles e com a
+      <a href="/privacidade">Política de privacidade</a>.
+    </p>
+  </section>
+
+  <section id="servico">
+    <h2>O que é o serviço</h2>
+    <p>
+      A Órbita Fiscal oferece um plugin para o Claude, da Anthropic, que consulta uma base de legislação e jurisprudência
+      brasileira e devolve, junto de cada resposta, a referência de onde ela saiu.
+    </p>
+    <div class="box">
+      <p>
+        O plugin é uma ferramenta de apoio à pesquisa e à redação. Ele não presta assessoria jurídica nem substitui o
+        julgamento profissional. Respostas geradas por IA podem conter erros: confira cada fundamento na fonte antes de
+        usar em peça ou parecer.
+      </p>
+    </div>
+    <p>
+      Para usar o plugin, você precisa de uma conta no Claude em um plano que aceite plugins<Pending kind="confirmar" />.
+      A conta no Claude é contratada com a Anthropic, à parte.
+    </p>
+  </section>
+
+  <section id="conta">
+    <h2>Sua conta</h2>
+    <ul>
+      <li>Você precisa ter 18 anos ou mais e informar dados verdadeiros.</li>
+      <li>A conta é pessoal. Guarde suas credenciais e avise se suspeitar de acesso indevido.</li>
+      <li>Você responde pelo que for feito com a sua conta enquanto não nos avisar do acesso indevido.</li>
+    </ul>
+  </section>
+
+  <section id="planos">
+    <h2>Planos e preços</h2>
+    <div class="table">
+      <table>
+        <thead><tr><th>Plano</th><th>Preço</th><th>Inclui</th></tr></thead>
+        <tbody>
+          <tr><td>Pro</td><td>R$ 50 por mês</td><td>Pesquisa de legislação e jurisprudência na base, com fonte para conferir</td></tr>
+          <tr><td>Max</td><td>R$ 75,90 por mês</td><td>Tudo do Pro, mais conferência de processos e preparação de peças com citações marcadas</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Limites de uso de cada plano<Pending kind="definir" />. Mudanças de preço são avisadas por e-mail com antecedência<Pending
+        kind="definir"
+      /> e só valem a partir da cobrança seguinte.
+    </p>
+  </section>
+
+  <section id="cobranca">
+    <h2>Cobrança e renovação</h2>
+    <p>
+      A cobrança é mensal, no cartão ou no Pix<Pending kind="confirmar" />, e a assinatura renova automaticamente a cada
+      mês até você cancelar<Pending kind="confirmar" />. Cada cobrança gera nota fiscal<Pending kind="definir" />.
+    </p>
+    <p>
+      Se um pagamento não for aprovado, avisamos e damos um prazo para regularizar antes de suspender o acesso<Pending
+        kind="definir"
+      />.
+    </p>
+  </section>
+
+  <section id="cancelamento">
+    <h2>Cancelamento</h2>
+    <p>
+      Você pode cancelar a qualquer momento no Portal do cliente, sem multa. O acesso continua até o fim do período já
+      pago e a assinatura não renova mais<Pending kind="confirmar" />.
+    </p>
+  </section>
+
+  <section id="reembolso">
+    <h2>Reembolso</h2>
+    <p>
+      Em até 7 dias da compra, você pode desistir e receber o valor integral, como prevê o art. 49 do Código de Defesa do
+      Consumidor. Prazos e passo a passo estão na <a href="/reembolso">Política de reembolso</a>.
+    </p>
+  </section>
+
+  <section id="licenca">
+    <h2>Licença de uso</h2>
+    <p>
+      A assinatura dá a você uma licença pessoal, intransferível e não exclusiva para usar o plugin enquanto ela estiver
+      ativa. Não é permitido:
+    </p>
+    <ul>
+      <li>compartilhar sua conta ou o arquivo do plugin com outras pessoas;</li>
+      <li>revender, sublicenciar ou oferecer o serviço a terceiros;</li>
+      <li>extrair a base em massa, por automação ou cópia sistemática;</li>
+      <li>descompilar o plugin ou contornar suas proteções<Pending kind="definir" />.</li>
+    </ul>
+    <p>Para uso por uma equipe ou escritório, fale com a equipe pela página de <a href="/#contato">contato</a>.</p>
+  </section>
+
+  <section id="uso">
+    <h2>Uso permitido</h2>
+    <p>Você se compromete a não usar o serviço para fins ilícitos, nem de forma que prejudique o funcionamento do serviço ou de outros usuários.</p>
+  </section>
+
+  <section id="conteudo">
+    <h2>Conteúdo e propriedade</h2>
+    <p>
+      Normas e decisões judiciais são públicas. A organização da base, o software do plugin, a marca e o site pertencem à
+      Órbita Fiscal. Os textos que você escreve e as peças que você produz são seus.
+    </p>
+  </section>
+
+  <section id="disponibilidade">
+    <h2>Disponibilidade</h2>
+    <p>
+      Trabalhamos para manter o serviço no ar, mas pode haver interrupções para manutenção, que avisaremos quando forem
+      programadas. Como o plugin funciona dentro do Claude, mudanças feitas pela Anthropic podem afetar o funcionamento;
+      como tratamos esses casos<Pending kind="definir" />.
+    </p>
+  </section>
+
+  <section id="responsabilidade">
+    <h2>Responsabilidade</h2>
+    <p>
+      A Órbita Fiscal responde pelo serviço nos termos do Código de Defesa do Consumidor. O plugin prepara rascunhos e
+      indica fontes; a análise do caso, a revisão e a decisão sobre o que usar em cada peça são do profissional que o
+      utiliza.
+    </p>
+  </section>
+
+  <section id="alteracoes">
+    <h2>Alterações</h2>
+    <p>
+      Se estes termos mudarem de forma relevante, avisaremos por e-mail com antecedência<Pending kind="definir" />. Se não
+      concordar, você pode cancelar antes de a mudança valer.
+    </p>
+  </section>
+
+  <section id="foro">
+    <h2>Lei aplicável e foro</h2>
+    <p>
+      Estes termos seguem a lei brasileira. Eventuais disputas podem ser levadas ao foro do seu domicílio, como garante o
+      art. 101, I, do Código de Defesa do Consumidor. Dúvidas: <a href={`mailto:${contact.email}`}>{contact.email}</a
+      ><Pending kind="confirmar" />.
+    </p>
+  </section>
+</Legal>

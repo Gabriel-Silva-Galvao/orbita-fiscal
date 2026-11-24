@@ -1,0 +1,40 @@
+---
+/**
+ * Ícone do Iconify, em linha, sem pedido de rede.
+ * Interface: Solar (traço). Marcas reais: MDI (ex.: Instagram), só em contexto verdadeiro.
+ * `draw` marca cada path para se desenhar ao entrar na tela (motor: data-draw).
+ */
+import { getIconData, iconToSVG, replaceIDs } from '@iconify/utils';
+import solar from '@iconify-json/solar/icons.json';
+import mdi from '@iconify-json/mdi/icons.json';
+
+interface Props {
+  name: string;
+  size?: number | string;
+  label?: string;
+  draw?: boolean;
+  class?: string;
+}
+const { name, size = 24, label, draw = false, class: cls } = Astro.props;
+const [prefix, icon] = name.split(':');
+const set = prefix === 'mdi' ? mdi : solar;
+const data = getIconData(set as any, icon);
+if (!data) throw new Error(`Ícone não encontrado: ${name}`);
+const svg = iconToSVG(data, { height: 'auto' });
+let body = replaceIDs(svg.body);
+if (draw) body = body.replace(/<(path|circle|rect|ellipse|line|polyline)\b/g, '<$1 class="draw" pathLength="1"');
+const attrs = svg.attributes;
+---
+
+<svg
+  class:list={['icon', cls]}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox={attrs.viewBox}
+  width={size}
+  height={size}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  data-draw={draw ? '' : undefined}
+  set:html={body}
+/>

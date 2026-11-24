@@ -1,0 +1,586 @@
+---
+/**
+ * Checkout (briefing, Página 3): resumo do plano à esquerda, pagamento à direita.
+ * Só a interface nesta etapa (decisão de 24/11/2026): sem PUBLIC_PAYMENT_PROVIDER, roda em modo de
+ * demonstração, nada é cobrado e nenhum dado sai do navegador.
+ * Na integração real, os campos do cartão devem ser os campos seguros do provedor (iframe/SDK),
+ * para que o número do cartão nunca passe pelo servidor da Órbita Fiscal.
+ */
+import Focus from '../../layouts/Focus.astro';
+import Pending from '../../components/Pending.astro';
+import Icon from '../../components/Icon.astro';
+import { plans, brl, type Plan } from '../../data/plans';
+
+export function getStaticPaths() {
+  return [{ params: { plano: 'pro' } }, { params: { plano: 'max' } }];
+}
+
+const slug = Astro.params.plano as Plan['slug'];
+const plan = plans[slug];
+const other = plans[slug === 'max' ? 'pro' : 'max'];
+const price = brl(plan.cents);
+const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
+---
+
+<Focus title={`Assinar o ${plan.name} · Órbita Fiscal`} description={`Assine o plano ${plan.name} da Órbita Fiscal por ${price} por mês. Reembolso integral em até 7 dias.`}>
+  <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider}>
+    <aside class="summary" aria-labelledby="sum-title">
+      <h1 id="sum-title" class="display-md">Assinar o {plan.name}</h1>
+      <p class="price"><span class="value">{price}</span> <span class="per">por mês</span></p>
+      <ul class="items">
+        {
+          plan.items.map((it) => (
+            <li>
+              <span>
+                {it.text}
+                {it.pending && <Pending kind={it.pending} />}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <a class="swap small" href={`/assinar/${other.slug}`}>Trocar para o {other.name} ({brl(other.cents)} por mês)</a>
+      <div class="terms-box">
+        <p><strong>Cobrança mensal. Reembolso integral em até 7 dias.</strong></p>
+        <dl>
+          <div><dt>Hoje</dt><dd>{price}</dd></div>
+          <div><dt>Próxima cobrança</dt><dd data-next-date>em 1 mês</dd></div>
+        </dl>
+        <p class="small mute">Cancele quando quiser no Portal do cliente, sem multa.</p>
+      </div>
+    </aside>
+
+    <section class="pay" aria-label="Pagamento">
+      {!provider && (
+        <p class="demo">
+          <strong>Modo de demonstração.</strong> Nada é cobrado e nenhum dado sai deste navegador. Não use um cartão de verdade: para testar, use 4242 4242 4242 4242 (aprova) ou 4000 0000 0000 0002 (é recusado).
+        </p>
+      )}
+
+      <form class="pay-form" novalidate data-form>
+        <fieldset class="group">
+          <legend class="group-title">Sua conta</legend>
+          <p class="account small" data-account hidden>
+            Assinando como <strong data-account-email></strong>.{' '}<a href={`/entrar?plano=${slug}`}>Usar outra conta</a>
+          </p>
+          <div class="field" data-email-field>
+            <label for="c-email">E-mail</label>
+            <input id="c-email" name="email" type="email" autocomplete="email" inputmode="email" aria-describedby="c-email-hint c-email-msg" />
+            <p class="hint" id="c-email-hint">Sua conta é criada com este e-mail. Já tem conta? <a href={`/entrar?plano=${slug}`}>Entre</a>.</p>
+            <p class="msg" id="c-email-msg" aria-live="polite"></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="group-title">Pagamento</legend>
+          <div class="methods" role="radiogroup" aria-label="Forma de pagamento">
+            <label class="method"><input type="radio" name="metodo" value="cartao" checked /> <Icon name="solar:card-linear" size={18} /> Cartão de crédito</label>
+            <label class="method"><input type="radio" name="metodo" value="pix" /> <Icon name="solar:qr-code-linear" size={18} /> Pix<Pending kind="confirmar" /></label>
+          </div>
+
+          <div class="method-panel" data-panel="cartao">
+            <div class="field">
+              <label for="c-card">Número do cartão</label>
+              <input id="c-card" name="cartao" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" aria-describedby="c-card-msg" />
+              <p class="msg" id="c-card-msg" aria-live="polite"></p>
+            </div>
+            <div class="row-2">
+              <div class="field">
+                <label for="c-exp">Validade</label>
+                <input id="c-exp" name="validade" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" aria-describedby="c-exp-msg" />
+                <p class="msg" id="c-exp-msg" aria-live="polite"></p>
+              </div>
+              <div class="field">
+                <label for="c-cvc">Código de segurança</label>
+                <input id="c-cvc" name="cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="3 ou 4 dígitos" aria-describedby="c-cvc-msg" />
+                <p class="msg" id="c-cvc-msg" aria-live="polite"></p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="c-holder">Nome impresso no cartão</label>
+              <input id="c-holder" name="titular" autocomplete="cc-name" aria-describedby="c-holder-msg" />
+              <p class="msg" id="c-holder-msg" aria-live="polite"></p>
+            </div>
+          </div>
+
+          <div class="method-panel" data-panel="pix" hidden>
+            <p class="small mute">Ao continuar, geramos um código Pix de {price}. Ele vale por 30 minutos. A renovação mensal pelo Pix<Pending kind="definir" />.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="group-title">Dados para a nota fiscal</legend>
+          <div class="field">
+            <label for="c-nome">Nome ou razão social</label>
+            <input id="c-nome" name="nome" autocomplete="name" aria-describedby="c-nome-msg" />
+            <p class="msg" id="c-nome-msg" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="c-doc">CPF ou CNPJ</label>
+            <input id="c-doc" name="documento" inputmode="numeric" aria-describedby="c-doc-msg" />
+            <p class="msg" id="c-doc-msg" aria-live="polite"></p>
+          </div>
+        </fieldset>
+
+        <p class="notice is-error" data-error role="alert" hidden></p>
+
+        <button type="submit" class="btn-main" data-submit>
+          <span data-submit-label>Pagar {price} e receber o plugin</span>
+        </button>
+        <p class="small mute fine">
+          Ao pagar, você concorda com os <a href="/termos">Termos de uso</a> e a <a href="/reembolso">Política de reembolso</a>.
+        </p>
+      </form>
+
+      <div class="pix-wait" data-pix hidden tabindex="-1">
+        <h2 class="title">Pague com Pix</h2>
+        <div class="qr" aria-hidden="true"><span>QR Code do Pix</span></div>
+        <div class="field">
+          <span class="label" id="pix-code-label">Pix copia e cola</span>
+          <div class="copy-row">
+            <code aria-labelledby="pix-code-label" data-pix-code></code>
+            <button type="button" class="btn-alt copy" data-copy-pix>Copiar</button>
+          </div>
+        </div>
+        <p class="notice" role="status">
+          <strong>Aguardando o pagamento</strong>
+          <span>O código expira em <span class="timer" data-timer>30:00</span>. Esta página se atualiza sozinha quando o Pix for confirmado.</span>
+        </p>
+        {!provider && <button type="button" class="btn-alt" data-pix-simulate>Simular Pix confirmado (demonstração)</button>}
+        <button type="button" class="link-btn" data-pix-back>Voltar e pagar com cartão</button>
+      </div>
+
+      <div class="done" data-done hidden tabindex="-1">
+        <p class="notice is-ok" role="status">
+          <strong>Pagamento aprovado.</strong>
+          <span>O recibo vai para <span data-done-email></span>. A nota fiscal chega por e-mail<Pending kind="definir" />.</span>
+        </p>
+        <h2 class="display-md">Seu plugin está pronto</h2>
+        <p class="mute">O próximo passo é instalar no Claude e conectar sua conta. Leva poucos minutos.</p>
+        <a class="btn-main" href="/instalar">Ir para a instalação</a>
+      </div>
+    </section>
+  </div>
+</Focus>
+
+<style>
+  .checkout {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 900px) {
+    .checkout {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: var(--space-8);
+      align-items: start;
+    }
+    .summary {
+      position: sticky;
+      top: var(--space-6);
+    }
+  }
+
+  /* Resumo */
+  .summary {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+  .price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .price .value {
+    font-family: var(--font-display);
+    font-size: 2.75rem;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .price .per {
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .items {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .items li {
+    position: relative;
+    padding-left: 20px;
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .items li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+  .swap {
+    width: fit-content;
+    color: var(--brand);
+  }
+  .terms-box {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .terms-box strong {
+    font-weight: 600;
+  }
+  .terms-box dl {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+  }
+  .terms-box dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font: var(--text-small);
+  }
+  .terms-box dt {
+    color: var(--mute);
+  }
+  .terms-box dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Formulário */
+  .pay {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .pay-form {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .group {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+  .group-title {
+    padding: 0 0 var(--space-2);
+    font: var(--text-title);
+    font-family: var(--font-display);
+  }
+  .account a,
+  .hint a,
+  .fine a {
+    color: var(--brand);
+  }
+  .account strong {
+    font-weight: 600;
+  }
+  .methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+  .method {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font: 500 0.9375rem/1.2 var(--font-body);
+    cursor: pointer;
+    transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out);
+  }
+  .method input {
+    accent-color: var(--brand);
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+  .method:has(input:checked) {
+    border: 2px solid var(--brand);
+    background: var(--bg);
+  }
+  .method:has(input:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .method :global(.icon) {
+    color: var(--brand);
+  }
+  .method-panel {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .fine {
+    margin-top: calc(-1 * var(--space-3));
+  }
+  .link-btn {
+    justify-self: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font: var(--text-small);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  /* Pix */
+  .pix-wait,
+  .done {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .pix-wait:focus,
+  .done:focus {
+    outline: none;
+  }
+  .qr {
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    width: 200px;
+    aspect-ratio: 1;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--mute);
+    font: var(--text-small);
+  }
+  .copy-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    align-items: stretch;
+  }
+  .copy-row code {
+    display: block;
+    padding: 12px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font: 500 0.8125rem/1.5 ui-monospace, Consolas, monospace;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+  .copy {
+    width: auto;
+    min-height: 0;
+  }
+  .timer {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  import { isEmail, isCPF, isCNPJ, maskDoc, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
+
+  const root = document.querySelector<HTMLElement>('[data-checkout]')!;
+  const price = root.dataset.price ?? '';
+  const provider = root.dataset.provider ?? '';
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const form = $<HTMLFormElement>('[data-form]');
+  const submit = $<HTMLButtonElement>('[data-submit]');
+  const label = $('[data-submit-label]');
+  const errorBox = $('[data-error]');
+  const input = (id: string) => $<HTMLInputElement>(`#${id}`);
+
+  // Próxima cobrança: mesma data no mês seguinte.
+  const next = new Date();
+  next.setMonth(next.getMonth() + 1);
+  $('[data-next-date]').textContent = next.toLocaleDateString('pt-BR');
+
+  // Conta já conhecida (vinda do Entrar) ou e-mail para criar a conta.
+  let accountEmail = '';
+  try {
+    accountEmail = sessionStorage.getItem('of-demo-email') ?? '';
+  } catch {}
+  if (accountEmail) {
+    $('[data-account]').hidden = false;
+    $('[data-account-email]').textContent = accountEmail;
+    $('[data-email-field]').hidden = true;
+  }
+
+  // Forma de pagamento
+  const method = () => (form.querySelector<HTMLInputElement>('input[name="metodo"]:checked')?.value ?? 'cartao');
+  const syncLabel = () =>
+    (label.textContent = method() === 'pix' ? `Gerar Pix de ${price}` : `Pagar ${price} e receber o plugin`);
+  const syncMethod = () => {
+    const m = method();
+    root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== m));
+    syncLabel();
+    errorBox.hidden = true;
+  };
+  form.querySelectorAll('input[name="metodo"]').forEach((r) => r.addEventListener('change', syncMethod));
+
+  // Máscaras
+  input('c-card').addEventListener('input', (e) => ((e.target as HTMLInputElement).value = maskCard((e.target as HTMLInputElement).value)));
+  input('c-exp').addEventListener('input', (e) => ((e.target as HTMLInputElement).value = maskExpiry((e.target as HTMLInputElement).value)));
+  input('c-cvc').addEventListener('input', (e) => ((e.target as HTMLInputElement).value = digits((e.target as HTMLInputElement).value).slice(0, 4)));
+  input('c-doc').addEventListener('input', (e) => ((e.target as HTMLInputElement).value = maskDoc((e.target as HTMLInputElement).value)));
+
+  const rules: Record<string, () => string> = {
+    'c-email': () => {
+      if (accountEmail) return '';
+      const v = input('c-email').value.trim();
+      return !v ? 'Escreva o e-mail da sua conta.' : !isEmail(v) ? 'Confira o e-mail: falta algo como “@” ou o domínio.' : '';
+    },
+    'c-card': () => (method() !== 'cartao' ? '' : isCard(input('c-card').value) ? '' : 'Confira o número do cartão: algum dígito parece estar errado.'),
+    'c-exp': () => (method() !== 'cartao' ? '' : isExpiry(input('c-exp').value) ? '' : 'Use mês e ano no formato MM/AA, a partir deste mês.'),
+    'c-cvc': () => (method() !== 'cartao' ? '' : /^\d{3,4}$/.test(input('c-cvc').value) ? '' : 'São os 3 ou 4 números no verso do cartão.'),
+    'c-holder': () => (method() !== 'cartao' ? '' : input('c-holder').value.trim().length >= 3 ? '' : 'Escreva o nome como está impresso no cartão.'),
+    'c-nome': () => (input('c-nome').value.trim().length >= 3 ? '' : 'Escreva o nome ou a razão social que vai na nota.'),
+    'c-doc': () => {
+      const d = digits(input('c-doc').value);
+      if (!d) return 'Informe o CPF ou o CNPJ para a nota fiscal.';
+      if (d.length === 11) return isCPF(d) ? '' : 'Esse CPF não confere. Revise os números.';
+      if (d.length === 14) return isCNPJ(d) ? '' : 'Esse CNPJ não confere. Revise os números.';
+      return 'O CPF tem 11 números e o CNPJ, 14.';
+    },
+  };
+  const check = (id: string) => {
+    const msg = rules[id]();
+    const el = input(id);
+    el.setAttribute('aria-invalid', String(!!msg));
+    document.getElementById(`${id}-msg`)!.textContent = msg;
+    return !msg;
+  };
+  Object.keys(rules).forEach((id) =>
+    input(id).addEventListener('blur', () => input(id).value && check(id)),
+  );
+
+  const busy = (on: boolean, text?: string) => {
+    submit.disabled = on;
+    on ? submit.setAttribute('aria-busy', 'true') : submit.removeAttribute('aria-busy');
+    if (text) label.textContent = text;
+    else syncLabel();
+  };
+
+  function showDone() {
+    // Demonstração: lembra a assinatura neste navegador para Instalar e Portal.
+    try {
+      const email = accountEmail || input('c-email').value.trim();
+      sessionStorage.setItem('of-demo-email', email);
+      localStorage.setItem(
+        'of-demo-assinatura',
+        JSON.stringify({ plano: root.dataset.plan, email, desde: new Date().toISOString(), metodo: method(), final: digits(input('c-card').value).slice(-4) }),
+      );
+    } catch {}
+    form.hidden = true;
+    $('[data-pix]').hidden = true;
+    $('[data-done-email]').textContent = accountEmail || input('c-email').value.trim();
+    const done = $('[data-done]');
+    done.hidden = false;
+    done.focus();
+  }
+
+  // Pix: código copia e cola e contagem de 30 minutos.
+  let pixTimer = 0;
+  function showPix() {
+    form.hidden = true;
+    const box = $('[data-pix]');
+    box.hidden = false;
+    $('[data-pix-code]').textContent = provider ? '' : 'DEMONSTRACAO-SEM-VALOR-00020126580014BR.GOV.BCB.PIX';
+    let left = 30 * 60;
+    clearInterval(pixTimer);
+    pixTimer = window.setInterval(() => {
+      left -= 1;
+      const m = String(Math.floor(left / 60)).padStart(2, '0');
+      const s = String(left % 60).padStart(2, '0');
+      $('[data-timer]').textContent = `${m}:${s}`;
+      if (left <= 0) {
+        clearInterval(pixTimer);
+        $('[data-timer]').textContent = 'expirado';
+      }
+    }, 1000);
+    box.focus();
+  }
+  $('[data-copy-pix]').addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    try {
+      await navigator.clipboard.writeText($('[data-pix-code]').textContent ?? '');
+      btn.textContent = 'Copiado';
+      setTimeout(() => (btn.textContent = 'Copiar'), 2000);
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents($('[data-pix-code]'));
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(range);
+    }
+  });
+  root.querySelector('[data-pix-simulate]')?.addEventListener('click', () => {
+    clearInterval(pixTimer);
+    showDone();
+  });
+  $('[data-pix-back]').addEventListener('click', () => {
+    clearInterval(pixTimer);
+    $('[data-pix]').hidden = true;
+    form.hidden = false;
+    form.querySelector<HTMLInputElement>('input[value="cartao"]')!.checked = true;
+    syncMethod();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (submit.disabled) return; // sem clique duplo
+    errorBox.hidden = true;
+    const ok = Object.keys(rules).map(check).every(Boolean);
+    if (!ok) {
+      root.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+      return;
+    }
+    if (method() === 'pix') return showPix();
+
+    busy(true, 'Processando o pagamento…');
+    try {
+      if (provider) {
+        // Integração real: tokenizar o cartão com o SDK do provedor e confirmar a assinatura no servidor.
+        throw new Error('provider-not-wired');
+      }
+      await new Promise((r) => setTimeout(r, 1400));
+      if (digits(input('c-card').value).endsWith('0002')) {
+        errorBox.innerHTML = '';
+        const strong = document.createElement('strong');
+        strong.textContent = 'O banco recusou o cartão.';
+        const span = document.createElement('span');
+        span.textContent = ' Nenhum valor foi cobrado. Confira os dados, use outro cartão ou pague com Pix.';
+        const pix = document.createElement('button');
+        pix.type = 'button';
+        pix.className = 'link-btn';
+        pix.textContent = 'Pagar com Pix';
+        pix.addEventListener('click', () => {
+          form.querySelector<HTMLInputElement>('input[value="pix"]')!.checked = true;
+          syncMethod();
+        });
+        errorBox.append(strong, span, document.createElement('br'), pix);
+        errorBox.hidden = false;
+        errorBox.focus?.();
+        return;
+      }
+      showDone();
+    } catch {
+      errorBox.textContent = 'Não conseguimos falar com o sistema de pagamento. Nenhum valor foi cobrado. Tente de novo em instantes.';
+      errorBox.hidden = false;
+    } finally {
+      busy(false);
+    }
+  });
+
+  syncMethod();
+</script>

@@ -1,0 +1,116 @@
+/* Órbita Fiscal — generated from tokens.json */
+:root, [data-theme="light"] {
+  --bg: #f2f6ef; /* Fundo da página. Texto ink, mute e brand sobre ele. */
+  --surface: #fafcf8; /* Cartões, campos e a conversa de exemplo. Texto ink e mute sobre ele. */
+  --ink: #102f31; /* Texto principal e títulos, sobre bg, surface e soft. Contraste mínimo 9,8:1. */
+  --mute: #53665e; /* Texto de apoio, legendas e rótulos, sobre bg e surface. Não usar sobre soft no tema claro (4,2:1). */
+  --brand: #10634f; /* Botão principal, links, marcadores e símbolo. Sobre bg contrasta 6,6:1 no claro e 8,5:1 no escuro. */
+  --on-brand: #f2f6ef; /* Texto sobre preenchimento brand (botão e selo). */
+  --soft: #c5dfa4; /* Disco do símbolo, plano em destaque e balão da pergunta. Texto ink sobre ele. */
+  --line: #cfd9cb; /* Filetes e bordas decorativas de cartão. Não serve de borda de campo (use line-strong). */
+  --line-strong: #6f877b; /* Borda de campo, seletor e foco secundário. Contraste mínimo 3:1 sobre bg e surface. */
+  --nucleus: #213947; /* Nêutrons do símbolo atômico. Só no logo. */
+}
+[data-theme="dark"] {
+  --bg: #102b28;
+  --surface: #16352f;
+  --ink: #f0f5e8;
+  --mute: #b2c8bc;
+  --brand: #83d3a9;
+  --on-brand: #102b28;
+  --soft: #385744;
+  --line: #2d4c45;
+  --line-strong: #6a9487;
+  --nucleus: #f0f5e8;
+}
+:root {
+  --space-1: 4px; /* Ajuste fino. */
+  --space-2: 8px; /* Entre ícone e texto. */
+  --space-3: 12px; /* Entre itens de lista. */
+  --space-4: 16px; /* Padding de cartão pequeno. */
+  --space-5: 24px; /* Padding de cartão e campo. */
+  --space-6: 32px; /* Entre grupos. */
+  --space-7: 48px; /* Entre título e conteúdo. */
+  --space-8: 64px; /* Entre seções no celular. */
+  --space-9: 96px; /* Entre seções no desktop. */
+  --radius-sm: 6px; /* Rótulo tracejado. */
+  --radius-md: 10px; /* Item de resultado. */
+  --radius-lg: 14px; /* Cartão, conversa e passo. */
+  --radius-xl: 16px; /* Cartão de plano. */
+  --radius-pill: 999px; /* Botão, aba e selo. */
+  --radius-round: 50%; /* Disco do símbolo e marcador. */
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", Arial, sans-serif;
+  --text-display-xl: 400 56px/60px var(--font-display); /* Título do hero. Uma vez por página. */
+  --text-display-lg: 400 40px/46px var(--font-display); /* Título de seção. */
+  --text-display-md: 400 28px/34px var(--font-display); /* Título de bloco e preço. */
+  --text-title: 400 20px/26px var(--font-display); /* Título de cartão e passo. */
+  --text-body-lg: 400 18px/29px var(--font-body); /* Frase de apoio do hero. */
+  --text-body: 400 16px/26px var(--font-body); /* Texto corrido. */
+  --text-small: 400 14px/21px var(--font-body); /* Legendas e notas. */
+  --text-button: 600 15px/15px var(--font-body); /* Texto de botão. */
+  --text-label: 600 11px/11px var(--font-body); /* Rótulo em caixa alta sobre títulos e selos. */
+}
+.display-xl {
+  font-family: var(--font-display);
+  font-size: 56px;
+  line-height: 60px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.display-lg {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 46px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.display-md {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body-lg {
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 29px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 26px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.small {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.button {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}

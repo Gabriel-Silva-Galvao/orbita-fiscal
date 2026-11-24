@@ -1,0 +1,49 @@
+<!-- @dsCard group="Marca" height=320 subtitle="Símbolo, assinatura e versão compacta" -->
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&display=swap"><style>
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.62 var(--font-body);padding:var(--space-5)}
+.cap{font:600 0.6875rem/1 var(--font-body);letter-spacing:.06em;color:var(--mute);margin:0 0 var(--space-3);text-transform:uppercase}
+.grid{display:grid;grid-template-columns:auto 1fr;gap:var(--space-6);align-items:center}
+.sym{overflow:visible;display:block}.nuc{transform-box:view-box;transform-origin:50px 50px;animation:breathe 4.8s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.06)}}
+.disc{width:180px;height:180px;border-radius:50%;background:var(--soft);display:grid;place-items:center;cursor:pointer}.disc .sym{width:80%}
+.lock{display:inline-flex;align-items:center;gap:12px;color:var(--ink);text-decoration:none}
+.mk{width:64px;height:64px;display:grid;place-items:center;border-radius:50%;transition:background-color .4s,transform .5s cubic-bezier(.34,1.56,.64,1)}
+.mk .sym{width:88%}.lock:hover .mk,.lock:focus-visible .mk{background:var(--soft);transform:scale(1.08) rotate(-6deg)}
+.nm{font-family:var(--font-display);font-size:28px;line-height:1;display:block}
+.tg{font:600 11px/1 var(--font-body);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-top:4px;display:block;transition:color .3s}
+.lock:hover .tg{color:var(--brand)}
+.lock:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px}
+.compact{display:inline-grid;place-items:center;width:48px;height:48px}.compact .sym{width:88%}
+.lab{font:400 0.75rem/1.33 var(--font-body);color:var(--mute);margin:6px 0 0}
+.row{display:flex;gap:var(--space-5);align-items:end;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<template id="sym"><svg class="sym" viewBox="6 14 88 72" aria-hidden="true"><g class="rings" transform="rotate(-28 50 50)"><ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="2.6"/><g class="e" data-r="in" data-a="3.1416" transform="translate(23 50)"><circle r="3.4" fill="var(--gap)" stroke="var(--ink)" stroke-width="2"/></g><g class="e" data-r="in" data-a="0" transform="translate(77 50)"><circle r="3.4" fill="var(--gap)" stroke="var(--ink)" stroke-width="2"/></g><g class="e" data-r="out" data-a="0" transform="translate(93 50)"><circle r="3.4" fill="var(--gap)" stroke="var(--ink)" stroke-width="2"/></g></g><g class="nuc"><circle cx="57.2" cy="50" r="4.4" fill="var(--brand)" stroke="var(--gap)" stroke-width=".7"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)" stroke="var(--gap)" stroke-width=".7"/><circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)" stroke="var(--gap)" stroke-width=".7"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)" stroke="var(--gap)" stroke-width=".7"/><circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)" stroke="var(--gap)" stroke-width=".7"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)" stroke="var(--gap)" stroke-width=".7"/><circle cx="50" cy="50" r="4.4" fill="var(--nucleus)" stroke="var(--gap)" stroke-width=".7"/></g></svg></template>
+<div class="grid">
+ <div><p class="cap">Símbolo no disco soft</p><div class="disc" data-host data-slot style="--gap:var(--soft)"></div></div>
+ <div style="display:grid;gap:var(--space-6)">
+  <div><p class="cap">Assinatura · cabeçalho, 64 px</p><a class="lock" href="#" aria-label="Órbita Fiscal, página inicial" data-host><span class="mk" data-slot style="--gap:var(--bg)"></span><span aria-hidden="true"><span class="nm">Órbita</span><span class="tg">Fiscal</span></span></a></div>
+  <div><p class="cap">Telas até 400 px · só o símbolo</p><div class="row"><div><span class="compact" data-slot style="--gap:var(--bg)"></span><p class="lab">48 px</p></div><div><span class="compact" style="width:24px;height:24px;--gap:var(--bg)" data-slot></span><p class="lab">24 px, mínimo</p></div></div></div>
+ </div>
+</div>
+<script>
+(function(){
+ var tpl=document.getElementById('sym');
+ document.querySelectorAll('[data-slot]').forEach(function(s){s.appendChild(tpl.content.cloneNode(true))});
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ var R={in:{rx:27,ry:17,p:7000},out:{rx:43,ry:28,p:12000}},T=Math.PI*2;
+ var all=[].slice.call(document.querySelectorAll('svg.sym')).map(function(svg){
+  var host=svg.closest('[data-host]')||svg,o={rings:svg.querySelector('.rings'),hot:false,speed:1,tilt:-28};
+  o.es=[].slice.call(svg.querySelectorAll('.e')).map(function(el){return{el:el,r:R[el.getAttribute('data-r')],a:+el.getAttribute('data-a')}});
+  host.addEventListener('pointerenter',function(){o.hot=true});host.addEventListener('pointerleave',function(){o.hot=false});
+  return o});
+ var last=performance.now();
+ function f(now){var dt=Math.min(now-last,64);last=now;all.forEach(function(o){
+  o.speed+=((o.hot?6:1)-o.speed)*Math.min(1,dt/220);o.tilt+=((o.hot?-14:-28)-o.tilt)*Math.min(1,dt/260);
+  o.rings.setAttribute('transform','rotate('+o.tilt.toFixed(2)+' 50 50)');
+  o.es.forEach(function(e){e.a=(e.a+T*dt*o.speed/e.r.p)%T;e.el.setAttribute('transform','translate('+(50+e.r.rx*Math.cos(e.a)).toFixed(2)+' '+(50+e.r.ry*Math.sin(e.a)).toFixed(2)+')')})});
+  requestAnimationFrame(f)}
+ requestAnimationFrame(f);
+})();
+</script></body></html>

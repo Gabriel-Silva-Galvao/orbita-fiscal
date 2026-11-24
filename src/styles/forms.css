@@ -1,0 +1,170 @@
+/*
+ * Campos de formulário (componente Field do design system), compartilhados por Entrar e Checkout.
+ * Rótulo sempre visível acima, borda line-strong, 16 px no texto (iOS não dá zoom), erro que não
+ * depende só de cor ("!" + frase), foco de 3 px em brand.
+ */
+.field {
+  display: grid;
+  gap: 6px;
+}
+.field label,
+.field .label {
+  font: var(--text-small);
+  font-weight: 500;
+}
+.field .hint {
+  font: var(--text-small);
+  font-size: 0.8125rem;
+  color: var(--mute);
+}
+.field input,
+.field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 1rem/1.4 var(--font-body);
+  transition: border-color 200ms var(--ease-out);
+}
+.field input::placeholder {
+  color: var(--mute);
+  opacity: 0.8;
+}
+.field input:focus-visible,
+.field select:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-color: var(--brand);
+}
+.field input[aria-invalid='true'] {
+  border: 2px solid var(--ink);
+}
+.field .msg {
+  font: var(--text-small);
+  font-size: 0.8125rem;
+}
+.field .msg:empty {
+  display: none;
+}
+.field .msg::before {
+  content: '!';
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.row-2 {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Botões de ação dos formulários */
+.btn-main,
+.btn-alt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  font: var(--text-button);
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 200ms var(--ease-out),
+    scale 160ms var(--ease-out),
+    opacity 200ms;
+}
+.btn-main {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: var(--on-brand);
+}
+.btn-alt {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+.btn-main:active,
+.btn-alt:active {
+  scale: 0.98;
+}
+.btn-main:focus-visible,
+.btn-alt:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+.btn-main[aria-busy='true'],
+.btn-main:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-alt:hover {
+    border-color: var(--ink);
+  }
+}
+
+/* Separador "ou" */
+.or {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  font: var(--text-small);
+  color: var(--mute);
+}
+.or::before,
+.or::after {
+  content: '';
+  height: 1px;
+  background: var(--line);
+}
+
+/* Mensagens de estado (sucesso, erro, aviso) */
+.notice {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font: var(--text-small);
+}
+.notice strong {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.notice.is-ok {
+  background: var(--soft);
+  border-color: var(--brand);
+}
+.notice.is-error {
+  border: 2px solid var(--ink);
+}
+.demo {
+  padding: 10px 14px;
+  border: 1px dashed var(--brand);
+  border-radius: var(--radius-md);
+  font: var(--text-small);
+  font-size: 0.8125rem;
+  color: var(--mute);
+}
+.demo strong {
+  color: var(--ink);
+  font-weight: 600;
+}

@@ -1,0 +1,8 @@
+{
+  "falta": "Tela pronta: 4 passos marcáveis, download, código de conexão, pergunta de teste e “Deu certo?” (demonstração). Falta o arquivo real do plugin, os nomes dos menus do Claude e os planos que aceitam plugins.",
+  "mvp": true,
+  "nome": "Instalar o plugin",
+  "ordem": 4,
+  "rota": "/instalar",
+  "status": "Em andamento"
+}

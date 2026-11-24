@@ -1,0 +1,407 @@
+<title>Progresso do site Órbita Fiscal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400&display=swap">
+<style>
+/* Painel de acompanhamento: uma coluna de leitura com o resumo em cima, as páginas como linhas de uma lista de verificação e a história embaixo. Marca Limiar Esmeralda. */
+:root {
+  --bg: #f2f6ef; --surface: #fafcf8; --ink: #102f31; --mute: #53665e; --brand: #10634f;
+  --on-brand: #f2f6ef; --soft: #c5dfa4; --line: #cfd9cb; --line-strong: #6f877b; --nucleus: #213947;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", Arial, sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #102b28; --surface: #16352f; --ink: #f0f5e8; --mute: #b2c8bc; --brand: #83d3a9;
+  --on-brand: #102b28; --soft: #385744; --line: #2d4c45; --line-strong: #6a9487; --nucleus: #f0f5e8; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #102b28; --surface: #16352f; --ink: #f0f5e8; --mute: #b2c8bc; --brand: #83d3a9;
+  --on-brand: #102b28; --soft: #385744; --line: #2d4c45; --line-strong: #6a9487; --nucleus: #f0f5e8; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 400; text-wrap: balance }
+p, li { text-wrap: pretty }
+p, ul, ol { margin: 0 }
+a { color: var(--brand); text-underline-offset: 3px }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; border-radius: 6px }
+
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 72px; display: grid; gap: 56px }
+@media (min-width: 720px) { .wrap { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)) } }
+
+/* Cabeçalho */
+.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
+.top svg { width: 52px; flex: none }
+.top .name { font-family: var(--font-display); font-size: 1.375rem; line-height: 1.1 }
+.top .meta { font-size: .875rem; color: var(--mute) }
+.top .spacer { flex: 1 }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--mute) }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong) }
+.live.on i { background: var(--brand) }
+
+/* Resumo */
+.summary { display: grid; gap: 24px }
+@media (min-width: 760px) { .summary { grid-template-columns: 1.1fr 1fr; align-items: end; gap: 48px } }
+.big { font-family: var(--font-display); font-size: clamp(2.75rem, 7vw, 4.25rem); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums }
+.big small { font-size: .42em; color: var(--mute); letter-spacing: 0 }
+.lead { font-size: 1.125rem; line-height: 1.55; color: var(--mute); max-width: 46ch; margin-top: 12px }
+.bar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px }
+.bar span { height: 14px; border-radius: 4px; border: 1px solid var(--line-strong); background: transparent; transition: background-color 400ms var(--ease-out), border-color 400ms var(--ease-out) }
+.bar span[data-s="Pronta"] { background: var(--brand); border-color: var(--brand) }
+.bar span[data-s="Em andamento"] { background: var(--soft); border-color: var(--brand) }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; font-size: .875rem; color: var(--mute) }
+.legend b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums }
+.counts { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line) }
+.counts div { padding: 14px 0 0 }
+.counts div + div { border-left: 1px solid var(--line); padding-left: 18px }
+.counts .n { font-family: var(--font-display); font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums }
+.counts .k { font-size: .875rem; color: var(--mute) }
+
+/* Seções */
+.sec { display: grid; gap: 20px }
+.sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap }
+.sec-head h2 { font-size: 1.75rem; line-height: 1.2 }
+.note { font-size: .875rem; color: var(--mute) }
+
+/* Filtro */
+.filters { display: flex; flex-wrap: wrap; gap: 6px }
+.filters button { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink); font: 500 .875rem/1 var(--font-body); cursor: pointer; transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out), scale 160ms var(--ease-out) }
+.filters button:active { scale: .97 }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.filters button span { font-variant-numeric: tabular-nums; opacity: .75; margin-left: 4px }
+
+/* Páginas */
+.pages { list-style: none; padding: 0; border-top: 1px solid var(--line) }
+.page { display: grid; grid-template-columns: 34px 1fr; gap: 4px 14px; padding: 18px 0; border-bottom: 1px solid var(--line) }
+@media (min-width: 760px) { .page { grid-template-columns: 34px minmax(0, 1fr) 190px; align-items: start } }
+.page .num { font-family: var(--font-display); font-size: 1.25rem; line-height: 1.3; color: var(--mute); font-variant-numeric: tabular-nums }
+.page .body { min-width: 0; display: grid; gap: 4px }
+.page h3 { font-size: 1.25rem; line-height: 1.3 }
+.page code { font: 500 .8125rem/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--mute); overflow-wrap: anywhere }
+.page .falta { font-size: .9375rem; color: var(--mute) }
+.page .falta b { color: var(--ink); font-weight: 600 }
+.page .ctrl { grid-column: 2; margin-top: 8px }
+@media (min-width: 760px) { .page .ctrl { grid-column: 3; margin-top: 0 } }
+.status { position: relative; display: block }
+.status select { appearance: none; width: 100%; min-height: 40px; padding: 0 34px 0 30px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: 500 .875rem/1 var(--font-body); cursor: pointer }
+.status select:disabled { cursor: default; opacity: 1 }
+.status::before { content: ""; position: absolute; left: 12px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; border: 1.5px solid var(--line-strong); pointer-events: none }
+.status::after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; margin-top: -5px; border-right: 1.5px solid var(--mute); border-bottom: 1.5px solid var(--mute); transform: rotate(45deg); pointer-events: none }
+.status[data-s="Pronta"] select { background: var(--brand); color: var(--on-brand); border-color: var(--brand) }
+.status[data-s="Pronta"]::before { background: var(--on-brand); border-color: var(--on-brand) }
+.status[data-s="Pronta"]::after { border-color: var(--on-brand) }
+.status[data-s="Em andamento"] select { background: var(--soft); border-color: var(--brand) }
+.status[data-s="Em andamento"]::before { background: var(--brand); border-color: var(--brand); clip-path: inset(0 50% 0 0) }
+.status[data-s="Depois do MVP"] select { border-style: dashed; color: var(--mute) }
+.status[data-s="Depois do MVP"]::before { border-style: dashed }
+.saving { font-size: .75rem; color: var(--mute); min-height: 1.2em; margin-top: 4px; padding-left: 12px }
+details.more { margin-top: 6px }
+details.more summary { cursor: pointer; font-size: .875rem; color: var(--brand); width: fit-content; list-style: none }
+details.more summary::-webkit-details-marker { display: none }
+details.more summary::before { content: "+ "; }
+details.more[open] summary::before { content: "− "; }
+details.more ul { margin-top: 8px; padding-left: 18px; display: grid; gap: 4px; font-size: .9375rem; color: var(--mute) }
+details.more ul b { color: var(--ink); font-weight: 600 }
+
+/* Bloqueios */
+.checks { list-style: none; padding: 0; display: grid; gap: 2px }
+.check label { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; padding: 10px 12px; margin: 0 -12px; border-radius: 10px; cursor: pointer; transition: background-color 200ms var(--ease-out) }
+@media (hover: hover) and (pointer: fine) { .check label:hover { background: var(--surface) } }
+.check input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: var(--brand); cursor: pointer }
+.check input:disabled { cursor: default }
+.check span { transition: color 300ms var(--ease-out) }
+.check input:checked + span { color: var(--mute); text-decoration: line-through; text-decoration-color: var(--line-strong) }
+
+/* Histórico */
+.timeline { list-style: none; padding: 0; position: relative; display: grid; gap: 22px }
+.timeline::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1.5px; background: var(--line) }
+.timeline li { position: relative; padding-left: 30px; display: grid; gap: 2px }
+.timeline li::before { content: ""; position: absolute; left: 0; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--brand) }
+.timeline li:first-child::before { background: var(--brand) }
+.timeline .d { font-size: .8125rem; color: var(--mute); font-variant-numeric: tabular-nums }
+.timeline .t { font-family: var(--font-display); font-size: 1.125rem; line-height: 1.3 }
+.timeline .x { font-size: .9375rem; color: var(--mute) }
+
+/* Próximos e links */
+.two { display: grid; gap: 40px }
+@media (min-width: 760px) { .two { grid-template-columns: 1fr 1fr } }
+.steps { padding-left: 20px; display: grid; gap: 8px }
+.steps li::marker { color: var(--brand); font-family: var(--font-display) }
+.links { list-style: none; padding: 0; border-top: 1px solid var(--line) }
+.links li { border-bottom: 1px solid var(--line) }
+.links a, .links span.f { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; text-decoration: none; color: var(--ink) }
+.links a::after { content: "↗"; color: var(--brand) }
+.links span.f code { font: 500 .8125rem/1.5 ui-monospace, Consolas, monospace; color: var(--mute) }
+
+/* Passo a passo */
+.ledger { display: grid; gap: 36px }
+@media (min-width: 760px) { .ledger { grid-template-columns: 1fr 1fr; gap: 48px } }
+.col-t { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: .9375rem; font-weight: 500; color: var(--mute); margin-bottom: 14px }
+.tag { display: inline-block; padding: 4px 10px; border-radius: 999px; font: 600 .75rem/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase }
+.tag-done { background: var(--brand); color: var(--on-brand) }
+.tag-todo { border: 1px dashed var(--line-strong); color: var(--ink) }
+.done-list { padding-left: 22px; display: grid; gap: 8px; font-size: .9375rem; color: var(--mute) }
+.done-list li::marker { color: var(--brand); font-variant-numeric: tabular-nums }
+.done-list b, .todo-list dt { color: var(--ink); font-weight: 600 }
+.todo-list { margin: 0; display: grid; gap: 4px }
+.todo-list dt { font-size: .9375rem; padding-top: 12px; border-top: 1px solid var(--line) }
+.todo-list dt:first-child { padding-top: 0; border-top: 0 }
+.todo-list dd { margin: 0 0 8px; font-size: .9375rem; color: var(--mute) }
+.empty { padding: 20px; border: 1px dashed var(--line-strong); border-radius: 14px; color: var(--mute); font-size: .9375rem }
+.foot { font-size: .8125rem; color: var(--mute); border-top: 1px solid var(--line); padding-top: 18px }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <svg viewBox="6 14 88 72" role="img" aria-label="Símbolo da Órbita Fiscal"><g transform="rotate(-28 50 50)"><ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="2.6"/><circle cx="23" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="77" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="93" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/></g><circle cx="57.2" cy="50" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)"/><circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)"/><circle cx="50" cy="50" r="4.4" fill="var(--nucleus)"/></svg>
+    <div>
+      <p class="name">Progresso do site</p>
+      <p class="meta">Órbita Fiscal · <span id="updated">atualizado em 24/11/2026</span></p>
+    </div>
+    <span class="spacer"></span>
+    <span class="live" id="live"><i></i><span>Conectando</span></span>
+  </header>
+
+  <section class="summary" aria-labelledby="sum-t">
+    <div>
+      <h1 id="sum-t" class="big"><span id="done">–</span> <small>de <span id="total">7</span> páginas do MVP prontas</small></h1>
+      <p class="lead">A landing roda localmente e ainda não está publicada. As outras páginas esperam decisões que estão na lista de bloqueios.</p>
+    </div>
+    <div>
+      <div class="bar" id="bar" aria-hidden="true"></div>
+      <p class="legend" id="legend"></p>
+      <div class="counts" style="margin-top:22px">
+        <div><p class="n" id="blk-open">–</p><p class="k">bloqueios em aberto</p></div>
+        <div><p class="n" id="blk-done">–</p><p class="k">bloqueios resolvidos</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="pg-t">
+    <div class="sec-head">
+      <h2 id="pg-t">Páginas</h2>
+      <div class="filters" id="filters" role="group" aria-label="Filtrar por status"></div>
+    </div>
+    <p class="note" id="pg-note">Mude o status direto na lista; a mudança vale para todos que abrem esta página.</p>
+    <ol class="pages" id="pages" aria-live="polite"></ol>
+    <p class="empty" id="pg-empty" hidden>Carregando o status das páginas…</p>
+  </section>
+
+  <section class="sec" aria-labelledby="bl-t">
+    <div class="sec-head">
+      <h2 id="bl-t">O que trava o lançamento</h2>
+      <p class="note">Decisões suas, não código. Marque quando resolver.</p>
+    </div>
+    <ul class="checks" id="checks"></ul>
+    <p class="empty" id="bl-empty" hidden>Carregando os bloqueios…</p>
+  </section>
+
+  <section class="sec" aria-labelledby="pp-t">
+    <div class="sec-head">
+      <h2 id="pp-t">Passo a passo</h2>
+      <p class="note">O mesmo conteúdo está em PROGRESSO.md, dentro do projeto.</p>
+    </div>
+    <div class="ledger">
+      <div>
+        <h3 class="col-t"><span class="tag tag-done">Feito</span> 14 etapas</h3>
+        <ol class="done-list">
+          <li><b>Base do projeto.</b> Briefings, mapa e design system importados; Astro com os tokens da marca, temas claro e escuro.</li>
+          <li><b>Landing.</b> Topo, exemplo em três abas, como funciona, planos Pro e Max, confiança e dúvidas.</li>
+          <li><b>Movimento.</b> GSAP, ScrollTrigger e Lenis; logo em órbita; tudo parado com movimento reduzido.</li>
+          <li><b>Fotos reais.</b> 8 fotos do Unsplash com crédito; lente, moldura fixa e Brasília em órbita.</li>
+          <li><b>Contato e rodapé.</b> Formulário validado; rodapé revelado com tema e cookies.</li>
+          <li><b>Logo.</b> Versão simples, 64 px no cabeçalho, só o símbolo até 400 px.</li>
+          <li><b>Auditoria de IA.</b> Sem sobretítulos, ícones decorativos ou contagem de preço; tipografia em rem.</li>
+          <li><b>Textos legais.</b> Privacidade, Termos e Reembolso em rascunho.</li>
+          <li><b>Entrar.</b> Google ou link por e-mail, com todos os estados.</li>
+          <li><b>Checkout.</b> Cartão, Pix, CPF/CNPJ, recusa, espera e aprovação.</li>
+          <li><b>Instalar.</b> Quatro passos marcáveis e pergunta de teste.</li>
+          <li><b>Portal.</b> Plano, reembolso em 7 dias, cancelamento e exclusão de conta.</li>
+          <li><b>Ajuda.</b> Seis artigos com link direto.</li>
+          <li><b>Artefatos.</b> Design system, briefings, pendências e este painel.</li>
+        </ol>
+      </div>
+      <div>
+        <h3 class="col-t"><span class="tag tag-todo">Falta</span> em 5 frentes</h3>
+        <dl class="todo-list">
+          <dt>Decisões da empresa</dt>
+          <dd>Provedor de pagamento e nota fiscal; hospedagem e domínio; serviço de e-mail; razão social, CNPJ e contatos reais; política de dados das consultas; prazos; limite do Max; formato do plugin; canal de suporte.</dd>
+          <dt>Jurídico</dt>
+          <dd>Revisão por advogado dos três textos legais e das 8 citações dos exemplos.</dd>
+          <dt>Servidor e integrações</dt>
+          <dd>Autenticação (Google e link por e-mail), cobrança com campos seguros do provedor, Pix, notas, Portal com dados reais, download do plugin, código de conexão, envio do formulário de contato. Depois, tirar o modo de demonstração.</dd>
+          <dt>Publicação</dt>
+          <dd>Fotos servidas pelo próprio site, imagem de compartilhamento, sitemap, teste com leitor de tela e com movimento reduzido, publicar no domínio.</dd>
+          <dt>Depois do MVP</dt>
+          <dd>Página Para equipes, com formulário de interesse.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <div class="two">
+    <section class="sec" aria-labelledby="nx-t">
+      <h2 id="nx-t" style="font-size:1.75rem">Próximos passos</h2>
+      <ol class="steps">
+        <li>Enviar Privacidade, Termos e Reembolso para revisão de um advogado.</li>
+        <li>Escolher o provedor de pagamento e a hospedagem para ligar Entrar, Checkout e Portal de verdade.</li>
+        <li>Criar o servidor: contas, envio dos links de acesso, assinatura e notas fiscais.</li>
+        <li>Baixar as fotos para o próprio site e publicar.</li>
+      </ol>
+    </section>
+    <section class="sec" aria-labelledby="ln-t">
+      <h2 id="ln-t" style="font-size:1.75rem">Onde está cada coisa</h2>
+      <ul class="links">
+        <li><a href="https://claude.ai/artifact/RAhv8e9CD2NQ5F2DXqHs44" target="_blank" rel="noopener">Briefings das páginas</a></li>
+        <li><a href="https://claude.ai/artifact/LFaGLAW9EJnNm4Q1R26eTU" target="_blank" rel="noopener">Pendências e decisões</a></li>
+        <li><a href="https://claude.ai/artifact/RvyazHgvww5Zk3qzojPFYA" target="_blank" rel="noopener">Design system</a></li>
+        <li><span class="f">Passo a passo completo <code>PROGRESSO.md</code></span></li>
+        <li><span class="f">Código do site <code>src/</code></span></li>
+        <li><span class="f">Auditoria de traços de IA <code>docs/auditoria-ia.md</code></span></li>
+        <li><span class="f">Análise de animações <code>docs/analise-do-site.md</code></span></li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="sec" aria-labelledby="hs-t">
+    <h2 id="hs-t" style="font-size:1.75rem">Histórico</h2>
+    <ol class="timeline">
+      <li><span class="d">24/11/2026</span><span class="t">Instalar, Portal e Ajuda</span><span class="x">Todas as páginas do MVP existem. Instalar com passos marcáveis e pergunta de teste; Portal com plano, reembolso em 7 dias, cancelamento e exclusão de conta; Ajuda com seis artigos de link direto. O fluxo completo roda em demonstração.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Entrar e Checkout</span><span class="x">Entrar com Google ou link por e-mail; Checkout com cartão, Pix, dados da nota e estados de recusa, espera e aprovação. As duas telas rodam em modo de demonstração, sem cobrança nem envio de e-mail.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Textos legais</span><span class="x">Páginas de Privacidade, Termos e Reembolso criadas, com índice lateral, vigência e aviso de rascunho. Base: LGPD, Marco Civil, CDC e Decreto 7.962/2013. Aguardam revisão por advogado.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Traços de IA</span><span class="x">Quatro skills de auditoria instaladas. Saíram sobretítulos, ícones decorativos, botões que fogem do cursor e a contagem de preço. Tipografia em rem.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Logo simples</span><span class="x">Volta ao símbolo original; só o símbolo em telas de até 400 px.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Rodapé e logo</span><span class="x">Rodapé escuro revelado ao final, com tema e cookies; logo maior no cabeçalho.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">O dia a dia</span><span class="x">Carrossel horizontal trocado por moldura fixa que troca de foto.</span></li>
+      <li><span class="d">24/11/2026</span><span class="t">Fotos e contato</span><span class="x">Fotos reais do Unsplash, lente na foto, Brasília em órbita, seção de contato e rodapé completo.</span></li>
+      <li><span class="d">23/11/2026</span><span class="t">Movimento</span><span class="x">Animações na página toda, parallax, logo com órbita sozinha e no hover.</span></li>
+      <li><span class="d">23/11/2026</span><span class="t">Primeira versão</span><span class="x">Landing em Astro a partir dos briefings, do protótipo e do design system.</span></li>
+    </ol>
+  </section>
+
+  <p class="foot">Status e bloqueios ficam salvos para todos que abrem esta página. O resto é atualizado a cada rodada de trabalho.</p>
+</div>
+
+<script>
+(() => {
+  const STATUSES = ["Pronta", "Em andamento", "A fazer", "Depois do MVP"];
+  const $ = (id) => document.getElementById(id);
+  let pages = [], blocks = [], filter = "Todas", canWrite = false, db = null;
+
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = String(text); return n; };
+  const str = (v) => (typeof v === "string" ? v : "");
+
+  function setLive(on, text) { const l = $("live"); l.classList.toggle("on", on); l.lastElementChild.textContent = text; }
+
+  function renderSummary() {
+    const mvp = pages.filter((p) => p.mvp !== false);
+    const done = mvp.filter((p) => p.status === "Pronta").length;
+    $("done").textContent = pages.length ? done : "–";
+    $("total").textContent = mvp.length || 7;
+    const bar = $("bar"); bar.replaceChildren();
+    bar.style.gridTemplateColumns = `repeat(${Math.max(mvp.length, 1)}, 1fr)`;
+    mvp.forEach((p) => { const s = el("span"); s.dataset.s = str(p.status); s.title = `${str(p.nome)}: ${str(p.status)}`; bar.append(s); });
+    const legend = $("legend"); legend.replaceChildren();
+    STATUSES.forEach((s) => { const n = pages.filter((p) => p.status === s).length; const sp = el("span"); const b = el("b", null, n); sp.append(b, " " + s.toLowerCase()); legend.append(sp); });
+    const closed = blocks.filter((b) => b.feito).length;
+    $("blk-open").textContent = blocks.length ? blocks.length - closed : "–";
+    $("blk-done").textContent = blocks.length ? closed : "–";
+  }
+
+  function renderFilters() {
+    const f = $("filters"); f.replaceChildren();
+    ["Todas", ...STATUSES].forEach((s) => {
+      const b = el("button"); b.type = "button"; b.setAttribute("aria-pressed", String(filter === s));
+      const n = s === "Todas" ? pages.length : pages.filter((p) => p.status === s).length;
+      b.append(s, el("span", null, n));
+      b.addEventListener("click", () => { filter = s; renderFilters(); renderPages(); });
+      f.append(b);
+    });
+  }
+
+  function renderPages() {
+    const list = $("pages"); list.replaceChildren();
+    const shown = pages.filter((p) => filter === "Todas" || p.status === filter);
+    shown.forEach((p) => {
+      const li = el("li", "page");
+      li.append(el("span", "num", p.ordem));
+      const body = el("div", "body");
+      body.append(el("h3", null, str(p.nome)), el("code", null, str(p.rota)));
+      const falta = el("p", "falta"); falta.append(el("b", null, "Falta: "), str(p.falta)); body.append(falta);
+      if (Array.isArray(p.secoes) && p.secoes.length) {
+        const det = el("details", "more"); det.append(el("summary", null, "O que já tem"));
+        const ul = el("ul"); p.secoes.forEach((s) => { const it = el("li"); it.append(el("b", null, str(s.nome) + ": "), str(s.texto)); ul.append(it); });
+        det.append(ul); body.append(det);
+      }
+      li.append(body);
+      const ctrl = el("div", "ctrl");
+      const wrap = el("label", "status"); wrap.dataset.s = str(p.status);
+      const sel = el("select"); sel.setAttribute("aria-label", `Status de ${str(p.nome)}`);
+      STATUSES.forEach((s) => { const o = el("option", null, s); o.value = s; if (s === p.status) o.selected = true; sel.append(o); });
+      sel.disabled = !canWrite;
+      const msg = el("p", "saving"); msg.setAttribute("role", "status");
+      sel.addEventListener("change", async () => {
+        const next = sel.value; wrap.dataset.s = next; msg.textContent = "Salvando…"; sel.disabled = true;
+        try { await db.doc("paginas/" + p.id).update({ status: next }); msg.textContent = "Salvo"; setTimeout(() => (msg.textContent = ""), 1600); }
+        catch (e) { msg.textContent = "Não deu para salvar. Você pode não ter permissão de edição."; sel.value = p.status; wrap.dataset.s = str(p.status); }
+        finally { sel.disabled = !canWrite; }
+      });
+      wrap.append(sel); ctrl.append(wrap, msg); li.append(ctrl);
+      list.append(li);
+    });
+    $("pg-empty").hidden = pages.length > 0;
+  }
+
+  function renderChecks() {
+    const ul = $("checks"); ul.replaceChildren();
+    blocks.forEach((b) => {
+      const li = el("li", "check"); const lab = el("label");
+      const cb = el("input"); cb.type = "checkbox"; cb.checked = !!b.feito; cb.disabled = !canWrite;
+      cb.addEventListener("change", async () => {
+        cb.disabled = true;
+        try { await db.doc("bloqueios/" + b.id).update({ feito: cb.checked }); }
+        catch (e) { cb.checked = !!b.feito; }
+        finally { cb.disabled = !canWrite; }
+      });
+      lab.append(cb, el("span", null, str(b.texto))); li.append(lab); ul.append(li);
+    });
+    $("bl-empty").hidden = blocks.length > 0;
+  }
+
+  function renderAll() { renderSummary(); renderFilters(); renderPages(); renderChecks(); }
+
+  $("pg-empty").hidden = false; $("bl-empty").hidden = false;
+  renderAll();
+
+  (async () => {
+    db = await window.claude?.use?.("db");
+    const user = await window.claude?.use?.("user");
+    if (!db) {
+      setLive(false, "Sem conexão");
+      $("pg-empty").textContent = "O status das páginas aparece quando você abre esta página conectado ao claude.ai.";
+      $("bl-empty").textContent = "Os bloqueios aparecem quando você abre esta página conectado ao claude.ai.";
+      return;
+    }
+    const can = user?.can ? await user.can("data.write") : null;
+    canWrite = can !== false;
+    $("pg-note").textContent = canWrite
+      ? "Mude o status direto na lista; a mudança vale para todos que abrem esta página."
+      : "Você está vendo em modo leitura.";
+    setLive(true, "Ao vivo");
+    db.collection("paginas").orderBy("ordem").onSnapshot((snap) => {
+      pages = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (!pages.length) $("pg-empty").textContent = "Nenhuma página cadastrada ainda.";
+      renderSummary(); renderFilters(); renderPages();
+    }, () => setLive(false, "Conexão perdida; recarregue"));
+    db.collection("bloqueios").orderBy("ordem").onSnapshot((snap) => {
+      blocks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (!blocks.length) $("bl-empty").textContent = "Nenhum bloqueio cadastrado.";
+      renderSummary(); renderChecks();
+    }, () => setLive(false, "Conexão perdida; recarregue"));
+    db.doc("meta/info").onSnapshot((s) => { const d = s.data(); if (d && typeof d.atualizadoEm === "string") $("updated").textContent = "atualizado em " + d.atualizadoEm; });
+  })();
+})();
+</script>

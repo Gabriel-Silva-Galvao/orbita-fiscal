@@ -1,0 +1,8 @@
+{
+  "falta": "Tela pronta com cartão, Pix, nota fiscal e todos os estados (modo de demonstração). Falta escolher o provedor, ligar os campos seguros do cartão, o Pix e a emissão de nota.",
+  "mvp": true,
+  "nome": "Checkout",
+  "ordem": 3,
+  "rota": "/assinar/pro, /assinar/max",
+  "status": "Em andamento"
+}

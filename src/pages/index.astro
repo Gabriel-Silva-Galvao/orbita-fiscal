@@ -1,0 +1,398 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import SceneLibrary from '../components/SceneLibrary.astro';
+import SceneBrasilia from '../components/SceneBrasilia.astro';
+import Pending from '../components/Pending.astro';
+import ExampleTabs from '../components/ExampleTabs.astro';
+import PlanCard from '../components/PlanCard.astro';
+import Faq from '../components/Faq.astro';
+import Footer from '../components/Footer.astro';
+import Story from '../components/Story.astro';
+import Contact from '../components/Contact.astro';
+
+const steps = [
+  {
+    n: '1',
+    title: 'Assine',
+    text: 'Escolha o Pro ou o Max e pague. Você recebe o plugin logo depois.',
+  },
+  {
+    n: '2',
+    title: 'Instale no Claude',
+    text: 'Baixe o arquivo e envie no menu de plugins do Claude.',
+  },
+  {
+    n: '3',
+    title: 'Conecte e pergunte',
+    text: 'Entre com sua conta Órbita Fiscal e pergunte como sempre perguntou.',
+  },
+];
+
+const trust = [
+  {
+    title: 'Fonte para conferir',
+    text: 'Cada resultado vem com a norma, a súmula ou o julgado de onde saiu, para você abrir e conferir.',
+    pending: 'confirmar' as const,
+  },
+  {
+    title: 'Rascunho, não sentença',
+    text: 'O plugin pesquisa e prepara. A decisão, a revisão e a assinatura continuam com você.',
+  },
+  {
+    title: 'Seus dados',
+    text: 'Dizemos o que guardamos, por quanto tempo e se as consultas treinam algum modelo.',
+    pending: 'definir' as const,
+  },
+];
+---
+
+<Base
+  title="Órbita Fiscal: pesquise o direito brasileiro na IA que você já usa"
+  description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças. A partir de R$ 50 por mês, reembolso em até 7 dias."
+>
+  <div class="page-sheet">
+  <Nav
+    links={[
+      { href: '#exemplo', label: 'Exemplo' },
+      { href: '#como-funciona', label: 'Como funciona' },
+      { href: '#planos', label: 'Planos' },
+    ]}
+    signIn="/entrar"
+    cta={{ href: '#planos', label: 'Ver planos' }}
+  />
+
+  <main id="conteudo">
+    <Hero />
+
+    <SceneLibrary />
+
+    <!-- Exemplo -->
+    <section id="exemplo" class="section" aria-labelledby="exemplo-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <h2 id="exemplo-title" class="display-lg" data-split>Uma pergunta, com o fundamento ao lado.</h2>
+          <p class="lead">Três tarefas do dia a dia, feitas dentro do Claude.</p>
+        </div>
+        <div data-reveal>
+          <ExampleTabs />
+        </div>
+      </div>
+    </section>
+
+    <Story />
+
+    <!-- Como funciona -->
+    <section id="como-funciona" class="section section-alt" aria-labelledby="como-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <h2 id="como-title" class="display-lg" data-split>Três passos, sem treinamento.</h2>
+          <p class="lead">Em poucos minutos você faz a primeira pergunta à base.</p>
+        </div>
+        <div class="steps-wrap" data-steps>
+          <div class="steps-track" aria-hidden="true"><span class="steps-fill"></span></div>
+          <ol class="steps">
+            {
+              steps.map((s) => (
+                <li class="step" data-reveal>
+                  <div class="step-top">
+                    <span class="step-n" aria-hidden="true">
+                      {s.n}
+                    </span>
+                  </div>
+                  <h3 class="title">{s.title}</h3>
+                  <p class="small mute">{s.text}</p>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planos -->
+    <section id="planos" class="section" aria-labelledby="planos-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <h2 id="planos-title" class="display-lg" data-split>Dois planos. Escolha pelo trabalho que você faz.</h2>
+        </div>
+        <div class="plans" data-reveal>
+          <PlanCard
+            name="Pro"
+            price="R$ 50"
+            count={50}
+            href="/assinar/pro"
+            cta="Assinar o Pro"
+            items={[
+              { text: 'Pesquisa de legislação e jurisprudência na base atualizada' },
+              { text: 'Fonte para conferir em cada resultado', pending: 'confirmar' },
+              { text: 'Funciona dentro do Claude' },
+            ]}
+          />
+          <PlanCard
+            name="Max"
+            price="R$ 75,90"
+            count={75.9}
+            href="/assinar/max"
+            cta="Assinar o Max"
+            featured
+            badge="Completo"
+            items={[
+              { text: 'Tudo do Pro' },
+              { text: 'Conferência de processos: o que ainda falta reunir' },
+              { text: 'Preparação de peças com citações marcadas para conferência' },
+              { text: 'Limite de uso', pending: 'definir' },
+            ]}
+          />
+        </div>
+        <ul class="plans-foot small mute" data-reveal>
+          <li>Reembolso em até 7 dias</li>
+          <li>Cobrança mensal</li>
+          <li><span>Cartão ou Pix<Pending kind="confirmar" /></span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Confiança -->
+    <section class="section" aria-labelledby="confianca-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <h2 id="confianca-title" class="display-lg" data-split>Feito para quem assina o que entrega.</h2>
+          <p class="lead">Direito brasileiro, com as garantias da lei brasileira.</p>
+        </div>
+        <div data-reveal>
+          <SceneBrasilia />
+        </div>
+        <ul class="trust">
+          {
+            trust.map((t) => (
+              <li class="trust-item" data-reveal>
+                <h3 class="title">{t.title}</h3>
+                <p class="small mute">
+                  {t.text}
+                  {t.pending && <Pending kind={t.pending} />}
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- Dúvidas -->
+    <section id="duvidas" class="section section-alt" aria-labelledby="duvidas-title">
+      <div class="wrap faq-grid">
+        <div class="section-head" data-reveal>
+          <h2 id="duvidas-title" class="display-lg" data-split>Antes de assinar.</h2>
+          <p class="lead">Outras perguntas estão na <a href="/ajuda">Ajuda</a>.</p>
+        </div>
+        <div data-reveal>
+          <Faq>
+            <details open>
+              <summary>Funciona com qual IA?</summary>
+              <div class="faq-a">
+                <p>
+                  Com o Claude, da Anthropic. Você instala o plugin no Claude que já usa. Os planos do Claude que
+                  aceitam plugins estão em confirmação<Pending kind="confirmar" />, e outras IAs ainda não têm
+                  data<Pending kind="definir" />.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Como funciona o reembolso?</summary>
+              <div class="faq-a">
+                <p>
+                  Se não servir para você, peça o reembolso integral em até 7 dias a partir da compra, direto no
+                  portal do cliente. Detalhes na <a href="/reembolso">política de reembolso</a>.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>O que a base cobre?</summary>
+              <div class="faq-a">
+                <p>
+                  Legislação e jurisprudência brasileira. A lista de tribunais, o período coberto e a frequência de
+                  atualização serão publicados com data e critério<Pending kind="definir" />.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>O que acontece com meus dados?</summary>
+              <div class="faq-a">
+                <p>
+                  Tratamos os dados da conta e das consultas conforme a LGPD. O que guardamos, por quanto tempo e se
+                  as consultas treinam modelos estará na <a href="/privacidade">política de privacidade</a
+                  ><Pending kind="definir" />.
+                </p>
+              </div>
+            </details>
+          </Faq>
+        </div>
+      </div>
+    </section>
+    <Contact />
+  </main>
+  </div>
+
+  <Footer />
+</Base>
+
+<style>
+  .section-alt {
+    background: var(--surface);
+  }
+
+  /* Passos com linha de progresso */
+  .steps-wrap {
+    position: relative;
+    --p: 0;
+  }
+  .steps {
+    position: relative;
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .steps-track {
+    position: absolute;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .steps-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--brand);
+  }
+  /* Celular: linha vertical à esquerda dos cartões. */
+  .steps-track {
+    left: 44px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+  }
+  .steps-fill {
+    transform-origin: top;
+    transform: scaleY(var(--p));
+  }
+  :global(html:not(.anim)) .steps-fill {
+    transform: none;
+  }
+  @media (min-width: 768px) {
+    .steps {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+    }
+    .steps-track {
+      left: 0;
+      right: 0;
+      top: 46px;
+      bottom: auto;
+      width: auto;
+      height: 2px;
+    }
+    .steps-fill {
+      transform-origin: left;
+      transform: scaleX(var(--p));
+    }
+  }
+  .step {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    transition: border-color 500ms ease-out;
+  }
+  .step-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+  .step-n {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-round);
+    border: 1.5px solid var(--line-strong);
+    background: var(--bg);
+    font: var(--text-display-md);
+    font-size: 22px;
+    color: var(--brand);
+    transition:
+      background-color 500ms ease-out,
+      color 500ms ease-out,
+      border-color 500ms ease-out,
+      transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  :global(html:not(.anim)) .step-n,
+  .step.is-lit .step-n {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+  }
+  .step.is-lit .step-n {
+    transform: scale(1.12);
+  }
+  .step.is-lit {
+    border-color: var(--brand);
+  }
+
+  /* Planos */
+  .plans {
+    display: grid;
+    gap: var(--space-4);
+  }
+  @media (min-width: 768px) {
+    .plans {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5);
+    }
+  }
+  .plans-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-5);
+  }
+
+  /* Confiança */
+  .trust {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 768px) {
+    .trust {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .trust-item {
+    display: grid;
+    gap: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 2px solid var(--brand);
+  }
+
+  /* Dúvidas */
+  .faq-grid {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .faq-grid .lead a {
+    color: var(--brand);
+  }
+  @media (min-width: 900px) {
+    .faq-grid {
+      grid-template-columns: 1fr 1.6fr;
+      gap: var(--space-7);
+      align-items: start;
+    }
+  }
+</style>

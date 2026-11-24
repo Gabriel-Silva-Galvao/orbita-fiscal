@@ -1,0 +1,26 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {"v": 1, "at": "2026-11-24T02:15:55Z"},
+  "title": "Órbita Fiscal",
+  "namespace": "OrbitaFiscal",
+  "libraries": [],
+  "sections": {},
+  "groups": ["Logo", "Prints"],
+  "assetGroups": {
+    "Logo": {"name": "Logo", "tile": "m", "order": ["orbita-simbolo-claro.svg", "orbita-simbolo-escuro.svg"], "files": {
+      "orbita-simbolo-claro.svg": {"name": "orbita-simbolo-claro.svg", "blob": "42357dd2785323c15d5df9592ca86d2d", "size": 1288, "type": "image/svg+xml"},
+      "orbita-simbolo-escuro.svg": {"name": "orbita-simbolo-escuro.svg", "blob": "d17a74599cb9dc0eaf963593ab697b48", "size": 1288, "type": "image/svg+xml"}
+    }},
+    "Prints": {"name": "Prints", "tile": "l", "order": ["hero-claro.png", "hero-escuro.png", "exemplo-escuro.png", "planos-claro.png", "celular-claro.png"], "files": {
+      "hero-claro.png": {"name": "hero-claro.png", "blob": "5b8760311663eed83d68ae5e63e77e55", "size": 103171, "type": "image/png"},
+      "hero-escuro.png": {"name": "hero-escuro.png", "blob": "7a1a3ac0ada86c6e692056fb9910fe97", "size": 103218, "type": "image/png"},
+      "exemplo-escuro.png": {"name": "exemplo-escuro.png", "blob": "91068b5fef3495cc03505bbcd908347c", "size": 91426, "type": "image/png"},
+      "planos-claro.png": {"name": "planos-claro.png", "blob": "a96bb591a09454fc3e1e21ea8003c2a1", "size": 79576, "type": "image/png"},
+      "celular-claro.png": {"name": "celular-claro.png", "blob": "46d63efb0c507ffc1693935b766a4b5c", "size": 113686, "type": "image/png"}
+    }}
+  },
+  "blobs": {},
+  "docs": {"sections": []},
+  "lastChange": {"by": "Claude", "at": "2026-11-24T04:41:16Z", "via": "Claude Code", "note": "Regras contra tracos de IA: tipografia em rem, sem sobretitulos e icones decorativos, sem alvos que se movem"}
+}

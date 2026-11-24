@@ -1,0 +1,8 @@
+{
+  "falta": "Seis artigos prontos, com link direto para cada um. Falta canal de suporte e prazo de resposta definitivos.",
+  "mvp": true,
+  "nome": "Ajuda",
+  "ordem": 6,
+  "rota": "/ajuda",
+  "status": "Em andamento"
+}

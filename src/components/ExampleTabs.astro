@@ -1,0 +1,458 @@
+---
+import Symbol from './Symbol.astro';
+import { examples } from '../data/examples';
+---
+
+<div class="ex" data-tabs>
+  <div class="ex-tabs" role="tablist" aria-label="Tarefas de exemplo">
+    <span class="ex-pill" aria-hidden="true"></span>
+    {
+      examples.map((ex, i) => (
+        <button
+          type="button"
+          role="tab"
+          class="ex-tab"
+          id={`tab-${ex.id}`}
+          aria-controls={`panel-${ex.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >
+          {ex.tab}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    examples.map((ex, i) => (
+      <div
+        class="ex-card is-done"
+        role="tabpanel"
+        id={`panel-${ex.id}`}
+        aria-labelledby={`tab-${ex.id}`}
+        tabindex="0"
+        hidden={i !== 0}
+      >
+        <p class="ex-q">
+          <span class="sr-only">{ex.question}</span>
+          <span class="ex-q-text" aria-hidden="true" data-full={ex.question}>
+            {ex.question}
+          </span>
+          <span class="ex-caret" aria-hidden="true" />
+        </p>
+        <p class="ex-consulted small">
+          <span class="ex-mark-wrap">
+            <Symbol class="ex-mark" on="surface" pace={1.5} />
+          </span>
+          <span class="ex-status" data-done={ex.consulted}>
+            {ex.consulted}
+          </span>
+          <span class="ex-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        </p>
+        <ul class="ex-sources">
+          {ex.sources.map((s, j) => (
+            <li class="ex-source" style={`--i:${j}`}>
+              <span class="ex-kind">{s.kind}</span>
+              <span class="title ex-title">{s.title}</span>
+              <span class="small ex-text">{s.text}</span>
+            </li>
+          ))}
+        </ul>
+        <div class="ex-answer">
+          <p>{ex.answer}</p>
+          {ex.answerList && (
+            <ol>
+              {ex.answerList.map((a) => (
+                <li>{a}</li>
+              ))}
+            </ol>
+          )}
+        </div>
+        <p class="ex-note">Exemplo ilustrativo. Confira cada fundamento na fonte antes de usar.</p>
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .ex-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+  .ex-pill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      transform 520ms cubic-bezier(0.34, 1.3, 0.64, 1),
+      width 520ms cubic-bezier(0.34, 1.3, 0.64, 1),
+      opacity 200ms;
+  }
+  .ex-tab {
+    position: relative;
+    z-index: 1;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    font: var(--text-button);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+      color 360ms ease-out,
+      border-color 280ms ease-out,
+      scale 160ms var(--ease-out);
+  }
+  .ex-tab:hover {
+    border-color: var(--ink);
+  }
+  .ex-tab[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  /* Com movimento, a pílula escura desliza até a aba escolhida. */
+  :global(.anim) .ex-tabs.has-pill .ex-pill {
+    opacity: 1;
+  }
+  :global(.anim) .ex-tabs.has-pill .ex-tab[aria-selected='true'] {
+    background: transparent;
+  }
+  .ex-tab:focus-visible {
+    border-radius: var(--radius-pill);
+  }
+
+  .ex-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    display: grid;
+    gap: var(--space-4);
+  }
+  .ex-card:focus-visible {
+    border-radius: var(--radius-lg);
+  }
+
+  .ex-q {
+    justify-self: end;
+    max-width: 540px;
+    background: var(--soft);
+    color: var(--ink);
+    padding: 14px 16px;
+    border-radius: var(--radius-lg);
+    border-bottom-right-radius: 4px;
+    font: var(--text-body);
+    font-size: 15px;
+    line-height: 24px;
+    transform-origin: bottom right;
+  }
+  .ex-caret {
+    display: none;
+    width: 2px;
+    height: 1.1em;
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    background: var(--ink);
+    animation: caret 0.9s steps(1) infinite;
+  }
+  .is-typing .ex-caret {
+    display: inline-block;
+  }
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .ex-consulted {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--mute);
+    font-size: 13px;
+  }
+  .ex-mark-wrap {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    flex: none;
+  }
+  .ex-mark-wrap :global(.ex-mark) {
+    width: 30px;
+  }
+  .ex-dots {
+    display: none;
+    gap: 4px;
+  }
+  .ex-dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    animation: dot 0.9s ease-in-out infinite;
+  }
+  .ex-dots i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .ex-dots i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes dot {
+    50% {
+      transform: translateY(-4px);
+      opacity: 0.4;
+    }
+  }
+  .is-searching .ex-dots {
+    display: inline-flex;
+  }
+
+  .ex-sources {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .ex-source {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px 12px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    transition:
+      border-color 280ms ease-out,
+      transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* Fio que liga a fonte à linha do símbolo. */
+  .ex-source::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--brand);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ex-source:hover {
+      border-color: var(--brand);
+      transform: translateX(4px);
+    }
+  }
+  .ex-tab:active {
+    scale: 0.97;
+  }
+  .is-done .ex-source::before {
+    transform: scaleY(1);
+    transition-delay: calc(var(--i) * 140ms + 300ms);
+  }
+  .ex-kind {
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    color: var(--brand);
+  }
+  .ex-title {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  .ex-text {
+    color: var(--mute);
+  }
+
+  .ex-answer {
+    font: var(--text-small);
+    font-size: 15px;
+    line-height: 23px;
+  }
+  .ex-answer ol {
+    margin: 6px 0 0;
+    padding-left: 20px;
+  }
+  .ex-answer li + li {
+    margin-top: 2px;
+  }
+
+  .ex-note {
+    padding-top: var(--space-3);
+    border-top: 1px dashed var(--line-strong);
+    font: var(--text-small);
+    font-size: 13px;
+    color: var(--mute);
+  }
+
+  /* Sequência: digita a pergunta, consulta a base, as fontes chegam uma a uma. */
+  :global(.anim) .ex-card .ex-source,
+  :global(.anim) .ex-card .ex-answer,
+  :global(.anim) .ex-card .ex-note {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  :global(.anim) .ex-card .ex-consulted {
+    opacity: 0;
+  }
+  :global(.anim) .ex-card.is-searching .ex-consulted,
+  :global(.anim) .ex-card.is-done .ex-consulted {
+    opacity: 1;
+    transition: opacity 300ms;
+  }
+  :global(.anim) .ex-card.is-done .ex-source,
+  :global(.anim) .ex-card.is-done .ex-answer,
+  :global(.anim) .ex-card.is-done .ex-note {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 500ms ease-out,
+      transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 280ms ease-out;
+    transition-delay: calc(var(--i, 0) * 140ms + 120ms);
+  }
+  :global(.anim) .ex-card.is-done .ex-answer {
+    --i: 3.2;
+  }
+  :global(.anim) .ex-card.is-done .ex-note {
+    --i: 4;
+  }
+  :global(.anim) .ex-card.is-done .ex-source:hover {
+    transform: translateX(4px);
+    transition-delay: 0ms;
+  }
+  :global(.anim) .ex-card.is-typing .ex-q {
+    animation: pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  const animate = document.documentElement.classList.contains('anim');
+
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = tabs.map((t) => document.getElementById(t.getAttribute('aria-controls')!)!);
+    const tablist = root.querySelector<HTMLElement>('.ex-tabs')!;
+    const pill = root.querySelector<HTMLElement>('.ex-pill')!;
+    let run = 0;
+    const played = new Set<HTMLElement>();
+
+    const placePill = () => {
+      const t = tabs.find((x) => x.getAttribute('aria-selected') === 'true');
+      if (!t) return;
+      pill.style.width = `${t.offsetWidth}px`;
+      pill.style.height = `${t.offsetHeight}px`;
+      pill.style.transform = `translate(${t.offsetLeft}px, ${t.offsetTop}px)`;
+      tablist.classList.add('has-pill');
+    };
+
+    // Digita a pergunta, mostra “consultando”, depois as fontes.
+    const play = (panel: HTMLElement, quick = false) => {
+      if (!animate) return;
+      const id = ++run;
+      // Já vista, ou trocada pelo teclado: só as fontes entram, sem digitar de novo.
+      if (quick || played.has(panel)) {
+        panel.classList.remove('is-typing', 'is-searching', 'is-done');
+        void panel.offsetWidth;
+        panel.classList.add('is-done');
+        return;
+      }
+      played.add(panel);
+      const q = panel.querySelector<HTMLElement>('.ex-q-text')!;
+      const status = panel.querySelector<HTMLElement>('.ex-status')!;
+      const mark = panel.querySelector<SVGSVGElement>('.ex-mark');
+      const full = q.dataset.full ?? '';
+      panel.classList.remove('is-done', 'is-searching');
+      panel.classList.add('is-typing');
+      q.textContent = '';
+      const step = Math.max(10, Math.min(24, 1300 / full.length));
+      let n = 0;
+      const type = () => {
+        if (id !== run) return;
+        n += 1;
+        q.textContent = full.slice(0, n);
+        if (n < full.length) return void setTimeout(type, step);
+        panel.classList.remove('is-typing');
+        panel.classList.add('is-searching');
+        status.textContent = 'Consultando a base';
+        if (mark) mark.dataset.boost = '7';
+        setTimeout(() => {
+          if (id !== run) return;
+          panel.classList.remove('is-searching');
+          panel.classList.add('is-done');
+          status.textContent = status.dataset.done ?? '';
+          if (mark) delete mark.dataset.boost;
+        }, 1100);
+      };
+      setTimeout(type, 250);
+    };
+
+    const select = (i: number, focus = false) => {
+      tabs.forEach((t, j) => {
+        const on = i === j;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        panels[j].hidden = !on;
+      });
+      placePill();
+      play(panels[i], focus);
+      if (focus) tabs[i].focus();
+    };
+
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => {
+        if (t.getAttribute('aria-selected') !== 'true') select(i);
+      });
+      t.addEventListener('keydown', (e) => {
+        const last = tabs.length - 1;
+        let n = -1;
+        if (e.key === 'ArrowRight') n = i === last ? 0 : i + 1;
+        if (e.key === 'ArrowLeft') n = i === 0 ? last : i - 1;
+        if (e.key === 'Home') n = 0;
+        if (e.key === 'End') n = last;
+        if (n >= 0) {
+          e.preventDefault();
+          select(n, true);
+        }
+      });
+    });
+
+    if (!animate) return;
+    placePill();
+    window.addEventListener('resize', placePill);
+    document.fonts?.ready.then(placePill);
+
+    // A primeira conversa toca quando entra na tela; até lá fica completa.
+    const first = panels[0];
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          play(first);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(root);
+  });
+</script>

@@ -1,0 +1,172 @@
+---
+import Legal from '../layouts/Legal.astro';
+import Pending from '../components/Pending.astro';
+import { contact } from '../data/site';
+
+const sections = [
+  { id: 'quem-somos', title: 'Quem trata seus dados' },
+  { id: 'dados', title: 'Que dados tratamos' },
+  { id: 'finalidades', title: 'Para quê e com que base legal' },
+  { id: 'consultas', title: 'Suas consultas e modelos de IA' },
+  { id: 'compartilhamento', title: 'Com quem compartilhamos' },
+  { id: 'internacional', title: 'Transferência internacional' },
+  { id: 'prazos', title: 'Por quanto tempo guardamos' },
+  { id: 'cookies', title: 'Cookies e armazenamento local' },
+  { id: 'direitos', title: 'Seus direitos' },
+  { id: 'seguranca', title: 'Segurança' },
+  { id: 'encarregado', title: 'Encarregado de dados' },
+  { id: 'mudancas', title: 'Mudanças nesta política' },
+];
+---
+
+<Legal
+  title="Política de privacidade · Órbita Fiscal"
+  description="Que dados pessoais a Órbita Fiscal trata, para quê, por quanto tempo e como exercer seus direitos pela LGPD."
+  heading="Política de privacidade"
+  intro="Esta política explica que dados pessoais a Órbita Fiscal trata quando você visita o site, cria uma conta, assina e usa o plugin, para quê, por quanto tempo e como exercer seus direitos pela Lei Geral de Proteção de Dados (Lei 13.709/2018)."
+  updated="24/11/2026"
+  sections={sections}
+>
+  <section id="quem-somos">
+    <h2>Quem trata seus dados</h2>
+    <p>
+      A controladora dos dados é a Órbita Fiscal, razão social<Pending kind="definir" />, CNPJ<Pending kind="definir" />, com
+      endereço<Pending kind="definir" />. É ela quem decide como os dados da sua conta, da sua assinatura e do uso do
+      plugin são tratados.
+    </p>
+  </section>
+
+  <section id="dados">
+    <h2>Que dados tratamos</h2>
+    <ul>
+      <li><strong>Conta:</strong> nome, e-mail e senha. A senha é guardada cifrada, nunca em texto aberto. O método de acesso ainda está em definição<Pending kind="definir" />.</li>
+      <li><strong>Assinatura e cobrança:</strong> plano contratado, histórico de pagamentos e dados para nota fiscal (nome ou razão social e CPF ou CNPJ). Os dados do cartão ficam com o provedor de pagamento<Pending kind="definir" />; a Órbita Fiscal não guarda o número do cartão.</li>
+      <li><strong>Uso do plugin:</strong> as consultas que o plugin envia à base e as fontes que ela devolve, além de registros técnicos de acesso (data, hora e endereço IP). O que exatamente é guardado de cada consulta está na seção <a href="#consultas">Suas consultas e modelos de IA</a>.</li>
+      <li><strong>Site:</strong> sua escolha de tema, guardada só no seu navegador. O site não usa cookies de publicidade nem de medição de audiência.</li>
+      <li><strong>Contato:</strong> nome, e-mail, assunto e mensagem que você envia pelo formulário.</li>
+    </ul>
+  </section>
+
+  <section id="finalidades">
+    <h2>Para quê e com que base legal</h2>
+    <p>Cada uso tem uma das bases legais do art. 7º da LGPD.</p>
+    <div class="table">
+      <table>
+        <thead><tr><th>Finalidade</th><th>Base legal</th></tr></thead>
+        <tbody>
+          <tr><td>Criar e manter sua conta</td><td>Execução de contrato (art. 7º, V)</td></tr>
+          <tr><td>Cobrar a assinatura e emitir nota fiscal</td><td>Execução de contrato e cumprimento de obrigação legal (art. 7º, V e II)</td></tr>
+          <tr><td>Responder às consultas feitas pelo plugin</td><td>Execução de contrato (art. 7º, V)</td></tr>
+          <tr><td>Guardar registros de acesso à aplicação</td><td>Obrigação legal: Marco Civil da Internet, Lei 12.965/2014, art. 15 (art. 7º, II)</td></tr>
+          <tr><td>Proteger a conta e prevenir fraude</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
+          <tr><td>Responder mensagens enviadas pelo formulário</td><td>Consentimento (art. 7º, I), dado na hora do envio</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="consultas">
+    <h2>Suas consultas e modelos de IA</h2>
+    <p>
+      O plugin funciona dentro do Claude, da Anthropic. O que você escreve no Claude também segue a política de
+      privacidade da Anthropic. A Órbita Fiscal recebe as consultas que o plugin envia à base jurídica para devolver as
+      fontes.
+    </p>
+    <p>
+      Se o conteúdo das consultas é guardado, por quanto tempo e se é usado para treinar algum modelo será informado aqui
+      antes do lançamento<Pending kind="definir" />.
+    </p>
+  </section>
+
+  <section id="compartilhamento">
+    <h2>Com quem compartilhamos</h2>
+    <p>A Órbita Fiscal não vende dados pessoais. Compartilha só o necessário com:</p>
+    <ul>
+      <li>o provedor de pagamento, para processar a cobrança<Pending kind="definir" />;</li>
+      <li>o serviço de hospedagem do site e da base<Pending kind="definir" />;</li>
+      <li>o emissor de notas fiscais<Pending kind="definir" />;</li>
+      <li>autoridades públicas, quando a lei ou uma ordem judicial exigir.</li>
+    </ul>
+  </section>
+
+  <section id="internacional">
+    <h2>Transferência internacional</h2>
+    <p>
+      Se algum fornecedor tratar dados fora do Brasil, a transferência seguirá uma das hipóteses do art. 33 da LGPD, e
+      os fornecedores e países serão listados aqui<Pending kind="definir" />.
+    </p>
+  </section>
+
+  <section id="prazos">
+    <h2>Por quanto tempo guardamos</h2>
+    <div class="table">
+      <table>
+        <thead><tr><th>Dado</th><th>Prazo</th></tr></thead>
+        <tbody>
+          <tr><td>Conta</td><td>Enquanto a conta existir, e depois pelo prazo<Pending kind="definir" /></td></tr>
+          <tr><td>Dados fiscais e de cobrança</td><td>Pelo prazo exigido pela legislação fiscal</td></tr>
+          <tr><td>Registros de acesso à aplicação</td><td>6 meses (Marco Civil da Internet, art. 15)</td></tr>
+          <tr><td>Consultas feitas pelo plugin</td><td><Pending kind="definir" /></td></tr>
+          <tr><td>Mensagens de contato</td><td><Pending kind="definir" /></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Terminado o prazo, os dados são eliminados ou anonimizados, salvo quando a lei permitir guardá-los (art. 16 da LGPD).</p>
+  </section>
+
+  <section id="cookies">
+    <h2>Cookies e armazenamento local</h2>
+    <p>
+      O site guarda no seu navegador apenas a escolha de tema (automático, claro ou escuro). Isso é essencial para o site
+      lembrar a sua preferência e não identifica você. Não usamos cookies de medição de audiência nem de publicidade.
+    </p>
+    <p>
+      Você pode apagar essa preferência a qualquer momento em <strong>Preferências de cookies</strong>, no rodapé. Se um
+      dia passarmos a usar outro tipo de cookie, vamos pedir sua permissão antes.
+    </p>
+  </section>
+
+  <section id="direitos">
+    <h2>Seus direitos</h2>
+    <p>Pelo art. 18 da LGPD, você pode pedir, a qualquer momento:</p>
+    <ul>
+      <li>confirmação de que tratamos seus dados e acesso a eles;</li>
+      <li>correção de dados incompletos, inexatos ou desatualizados;</li>
+      <li>anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desacordo com a lei;</li>
+      <li>portabilidade dos dados a outro fornecedor;</li>
+      <li>eliminação dos dados tratados com o seu consentimento;</li>
+      <li>informação sobre com quem compartilhamos seus dados;</li>
+      <li>informação sobre a possibilidade de não consentir e suas consequências;</li>
+      <li>revogação do consentimento.</li>
+    </ul>
+    <p>
+      Para pedir, escreva ao encarregado (veja abaixo). Respondemos ao pedido de acesso completo em até 15 dias, como
+      prevê o art. 19 da LGPD. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
+    </p>
+  </section>
+
+  <section id="seguranca">
+    <h2>Segurança</h2>
+    <p>
+      O site usa conexão cifrada (HTTPS) e as senhas são guardadas cifradas. As demais medidas técnicas e administrativas
+      serão descritas aqui<Pending kind="definir" />. Se houver um incidente que possa causar risco ou dano relevante,
+      avisaremos você e a ANPD, como manda o art. 48 da LGPD.
+    </p>
+  </section>
+
+  <section id="encarregado">
+    <h2>Encarregado de dados</h2>
+    <p>
+      O encarregado (art. 41 da LGPD) recebe pedidos e reclamações sobre seus dados:
+      <a href={`mailto:${contact.privacyEmail}`}>{contact.privacyEmail}</a><Pending kind="confirmar" />.
+    </p>
+  </section>
+
+  <section id="mudancas">
+    <h2>Mudanças nesta política</h2>
+    <p>
+      Quando esta política mudar de forma relevante, avisaremos por e-mail com antecedência<Pending kind="definir" /> e
+      atualizaremos a data no topo da página.
+    </p>
+  </section>
+</Legal>

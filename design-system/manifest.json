@@ -1,0 +1,175 @@
+{
+  "manifestVersion": 3,
+  "name": "Órbita Fiscal",
+  "namespace": "OrbitaFiscal",
+  "files": [
+    "assets/Logo/README.md",
+    "assets/Prints/README.md",
+    "components/Button/README.md",
+    "components/ExampleCard/README.md",
+    "components/Faq/README.md",
+    "components/Field/README.md",
+    "components/Logo/README.md",
+    "components/Motion/README.md",
+    "components/Nav/README.md",
+    "components/PlanCard/README.md",
+    "components/Step/README.md",
+    "components/Tag/README.md",
+    "movimento.md",
+    "referencias.md",
+    "tokens.css",
+    "uso-na-pagina.md"
+  ],
+  "libraries": [],
+  "components": [
+    {
+      "name": "Button",
+      "group": "Ações",
+      "summary": "Botão em pílula com texto button: um principal cheio e um secundário só com contorno."
+    },
+    {
+      "name": "ExampleCard",
+      "group": "Prova",
+      "summary": "Conversa de exemplo que mostra uma tarefa real resolvida, com as fontes ao lado da resposta."
+    },
+    {
+      "name": "Faq",
+      "group": "Prova",
+      "summary": "Lista de perguntas em , de três a quatro itens, com filetes line e sem cartões."
+    },
+    {
+      "name": "Field",
+      "group": "Formulário",
+      "summary": "Campo de texto com rótulo acima, borda visível e mensagem curta abaixo, para Entrar e Checkout."
+    },
+    {
+      "name": "Logo",
+      "group": "Marca",
+      "summary": "O símbolo é um átomo de lítio estilizado: dois anéis inclinados em −28°, três elétrons e um núcleo de sete esferas (três prótons, quatro nêutrons)."
+    },
+    {
+      "name": "Motion",
+      "group": "Movimento",
+      "summary": "Três movimentos permitidos."
+    },
+    {
+      "name": "Nav",
+      "group": "Estrutura",
+      "summary": "Cabeçalho enxuto: logo, três links de âncora e um botão."
+    },
+    {
+      "name": "PlanCard",
+      "group": "Planos",
+      "summary": "Dois cartões de plano lado a lado, o Max em destaque, sem tabela de comparação."
+    },
+    {
+      "name": "Step",
+      "group": "Prova",
+      "summary": "Cartão de passo numerado, em trio, para explicar a instalação sem treinamento."
+    },
+    {
+      "name": "Tag",
+      "group": "Rótulos",
+      "summary": "Quatro rótulos pequenos: selo, aba, rótulo a definir e sobretítulo."
+    }
+  ],
+  "assetGroups": [
+    {
+      "name": "Logo",
+      "order": [
+        "orbita-simbolo-claro.svg",
+        "orbita-simbolo-escuro.svg"
+      ],
+      "files": [
+        {
+          "path": "assets/Logo/orbita-simbolo-claro.svg",
+          "id": "628401a05e11dd73a1de4e3a3e79c09b"
+        },
+        {
+          "path": "assets/Logo/orbita-simbolo-escuro.svg",
+          "id": "45fc8dcf3886470948227169ea7e7c95"
+        }
+      ]
+    },
+    {
+      "name": "Prints",
+      "tile": "l",
+      "order": [
+        "hero-claro.png",
+        "hero-escuro.png",
+        "exemplo-escuro.png",
+        "planos-claro.png",
+        "celular-claro.png"
+      ],
+      "files": [
+        {
+          "path": "assets/Prints/hero-claro.png",
+          "id": "08ec4b3eb8054aecf83df9338d79697b"
+        },
+        {
+          "path": "assets/Prints/hero-escuro.png",
+          "id": "0f2f9ea54a0fc4d9c9a5674a030bad30"
+        },
+        {
+          "path": "assets/Prints/exemplo-escuro.png",
+          "id": "182c0154da6362c616127cee5407d62f"
+        },
+        {
+          "path": "assets/Prints/planos-claro.png",
+          "id": "2e8d1b45c0941792da1b451b002b34ec"
+        },
+        {
+          "path": "assets/Prints/celular-claro.png",
+          "id": "bb67c9923e4571662d7f349ece8da7d8"
+        }
+      ]
+    }
+  ],
+  "storage": {
+    "files": {
+      "assets/Logo/orbita-simbolo-claro.svg": {
+        "store": "blob",
+        "id": "628401a05e11dd73a1de4e3a3e79c09b",
+        "bytes": 1288,
+        "type": "image/svg+xml"
+      },
+      "assets/Logo/orbita-simbolo-escuro.svg": {
+        "store": "blob",
+        "id": "45fc8dcf3886470948227169ea7e7c95",
+        "bytes": 1288,
+        "type": "image/svg+xml"
+      },
+      "assets/Prints/celular-claro.png": {
+        "store": "blob",
+        "id": "bb67c9923e4571662d7f349ece8da7d8",
+        "bytes": 113686,
+        "type": "image/png"
+      },
+      "assets/Prints/exemplo-escuro.png": {
+        "store": "blob",
+        "id": "182c0154da6362c616127cee5407d62f",
+        "bytes": 91426,
+        "type": "image/png"
+      },
+      "assets/Prints/hero-claro.png": {
+        "store": "blob",
+        "id": "08ec4b3eb8054aecf83df9338d79697b",
+        "bytes": 103171,
+        "type": "image/png"
+      },
+      "assets/Prints/hero-escuro.png": {
+        "store": "blob",
+        "id": "0f2f9ea54a0fc4d9c9a5674a030bad30",
+        "bytes": 103218,
+        "type": "image/png"
+      },
+      "assets/Prints/planos-claro.png": {
+        "store": "blob",
+        "id": "2e8d1b45c0941792da1b451b002b34ec",
+        "bytes": 79576,
+        "type": "image/png"
+      }
+    },
+    "blobBytesUsed": 493653
+  }
+}

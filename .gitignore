@@ -1,0 +1,21 @@
+# Dependências e saídas geradas
+node_modules/
+dist/
+.astro/
+.vite/
+
+# Variáveis locais (use .env.example como modelo)
+.env
+.env.*
+!.env.example
+
+# Pacotes para download (o conteúdo já está no repositório)
+*.zip
+
+# Arquivos locais do Claude Code
+.claude/settings.local.json
+.claude/fotos/
+
+# Sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,286 @@
+---
+/**
+ * Layout dos textos legais (briefing, Página 7): coluna única de leitura, índice lateral no
+ * desktop (recolhível no celular), vigência no topo, aviso de rascunho e nenhuma animação.
+ * “Voltar” leva à página de origem quando ela é deste site; senão, à landing.
+ */
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Pending from '../components/Pending.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  heading: string;
+  intro: string;
+  updated: string;
+  sections: { id: string; title: string }[];
+}
+const { title, description, heading, intro, updated, sections } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <div class="page-sheet">
+    <Nav
+      links={[
+        { href: '/#exemplo', label: 'Exemplo' },
+        { href: '/#como-funciona', label: 'Como funciona' },
+        { href: '/#planos', label: 'Planos' },
+      ]}
+      signIn="/entrar"
+      cta={{ href: '/#planos', label: 'Ver planos' }}
+    />
+
+    <main id="conteudo" class="legal">
+      <div class="wrap legal-grid">
+        <div class="legal-head">
+          <a class="back" href="/" data-back>← Voltar</a>
+          <h1 class="display-lg">{heading}</h1>
+          <p class="legal-dates small">
+            <span>Vigente a partir de <Pending kind="definir" /></span>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>Última atualização: {updated}</span>
+          </p>
+          <p class="draft small" role="note">
+            <strong>Rascunho para revisão jurídica.</strong> Este texto ainda não vale como contrato. Ele organiza o que
+            precisa constar e será redigido ou revisado por um advogado antes do lançamento. Trechos com rótulo tracejado
+            dependem de decisões da empresa.
+          </p>
+          <p class="lead">{intro}</p>
+        </div>
+
+        <nav class="toc" aria-label="Nesta página">
+          <details class="toc-box" open>
+            <summary>Nesta página</summary>
+            <ol>
+              {
+                sections.map((s) => (
+                  <li>
+                    <a href={`#${s.id}`}>{s.title}</a>
+                  </li>
+                ))
+              }
+            </ol>
+          </details>
+        </nav>
+
+        <article class="legal-body">
+          <slot />
+        </article>
+      </div>
+    </main>
+  </div>
+  <Footer />
+</Base>
+
+<style>
+  .legal {
+    padding-block: var(--space-7) var(--space-9);
+  }
+  .legal-grid {
+    display: grid;
+    gap: var(--space-6);
+  }
+  @media (min-width: 1000px) {
+    .legal-grid {
+      grid-template-columns: 240px minmax(0, 1fr);
+      column-gap: var(--space-8);
+      align-items: start;
+    }
+    .legal-head,
+    .legal-body {
+      grid-column: 2;
+    }
+    .toc {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      position: sticky;
+      top: 110px;
+    }
+  }
+  .legal-head {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 68ch;
+  }
+  .back {
+    width: fit-content;
+    font: var(--text-small);
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .back:hover {
+    color: var(--ink);
+  }
+  .legal-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    color: var(--mute);
+  }
+  .sep {
+    color: var(--line-strong);
+  }
+  .draft {
+    padding: var(--space-4);
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .draft strong {
+    font-weight: 600;
+  }
+
+  .toc-box {
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-3);
+  }
+  .toc summary {
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+    cursor: pointer;
+    padding-block: 6px;
+  }
+  .toc ol {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--space-2);
+    display: grid;
+    gap: 2px;
+    counter-reset: toc;
+  }
+  .toc li {
+    counter-increment: toc;
+  }
+  .toc a {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    font: var(--text-small);
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .toc a::before {
+    content: counter(toc);
+    min-width: 1.4em;
+    color: var(--line-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a:hover,
+  .toc a[aria-current='true'] {
+    color: var(--ink);
+  }
+  .toc a[aria-current='true']::before {
+    color: var(--brand);
+  }
+
+  /* Corpo do texto: medida de leitura, títulos numerados, tabelas simples. */
+  .legal-body {
+    max-width: 68ch;
+    counter-reset: sec;
+  }
+  .legal-body :global(section) {
+    padding-top: var(--space-6);
+    scroll-margin-top: 110px;
+  }
+  .legal-body :global(h2) {
+    counter-increment: sec;
+    font: var(--text-display-md);
+    margin-bottom: var(--space-3);
+  }
+  .legal-body :global(h2::before) {
+    content: counter(sec) '. ';
+    color: var(--brand);
+  }
+  .legal-body :global(h3) {
+    font: var(--text-title);
+    margin: var(--space-4) 0 var(--space-2);
+  }
+  .legal-body :global(p),
+  .legal-body :global(li) {
+    font: var(--text-body);
+    line-height: 1.7;
+  }
+  .legal-body :global(p + p) {
+    margin-top: var(--space-3);
+  }
+  .legal-body :global(ul),
+  .legal-body :global(ol) {
+    margin: var(--space-3) 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: var(--space-2);
+    list-style: revert;
+  }
+  .legal-body :global(li::marker) {
+    color: var(--brand);
+  }
+  .legal-body :global(strong) {
+    font-weight: 600;
+  }
+  .legal-body :global(a) {
+    color: var(--brand);
+  }
+  .legal-body :global(.table) {
+    overflow-x: auto;
+    margin: var(--space-4) 0;
+  }
+  .legal-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font: var(--text-small);
+  }
+  .legal-body :global(th),
+  .legal-body :global(td) {
+    text-align: start;
+    vertical-align: top;
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .legal-body :global(th) {
+    font-weight: 600;
+    color: var(--mute);
+  }
+  .legal-body :global(.box) {
+    margin: var(--space-4) 0;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--soft);
+    color: var(--ink);
+  }
+  .legal-body :global(.box p) {
+    margin: 0;
+  }
+</style>
+
+<script>
+  // Voltar à página de origem quando ela é deste site.
+  const back = document.querySelector<HTMLAnchorElement>('[data-back]');
+  try {
+    const ref = document.referrer ? new URL(document.referrer) : null;
+    if (back && ref && ref.origin === location.origin && ref.pathname !== location.pathname) {
+      back.href = ref.pathname + ref.hash;
+    }
+  } catch {}
+
+  // Índice: marca a seção que está sendo lida.
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc a'));
+  const map = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        links.forEach((a) => a.removeAttribute('aria-current'));
+        map.get(e.target.id)?.setAttribute('aria-current', 'true');
+      }
+    },
+    { rootMargin: '-20% 0px -70% 0px' },
+  );
+  document.querySelectorAll('.legal-body section[id]').forEach((s) => io.observe(s));
+
+  // No celular o índice começa fechado.
+  if (window.matchMedia('(max-width: 999px)').matches) document.querySelector('.toc-box')?.removeAttribute('open');
+</script>

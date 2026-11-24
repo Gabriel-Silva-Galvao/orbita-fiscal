@@ -1,0 +1,112 @@
+---
+import Logo from './Logo.astro';
+import Button from './Button.astro';
+
+interface Props {
+  links?: { href: string; label: string }[];
+  cta?: { href: string; label: string };
+  signIn?: string;
+}
+const { links = [], cta, signIn } = Astro.props;
+---
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <Logo />
+    {
+      links.length > 0 && (
+        <nav class="nav-links" aria-label="Seções da página">
+          {links.map((l) => (
+            <a href={l.href}>
+              <span>{l.label}</span>
+            </a>
+          ))}
+        </nav>
+      )
+    }
+    <div class="nav-actions">
+      {signIn && <a class="nav-signin" href={signIn}>Entrar</a>}
+      {cta && <Button href={cta.href}>{cta.label}</Button>}
+    </div>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    transition:
+      transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 300ms ease-out;
+  }
+  .nav.is-hidden {
+    transform: translateY(-100%);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: 92px;
+    border-bottom: 1px solid var(--line);
+    transition: min-height 350ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .nav.is-scrolled .nav-inner {
+    min-height: 74px;
+  }
+  .nav-links {
+    display: none;
+    gap: var(--space-5);
+  }
+  .nav-links a,
+  .nav-signin {
+    position: relative;
+    font: var(--text-small);
+    color: var(--mute);
+    text-decoration: none;
+    padding: 6px 2px;
+    transition: color 280ms ease-out;
+  }
+  /* Sublinhado que corre da esquerda. */
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    height: 1.5px;
+    background: var(--brand);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .nav-links a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  .nav-links a:hover,
+  .nav-signin:hover {
+    color: var(--ink);
+  }
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+  }
+  .nav-signin {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .nav-links,
+    .nav-signin {
+      display: flex;
+    }
+  }
+  @media (max-width: 480px) {
+    .nav-inner {
+      min-height: 72px;
+    }
+  }
+</style>
