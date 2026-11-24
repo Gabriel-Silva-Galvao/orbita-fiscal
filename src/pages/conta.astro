@@ -8,6 +8,7 @@ import Focus from '../layouts/Focus.astro';
 import Pending from '../components/Pending.astro';
 import { plans, brl } from '../data/plans';
 import { novidades, ORIGENS } from '../data/novidades';
+import { tutoriais } from '../data/tutoriais';
 
 const dataBr = (iso: string) => iso.split('-').reverse().join('/');
 
@@ -20,6 +21,7 @@ const planData = JSON.stringify(
 const tabs = [
   { id: 'plugin', label: 'Status do plugin' },
   { id: 'novidades', label: 'Novidades' },
+  { id: 'tutoriais', label: 'Tutoriais' },
   { id: 'plano', label: 'Plano e pagamento' },
   { id: 'cancelar', label: 'Cancelar ou reembolso' },
   { id: 'conta', label: 'Conta' },
@@ -89,18 +91,13 @@ const tabs = [
             <span class="conn-state" data-conn-claude></span>
             <a href="/instalar" data-conn-claude-link></a>
           </li>
-          <li>
-            <span class="conn-ia">ChatGPT</span>
-            <span class="conn-state">Em preparação</span>
-          </li>
-          <li>
-            <span class="conn-ia">Microsoft Copilot</span>
-            <span class="conn-state">Em preparação</span>
-          </li>
-          <li>
-            <span class="conn-ia">Gemini</span>
-            <span class="conn-state">Em preparação</span>
-          </li>
+          {tutoriais.filter((t) => !t.disponivel).map((t) => (
+            <li>
+              <span class="conn-ia">{t.nome}</span>
+              <span class="conn-state">Em preparação</span>
+              <a href={`#tutoriais`} data-goto="tutoriais" data-ia={t.id}>Como vai funcionar</a>
+            </li>
+          ))}
         </ul>
         <div class="row-actions">
           <a class="btn-main" href="/instalar">Baixar e instalar de novo</a>
@@ -139,6 +136,30 @@ const tabs = [
         <p class="empty small" data-news-empty hidden>
           Nenhuma novidade nesta categoria ainda. Quando o Claude ou outra IA mudar algo que afete plugins, aparece aqui.
         </p>
+      </section>
+
+      <section id="p-tutoriais" role="tabpanel" aria-labelledby="tab-tutoriais" class="panel" data-panel="tutoriais" hidden>
+        <p class="mute small">O plugin é o mesmo em todas as IAs; muda o caminho para instalar. Escolha a sua.</p>
+        <div class="filters" role="group" aria-label="Escolher a IA">
+          {tutoriais.map((t, i) => (
+            <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-ia-pick={t.id}>{t.nome}</button>
+          ))}
+        </div>
+        {tutoriais.map((t, i) => (
+          <article class="tut" data-tut={t.id} hidden={i !== 0}>
+            <header class="tut-head">
+              <h2 class="news-title">{t.nome}</h2>
+              <span class:list={['tut-state', t.disponivel ? 'is-on' : '']}>{t.disponivel ? 'Disponível' : 'Em preparação'}</span>
+            </header>
+            <p class="small"><strong>Quem instala:</strong> {t.quem}</p>
+            <p class="small"><strong>O que precisa:</strong> {t.requisitos}</p>
+            <ol class="tut-steps">
+              {t.passos.map((p) => <li>{p}</li>)}
+            </ol>
+            <p class="small mute">{t.observacao}</p>
+            {t.disponivel && <a class="btn-main" href="/instalar">Abrir o passo a passo completo</a>}
+          </article>
+        ))}
       </section>
 
       <section id="p-plano" role="tabpanel" aria-labelledby="tab-plano" class="panel" data-panel="plano" hidden>
@@ -368,6 +389,45 @@ const tabs = [
     color: var(--ink);
   }
 
+  /* Tutoriais */
+  .tut {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+  }
+  .tut-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .tut-state {
+    padding: 2px 10px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-pill);
+    font: 600 0.75rem/1.5 var(--font-body);
+    color: var(--mute);
+  }
+  .tut-state.is-on {
+    border: 1px solid var(--brand);
+    color: var(--brand);
+  }
+  .tut-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 6px;
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .tut .btn-main {
+    width: auto;
+  }
+
   /* Status do plugin */
   .stats {
     display: grid;
@@ -566,9 +626,18 @@ const tabs = [
       $('[data-news-empty]').hidden = shown > 0;
     }),
   );
+  // Tutoriais: um por vez, escolhido pela IA.
+  const iaBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-ia-pick]'));
+  function pickIa(id: string) {
+    iaBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.iaPick === id)));
+    root.querySelectorAll<HTMLElement>('[data-tut]').forEach((t) => (t.hidden = t.dataset.tut !== id));
+  }
+  iaBtns.forEach((b) => b.addEventListener('click', () => pickIa(b.dataset.iaPick!)));
+
   root.querySelectorAll<HTMLAnchorElement>('[data-goto]').forEach((a) =>
     a.addEventListener('click', (e) => {
       e.preventDefault();
+      if (a.dataset.ia) pickIa(a.dataset.ia);
       history.replaceState(null, '', `#${a.dataset.goto}`);
       selectTab(a.dataset.goto!, true);
     }),
