@@ -22,6 +22,8 @@ const tabs = [
   { id: 'plugin', label: 'Status do plugin' },
   { id: 'novidades', label: 'Novidades' },
   { id: 'tutoriais', label: 'Tutoriais' },
+  { id: 'alertas', label: 'Alertas por tema', max: true },
+  { id: 'resumo', label: 'Resumo semanal', max: true },
   { id: 'plano', label: 'Plano e pagamento' },
   { id: 'cancelar', label: 'Cancelar ou reembolso' },
   { id: 'conta', label: 'Conta' },
@@ -57,6 +59,7 @@ const tabs = [
           <a role="tab" id={`tab-${t.id}`} href={`#${t.id}`} aria-controls={`p-${t.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={t.id}>
             {t.label}
             {t.id === 'novidades' && <span class="badge" data-news-badge hidden></span>}
+            {t.max && <>{' '}<span class="max-tag">Max</span></>}
           </a>
         ))}
       </div>
@@ -160,6 +163,54 @@ const tabs = [
             {t.disponivel && <a class="btn-main" href="/instalar">Abrir o passo a passo completo</a>}
           </article>
         ))}
+      </section>
+
+      <section id="p-alertas" role="tabpanel" aria-labelledby="tab-alertas" class="panel" data-panel="alertas" hidden>
+        <div class="locked" data-locked>
+          <h2 class="news-title">Alertas por tema, no plano Max</h2>
+          <p class="small">Salve os temas que você acompanha, como ICMS-ST ou crédito de PIS/Cofins. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail.</p>
+          <a class="btn-main" href="/assinar/max">Conhecer o Max</a>
+        </div>
+        <div class="unlocked" data-unlocked hidden>
+          <p class="mute small">Salve os temas que você acompanha. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail<Pending kind="confirmar" />.</p>
+          <form class="theme-form" data-theme-form novalidate>
+            <div class="field">
+              <label for="p-tema">Novo tema</label>
+              <input id="p-tema" maxlength="60" placeholder="Ex.: crédito de PIS/Cofins sobre frete" aria-describedby="p-tema-msg" />
+              <p class="msg" id="p-tema-msg" aria-live="polite"></p>
+            </div>
+            <button type="submit" class="btn-alt">Salvar tema</button>
+          </form>
+          <p class="small mute">Sugestões:</p>
+          <div class="filters" data-theme-suggest>
+            {['ICMS-ST', 'Exclusão do ICMS do PIS/Cofins', 'Prescrição intercorrente', 'Reforma tributária (IBS e CBS)'].map((s) => (
+              <button type="button" data-suggest={s}>+ {s}</button>
+            ))}
+          </div>
+          <h2 class="title">Seus temas</h2>
+          <ul class="chips" data-themes></ul>
+          <p class="empty small" data-themes-empty>Nenhum tema salvo ainda.</p>
+          <p class="empty small">Os alertas aparecem aqui quando houver decisão ou norma nova sobre os seus temas.</p>
+        </div>
+      </section>
+
+      <section id="p-resumo" role="tabpanel" aria-labelledby="tab-resumo" class="panel" data-panel="resumo" hidden>
+        <div class="locked" data-locked>
+          <h2 class="news-title">Resumo semanal, no plano Max</h2>
+          <p class="small">Toda semana, as decisões e normas mais relevantes das áreas que você escolher, aqui e por e-mail.</p>
+          <a class="btn-main" href="/assinar/max">Conhecer o Max</a>
+        </div>
+        <div class="unlocked" data-unlocked hidden>
+          <p class="mute small">Escolha as áreas. O resumo chega toda semana<Pending kind="confirmar" />, aqui e por e-mail.</p>
+          <fieldset class="areas" data-areas>
+            <legend class="sr-only">Áreas do resumo</legend>
+            {['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'Previdenciário', 'Processo tributário', 'Reforma tributária (IBS e CBS)'].map((a) => (
+              <label class="area"><input type="checkbox" value={a} /> {a}</label>
+            ))}
+          </fieldset>
+          <p class="small mute" data-areas-msg role="status"></p>
+          <p class="empty small">O primeiro resumo aparece aqui na semana seguinte à escolha das áreas.</p>
+        </div>
       </section>
 
       <section id="p-plano" role="tabpanel" aria-labelledby="tab-plano" class="panel" data-panel="plano" hidden>
@@ -387,6 +438,91 @@ const tabs = [
   .max-tag {
     background: var(--soft);
     color: var(--ink);
+  }
+
+  /* Alertas e Resumo (Max) */
+  .locked {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    padding: var(--space-5);
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-xl);
+  }
+  .locked .btn-main {
+    width: auto;
+  }
+  .unlocked {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .unlocked[hidden],
+  .locked[hidden] {
+    display: none;
+  }
+  .theme-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-3);
+  }
+  .theme-form .field {
+    flex: 1 1 260px;
+  }
+  .theme-form .btn-alt {
+    width: auto;
+  }
+  .chips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chips li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px 4px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--soft);
+    font: var(--text-small);
+  }
+  .chips button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .chips button:focus-visible {
+    outline: 3px solid var(--brand);
+  }
+  .areas {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .area input {
+    accent-color: var(--brand);
   }
 
   /* Tutoriais */
@@ -626,6 +762,77 @@ const tabs = [
       $('[data-news-empty]').hidden = shown > 0;
     }),
   );
+  // Alertas por tema (Max). Na demonstração, os temas ficam neste navegador; depois, na API.
+  const THEMES_KEY = 'of-demo-temas';
+  const getThemes = (): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem(THEMES_KEY) ?? '[]');
+    } catch {
+      return [];
+    }
+  };
+  const setThemes = (t: string[]) => {
+    try {
+      localStorage.setItem(THEMES_KEY, JSON.stringify(t));
+    } catch {}
+    renderThemes();
+  };
+  function renderThemes() {
+    const list = $('[data-themes]');
+    const themes = getThemes();
+    list.replaceChildren();
+    themes.forEach((t) => {
+      const li = document.createElement('li');
+      li.append(t);
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '×';
+      x.setAttribute('aria-label', `Remover o tema ${t}`);
+      x.addEventListener('click', () => setThemes(getThemes().filter((y) => y !== t)));
+      li.append(x);
+      list.append(li);
+    });
+    $('[data-themes-empty]').hidden = themes.length > 0;
+    root.querySelectorAll<HTMLButtonElement>('[data-suggest]').forEach((b) => (b.hidden = themes.includes(b.dataset.suggest!)));
+  }
+  function addTheme(raw: string) {
+    const t = raw.trim().replace(/\s+/g, ' ');
+    const msg = $('#p-tema-msg');
+    if (t.length < 3) return void (msg.textContent = 'Escreva o tema com pelo menos 3 letras.');
+    const themes = getThemes();
+    if (themes.some((x) => x.toLowerCase() === t.toLowerCase())) return void (msg.textContent = 'Esse tema já está salvo.');
+    if (themes.length >= 20) return void (msg.textContent = 'Você chegou ao máximo de 20 temas. Remova um para salvar outro.');
+    msg.textContent = '';
+    setThemes([...themes, t]);
+  }
+  $<HTMLFormElement>('[data-theme-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $<HTMLInputElement>('#p-tema');
+    addTheme(input.value);
+    if (!$('#p-tema-msg').textContent) input.value = '';
+    input.focus();
+  });
+  root.querySelectorAll<HTMLButtonElement>('[data-suggest]').forEach((b) => b.addEventListener('click', () => addTheme(b.dataset.suggest!)));
+
+  // Resumo semanal (Max): áreas escolhidas.
+  const AREAS_KEY = 'of-demo-areas';
+  const areaInputs = Array.from(root.querySelectorAll<HTMLInputElement>('[data-areas] input'));
+  try {
+    const saved: string[] = JSON.parse(localStorage.getItem(AREAS_KEY) ?? '[]');
+    areaInputs.forEach((i) => (i.checked = saved.includes(i.value)));
+  } catch {}
+  areaInputs.forEach((i) =>
+    i.addEventListener('change', () => {
+      const chosen = areaInputs.filter((x) => x.checked).map((x) => x.value);
+      try {
+        localStorage.setItem(AREAS_KEY, JSON.stringify(chosen));
+      } catch {}
+      $('[data-areas-msg]').textContent = chosen.length
+        ? `Salvo: ${chosen.length} ${chosen.length === 1 ? 'área' : 'áreas'}.`
+        : 'Nenhuma área escolhida: o resumo fica pausado.';
+    }),
+  );
+
   // Tutoriais: um por vez, escolhido pela IA.
   const iaBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-ia-pick]'));
   function pickIa(id: string) {
@@ -680,6 +887,12 @@ const tabs = [
     sw.textContent = `Trocar para o ${plans[other].name} (${plans[other].price} por mês)`;
     $('[data-email]').textContent = sub.email;
     $<HTMLInputElement>('#p-nome').value = sub.nome ?? '';
+
+    // Seções do Max: no Pro, bloqueadas com convite.
+    const isMax = sub.plano === 'max';
+    root.querySelectorAll<HTMLElement>('[data-locked]').forEach((el) => (el.hidden = isMax));
+    root.querySelectorAll<HTMLElement>('[data-unlocked]').forEach((el) => (el.hidden = !isMax));
+    renderThemes();
 
     // Status do plugin. Consultas e última consulta virão da API; na demonstração, ainda não há nenhuma.
     $('[data-access]').textContent = sub.reembolso ? 'Encerrado' : 'Ativo';
