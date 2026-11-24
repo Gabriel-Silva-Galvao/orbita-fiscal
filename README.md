@@ -23,11 +23,13 @@ Copie `.env.example` para `.env` quando houver servidor. Sem as variáveis, Entr
 - **Frontend:** o site inteiro fica em Astro. As páginas públicas continuam estáticas. As abas do assinante vão ser renderizadas no servidor, com ilhas React só nas partes muito interativas. Pesquisa: [artefatos/astro-ou-react.html](artefatos/astro-ou-react.html).
 - **Backend:** todo em **Python**, com **FastAPI** como biblioteca principal. Login, assinatura, pagamento, portal e a base jurídica do plugin ficam nessa API. O Astro só chama a API por HTTP, sem regra de negócio própria: o servidor do Astro apenas protege as rotas e repassa as chamadas.
 - Os endpoints do `.env.example` (`PUBLIC_AUTH_ENDPOINT`, `PUBLIC_CONTACT_ENDPOINT` e os próximos) apontam para essa API.
+- **Acesso:** Google ou e-mail e senha, sempre com verificação em duas etapas por código de 6 dígitos no e-mail, no cadastro e no login. Contrato da API no topo de `src/pages/entrar.astro`.
+- **Conta antes da compra:** só quem criou a conta e confirmou o e-mail chega ao Checkout. Escolher um plano sem estar logado leva a `/entrar?plano=<plano>&modo=criar`, e depois do código a pessoa volta ao Checkout desse plano.
 
 ### Como o Plano A está montado
 
 - `astro.config.mjs`: integração `@astrojs/react` e adaptador `@astrojs/node` (modo `standalone`). Tudo continua estático por padrão.
-- Rotas do assinante (`/conta`, `/instalar` e o futuro `/app`) declaram `export const prerender = false` e rodam no servidor.
+- Rotas do assinante (`/conta`, `/instalar`, `/assinar/pro|max` e o futuro `/app`) declaram `export const prerender = false` e rodam no servidor.
 - `src/middleware.ts` protege essas rotas. Com `API_URL` definido, chama `GET {API_URL}/auth/sessao` repassando o cookie: 200 abre a página e põe o usuário em `Astro.locals.usuario`; 401/403 manda para `/entrar?next=<rota>`. Sem `API_URL`, tudo abre em demonstração.
 - Componentes React (`.tsx` em `src/components/`) entram só onde há muita interação, com `client:load`, `client:visible` ou, para um app inteiro, `client:only="react"`.
 

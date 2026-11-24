@@ -9,7 +9,7 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 | Página | Rota | Situação | O que falta |
 | --- | --- | --- | --- |
 | 1. Landing | `/` | Pronta | Revisão jurídica dos exemplos; contatos reais |
-| 2. Entrar e criar conta | `/entrar` | Tela pronta, demonstração | Servidor de autenticação (Google + link por e-mail) |
+| 2. Entrar e criar conta | `/entrar` | Tela pronta, demonstração | Servidor de autenticação (Google ou e-mail e senha + código por e-mail) |
 | 3. Checkout | `/assinar/pro`, `/assinar/max` | Tela pronta, demonstração | Provedor de pagamento, campos seguros do cartão, Pix, nota fiscal |
 | 4. Instalar o plugin | `/instalar` | Tela pronta, demonstração | Arquivo real do plugin, link expirável, código de conexão real, nomes dos menus do Claude |
 | 5. Portal do cliente | `/conta` | Tela pronta, demonstração | Dados reais da assinatura, notas, reembolso e cancelamento pelo provedor |
@@ -140,15 +140,16 @@ Painel interativo (status e bloqueios editáveis): https://claude.ai/artifact/Ea
 
 - [x] Tela com abas Entrar e Criar conta
 - [x] Botão Continuar com Google
-- [x] Link de acesso por e-mail, sem senha
+- [x] E-mail e senha, com mostrar senha e "Esqueci a senha"
+- [x] Verificação em duas etapas por código no e-mail, no cadastro e no login (Google e senha)
 - [x] Faixa do plano escolhido, com troca
-- [x] Estados: link enviado, reenvio, já cadastrado, expirado, erro
+- [x] Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro
 
 **Falta**
 
 - [ ] Servidor de autenticação
 - [ ] Login com Google de verdade (OAuth)
-- [ ] Envio dos e-mails com o link
+- [ ] Envio dos e-mails com o código e com o link de senha nova
 - [ ] Sessão da pessoa entre as páginas
 
 ### 8. Checkout (5 de 10)

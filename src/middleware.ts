@@ -6,13 +6,14 @@
  * cookie é válida, em GET {API_URL}/auth/sessao, repassando o cabeçalho Cookie.
  *   200 com JSON do usuário -> segue, com o usuário em Astro.locals.usuario
  *   401/403                 -> redireciona para /entrar?next=<rota>
+ *                              (no Checkout, /entrar?plano=<plano>&modo=criar: conta antes da compra)
  *   API fora do ar          -> 503, sem abrir a página
  * Toda regra de negócio fica na API; aqui só se decide se a porta abre.
  */
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
 
-const PROTEGIDAS = ['/conta', '/instalar', '/app'];
+const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar'];
 
 const protegida = (path: string) => PROTEGIDAS.some((p) => path === p || path.startsWith(`${p}/`));
 
@@ -21,7 +22,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Páginas estáticas são geradas no build, sem requisição real: não há o que proteger.
   if (context.isPrerendered || !protegida(pathname) || !API_URL) return next();
 
-  const entrar = () => context.redirect(`/entrar?next=${encodeURIComponent(pathname + search)}`);
+  // Decisão de 24/11/2026: primeiro a conta, depois a compra. Quem chega ao Checkout sem
+  // sessão vai criar a conta com o plano já escolhido; o Entrar leva de volta ao Checkout.
+  const plano = pathname.match(/^\/assinar\/(pro|max)$/)?.[1];
+  const entrar = () =>
+    context.redirect(plano ? `/entrar?plano=${plano}&modo=criar` : `/entrar?next=${encodeURIComponent(pathname + search)}`);
   const cookie = context.request.headers.get('cookie');
   if (!cookie) return entrar();
 

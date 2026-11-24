@@ -5,17 +5,21 @@
  * demonstração, nada é cobrado e nenhum dado sai do navegador.
  * Na integração real, os campos do cartão devem ser os campos seguros do provedor (iframe/SDK),
  * para que o número do cartão nunca passe pelo servidor da Órbita Fiscal.
+ *
+ * Conta antes da compra (decisão de 24/11/2026): só quem já criou a conta e confirmou o e-mail
+ * pelo código chega aqui. Com a API, o middleware manda quem não entrou para
+ * /entrar?plano=<plano>&modo=criar; na demonstração, o próprio script faz isso.
  */
 import Focus from '../../layouts/Focus.astro';
 import Pending from '../../components/Pending.astro';
 import Icon from '../../components/Icon.astro';
 import { plans, brl, type Plan } from '../../data/plans';
 
-export function getStaticPaths() {
-  return [{ params: { plano: 'pro' } }, { params: { plano: 'max' } }];
-}
+export const prerender = false;
 
 const slug = Astro.params.plano as Plan['slug'];
+if (slug !== 'pro' && slug !== 'max') return new Response(null, { status: 404 });
+const accountEmail = Astro.locals.usuario?.email ?? '';
 const plan = plans[slug];
 const other = plans[slug === 'max' ? 'pro' : 'max'];
 const price = brl(plan.cents);
@@ -23,7 +27,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 ---
 
 <Focus title={`Assinar o ${plan.name} · Órbita Fiscal`} description={`Assine o plano ${plan.name} da Órbita Fiscal por ${price} por mês.`}>
-  <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider}>
+  <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider} data-session-email={accountEmail}>
     <aside class="summary" aria-labelledby="sum-title">
       <h1 id="sum-title" class="display-md">Assinar o {plan.name}</h1>
       <p class="price"><span class="value">{price}</span> <span class="per">por mês</span></p>
@@ -60,15 +64,9 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
       <form class="pay-form" novalidate data-form>
         <fieldset class="group">
           <legend class="group-title">Sua conta</legend>
-          <p class="account small" data-account hidden>
-            Assinando como <strong data-account-email></strong>.{' '}<a href={`/entrar?plano=${slug}`}>Usar outra conta</a>
+          <p class="account small" data-account>
+            Assinando como <strong data-account-email>{accountEmail}</strong>.{' '}<a href={`/entrar?plano=${slug}`}>Usar outra conta</a>
           </p>
-          <div class="field" data-email-field>
-            <label for="c-email">E-mail</label>
-            <input id="c-email" name="email" type="email" autocomplete="email" inputmode="email" aria-describedby="c-email-hint c-email-msg" />
-            <p class="hint" id="c-email-hint">Sua conta é criada com este e-mail. Já tem conta? <a href={`/entrar?plano=${slug}`}>Entre</a>.</p>
-            <p class="msg" id="c-email-msg" aria-live="polite"></p>
-          </div>
         </fieldset>
 
         <fieldset class="group">
@@ -389,7 +387,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 </style>
 
 <script>
-  import { isEmail, isCPF, isCNPJ, maskDoc, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
+  import { isCPF, isCNPJ, maskDoc, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
 
   const root = document.querySelector<HTMLElement>('[data-checkout]')!;
   const price = root.dataset.price ?? '';
@@ -406,16 +404,16 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
   next.setMonth(next.getMonth() + 1);
   $('[data-next-date]').textContent = next.toLocaleDateString('pt-BR');
 
-  // Conta já conhecida (vinda do Entrar) ou e-mail para criar a conta.
-  let accountEmail = '';
-  try {
-    accountEmail = sessionStorage.getItem('of-demo-email') ?? '';
-  } catch {}
-  if (accountEmail) {
-    $('[data-account]').hidden = false;
-    $('[data-account-email]').textContent = accountEmail;
-    $('[data-email-field]').hidden = true;
+  // Conta antes da compra: o e-mail vem da sessão (servidor) ou, na demonstração, do Entrar.
+  // Sem conta, a pessoa vai criar a sua primeiro, com o plano já escolhido.
+  let accountEmail = root.dataset.sessionEmail ?? '';
+  if (!accountEmail) {
+    try {
+      accountEmail = sessionStorage.getItem('of-demo-email') ?? '';
+    } catch {}
   }
+  if (!accountEmail) location.replace(`/entrar?plano=${root.dataset.plan}&modo=criar`);
+  $('[data-account-email]').textContent = accountEmail;
 
   // Forma de pagamento
   const method = () => (form.querySelector<HTMLInputElement>('input[name="metodo"]:checked')?.value ?? 'cartao');
@@ -436,11 +434,6 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
   input('c-doc').addEventListener('input', (e) => ((e.target as HTMLInputElement).value = maskDoc((e.target as HTMLInputElement).value)));
 
   const rules: Record<string, () => string> = {
-    'c-email': () => {
-      if (accountEmail) return '';
-      const v = input('c-email').value.trim();
-      return !v ? 'Escreva o e-mail da sua conta.' : !isEmail(v) ? 'Confira o e-mail: falta algo como “@” ou o domínio.' : '';
-    },
     'c-card': () => (method() !== 'cartao' ? '' : isCard(input('c-card').value) ? '' : 'Confira o número do cartão: algum dígito parece estar errado.'),
     'c-exp': () => (method() !== 'cartao' ? '' : isExpiry(input('c-exp').value) ? '' : 'Use mês e ano no formato MM/AA, a partir deste mês.'),
     'c-cvc': () => (method() !== 'cartao' ? '' : /^\d{3,4}$/.test(input('c-cvc').value) ? '' : 'São os 3 ou 4 números no verso do cartão.'),
@@ -475,7 +468,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
   function showDone() {
     // Demonstração: lembra a assinatura neste navegador para Instalar e Portal.
     try {
-      const email = accountEmail || input('c-email').value.trim();
+      const email = accountEmail;
       sessionStorage.setItem('of-demo-email', email);
       localStorage.setItem(
         'of-demo-assinatura',
@@ -484,7 +477,7 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
     } catch {}
     form.hidden = true;
     $('[data-pix]').hidden = true;
-    $('[data-done-email]').textContent = accountEmail || input('c-email').value.trim();
+    $('[data-done-email]').textContent = accountEmail;
     const done = $('[data-done]');
     done.hidden = false;
     done.focus();

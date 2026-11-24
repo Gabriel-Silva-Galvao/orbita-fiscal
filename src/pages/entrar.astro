@@ -1,10 +1,23 @@
 ---
 /**
- * Entrar e criar conta (briefing, Página 2). Acesso sem senha: Google ou link por e-mail
- * (decisão de 24/11/2026). Mesmo layout nas duas abas.
+ * Entrar e criar conta (briefing, Página 2).
+ * Decisão de 24/11/2026 (substitui o acesso só por link): Google ou e-mail e senha, sempre com
+ * verificação em duas etapas por código enviado ao e-mail. Vale para criar conta e para entrar.
+ *
+ * Fluxo: formulário (ou Google) -> etapa "código" (6 dígitos, 10 minutos) -> destino.
  * Parâmetros: ?plano=pro|max mostra a faixa do plano e segue para o Checkout;
- * ?modo=criar abre “Criar conta”; ?erro=link-expirado avisa que o link venceu.
- * Sem PUBLIC_AUTH_ENDPOINT, roda em modo de demonstração: nenhum e-mail sai daqui.
+ * ?modo=criar abre "Criar conta"; ?etapa=codigo abre direto no código (volta do Google);
+ * ?next=<rota> volta para a página pedida pelo middleware; ?erro=codigo-expirado avisa.
+ *
+ * API (PUBLIC_AUTH_ENDPOINT é a base da API de autenticação em FastAPI; chamadas com cookie):
+ *   POST /cadastro         {nome, email, senha, plano} -> 202 código enviado | 409 e-mail já tem conta
+ *   POST /login            {email, senha}              -> 202 código enviado | 401 e-mail ou senha não conferem
+ *   POST /codigo           {codigo}                    -> 200 sessão criada (cookie) | 400 {tentativas_restantes} | 410 expirado
+ *   POST /codigo/reenviar  {}                          -> 202 | 429 espere
+ *   POST /senha/esqueci    {email}                     -> 202 (sempre, para não revelar contas)
+ *   GET  /google?next=<rota>: OAuth; na volta a API envia o código ao e-mail da conta Google e
+ *     redireciona para /entrar?etapa=codigo&next=<rota>.
+ * 429 em qualquer rota = muitas tentativas. Sem PUBLIC_AUTH_ENDPOINT, roda em demonstração.
  */
 import Focus from '../layouts/Focus.astro';
 import Icon from '../components/Icon.astro';
@@ -16,7 +29,7 @@ const planData = JSON.stringify(
 );
 ---
 
-<Focus title="Entrar · Órbita Fiscal" description="Entre ou crie sua conta na Órbita Fiscal com o Google ou com um link enviado ao seu e-mail.">
+<Focus title="Entrar · Órbita Fiscal" description="Entre ou crie sua conta na Órbita Fiscal com o Google ou com e-mail e senha, com verificação em duas etapas.">
   <div class="wrap auth" data-auth data-endpoint={endpoint} data-plans={planData}>
     <div class="auth-card">
       <p class="plan-band" data-plan-band hidden>
@@ -24,19 +37,20 @@ const planData = JSON.stringify(
         <button type="button" class="link-btn" data-plan-swap>Trocar para o <span data-plan-other></span></button>
       </p>
 
-      <div class="tabs" role="tablist" aria-label="Entrar ou criar conta">
+      <div class="tabs" role="tablist" aria-label="Entrar ou criar conta" data-tabs>
         <button type="button" role="tab" id="tab-entrar" aria-controls="painel" aria-selected="true" data-mode="entrar">Entrar</button>
         <button type="button" role="tab" id="tab-criar" aria-controls="painel" aria-selected="false" tabindex="-1" data-mode="criar">Criar conta</button>
       </div>
 
       <div id="painel" role="tabpanel" aria-labelledby="tab-entrar" class="panel">
+        <!-- Etapa 1: Google ou e-mail e senha -->
         <div class="step" data-step="form">
           <h1 class="display-md" data-title>Entre na sua conta</h1>
-          <p class="mute" data-sub>Sem senha: use o Google ou receba um link no seu e-mail.</p>
+          <p class="mute" data-sub>Use o Google ou seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.</p>
 
           {!endpoint && (
             <p class="demo">
-              <strong>Modo de demonstração.</strong> Nenhum e-mail é enviado e nenhuma conta é criada de verdade.
+              <strong>Modo de demonstração.</strong> Nenhum e-mail é enviado: o código aparece na tela. A conta fica só neste navegador.
             </p>
           )}
 
@@ -60,7 +74,19 @@ const planData = JSON.stringify(
               <input id="a-email" name="email" type="email" autocomplete="email" inputmode="email" aria-describedby="a-email-msg" />
               <p class="msg" id="a-email-msg" aria-live="polite"></p>
             </div>
-            <button type="submit" class="btn-main" data-submit>Enviar link de acesso</button>
+            <div class="field">
+              <div class="label-row">
+                <label for="a-senha">Senha</label>
+                <button type="button" class="link-btn" data-forgot>Esqueci a senha</button>
+              </div>
+              <div class="pass">
+                <input id="a-senha" name="senha" type="password" autocomplete="current-password" aria-describedby="a-senha-hint a-senha-msg" />
+                <button type="button" class="pass-toggle" data-toggle-pass aria-controls="a-senha" aria-pressed="false">Mostrar</button>
+              </div>
+              <p class="hint small mute" id="a-senha-hint" data-pass-hint hidden>Pelo menos 8 caracteres, com letras e números.</p>
+              <p class="msg" id="a-senha-msg" aria-live="polite"></p>
+            </div>
+            <button type="submit" class="btn-main" data-submit>Continuar</button>
           </form>
 
           <p class="legal small">
@@ -68,20 +94,50 @@ const planData = JSON.stringify(
           </p>
         </div>
 
-        <div class="step" data-step="sent" hidden tabindex="-1">
-          <h1 class="display-md">Confira seu e-mail</h1>
+        <!-- Etapa 2: código de verificação enviado ao e-mail -->
+        <div class="step" data-step="code" hidden tabindex="-1">
+          <h1 class="display-md">Confirme que é você</h1>
           <p class="notice is-ok" role="status">
-            <strong>Enviamos um link para <span data-sent-to></span>.</strong>
-            <span>Abra o e-mail e toque no link para entrar. Ele vale por 15 minutos<span class="pending-inline">a definir</span>.</span>
+            <strong>Enviamos um código de 6 dígitos para <span data-code-to></span>.</strong>
+            <span>Ele vale por 10 minutos<span class="pending-inline">a confirmar</span>. Esta é a segunda etapa da verificação: sem ela, ninguém entra só com a senha.</span>
           </p>
-          <p class="mute small">Não chegou? Veja a caixa de spam ou peça outro link.</p>
+          <p class="demo" data-demo-code hidden>
+            <strong>Demonstração:</strong> o código é <span class="code-show" data-demo-value></span>.
+          </p>
+          <p class="notice is-error" data-code-error role="alert" hidden></p>
+          <form class="form" novalidate data-code-form>
+            <div class="field">
+              <label for="a-codigo">Código de verificação</label>
+              <input
+                id="a-codigo"
+                class="code-input"
+                name="codigo"
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                aria-describedby="a-codigo-msg"
+              />
+              <p class="msg" id="a-codigo-msg" aria-live="polite"></p>
+            </div>
+            <button type="submit" class="btn-main" data-code-submit>Confirmar e entrar</button>
+          </form>
+          <p class="mute small">Não chegou? Veja a caixa de spam ou peça outro código.</p>
           <div class="sent-actions">
             <button type="button" class="btn-alt" data-resend disabled>Reenviar em <span data-count>60</span> s</button>
-            <button type="button" class="link-btn" data-other>Usar outro e-mail</button>
+            <button type="button" class="link-btn" data-back>Voltar e usar outra conta</button>
           </div>
-          {!endpoint && (
-            <a class="btn-main" href="/conta" data-continue>Continuar (demonstração)</a>
-          )}
+        </div>
+
+        <!-- Esqueci a senha: confirmação -->
+        <div class="step" data-step="reset" hidden tabindex="-1">
+          <h1 class="display-md">Confira seu e-mail</h1>
+          <p class="notice is-ok" role="status">
+            <strong>Se existir uma conta com <span data-reset-to></span>, enviamos um link para criar uma senha nova.</strong>
+            <span>O link vale por 30 minutos<span class="pending-inline">a confirmar</span>. Ao entrar com a senha nova, pedimos o código do e-mail como sempre.</span>
+          </p>
+          <button type="button" class="link-btn" data-back>Voltar para entrar</button>
         </div>
       </div>
     </div>
@@ -167,6 +223,50 @@ const planData = JSON.stringify(
   .legal {
     color: var(--mute);
   }
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .pass {
+    position: relative;
+  }
+  .pass input {
+    width: 100%;
+    padding-right: 88px;
+  }
+  .pass-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    min-height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--brand);
+    font: 500 0.875rem/1 var(--font-body);
+    cursor: pointer;
+  }
+  .pass-toggle:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 1px;
+  }
+  .code-input {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 0.4em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .code-show {
+    font-family: var(--font-display);
+    font-size: 1.125em;
+    letter-spacing: 0.15em;
+    font-variant-numeric: tabular-nums;
+  }
   .sent-actions {
     display: grid;
     gap: var(--space-3);
@@ -186,12 +286,13 @@ const planData = JSON.stringify(
 <script>
   import { isEmail } from '../scripts/validate';
 
+  type Mode = 'entrar' | 'criar';
   const root = document.querySelector<HTMLElement>('[data-auth]')!;
-  const endpoint = root.dataset.endpoint ?? '';
+  const endpoint = (root.dataset.endpoint ?? '').replace(/\/$/, '');
   const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, { name: string; price: string }>;
   const params = new URLSearchParams(location.search);
   let plan = params.get('plano') && plans[params.get('plano')!] ? params.get('plano')! : '';
-  let mode: 'entrar' | 'criar' = params.get('modo') === 'criar' ? 'criar' : 'entrar';
+  let mode: Mode = params.get('modo') === 'criar' ? 'criar' : 'entrar';
 
   const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
@@ -199,17 +300,34 @@ const planData = JSON.stringify(
   const nameField = $('[data-name-field]');
   const nameInput = $<HTMLInputElement>('#a-nome');
   const emailInput = $<HTMLInputElement>('#a-email');
+  const passInput = $<HTMLInputElement>('#a-senha');
+  const codeInput = $<HTMLInputElement>('#a-codigo');
   const errorBox = $('[data-error]');
+  const codeError = $('[data-code-error]');
   const submit = $<HTMLButtonElement>('[data-submit]');
-  const stepForm = $('[data-step="form"]');
-  const stepSent = $('[data-step="sent"]');
+  const codeSubmit = $<HTMLButtonElement>('[data-code-submit]');
+  const steps = {
+    form: $('[data-step="form"]'),
+    code: $('[data-step="code"]'),
+    reset: $('[data-step="reset"]'),
+  };
 
   // Para onde ir depois de entrar: Checkout do plano escolhido; senão a rota que o middleware
   // pediu em ?next= (só caminhos deste site); senão o Portal.
-  const askedNext = new URLSearchParams(location.search).get('next') ?? '';
+  const askedNext = params.get('next') ?? '';
   const safeNext = askedNext.startsWith('/') && !askedNext.startsWith('//') && !askedNext.startsWith('/\\') ? askedNext : '';
   const nextUrl = () => (plan ? `/assinar/${plan}` : safeNext || '/conta');
 
+  const api = (path: string, body: unknown = {}) =>
+    fetch(`${endpoint}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  /* ---------- Plano ---------- */
   function renderPlan() {
     const band = $('[data-plan-band]');
     band.hidden = !plan;
@@ -218,8 +336,6 @@ const planData = JSON.stringify(
     $('[data-plan-name]').textContent = plans[plan].name;
     $('[data-plan-price]').textContent = plans[plan].price;
     $('[data-plan-other]').textContent = plans[other].name;
-    const cont = root.querySelector<HTMLAnchorElement>('[data-continue]');
-    if (cont) cont.href = nextUrl();
   }
   $('[data-plan-swap]').addEventListener('click', () => {
     plan = plan === 'max' ? 'pro' : 'max';
@@ -228,7 +344,14 @@ const planData = JSON.stringify(
     renderPlan();
   });
 
-  function setMode(m: 'entrar' | 'criar', focus = false) {
+  /* ---------- Etapas ---------- */
+  function show(step: keyof typeof steps) {
+    for (const [k, el] of Object.entries(steps)) el.hidden = k !== step;
+    $('[data-tabs]').hidden = step !== 'form';
+    if (step !== 'form') steps[step].focus();
+  }
+
+  function setMode(m: Mode, focus = false) {
     mode = m;
     tabs.forEach((t) => {
       const on = t.dataset.mode === m;
@@ -237,24 +360,29 @@ const planData = JSON.stringify(
       if (on) $('#painel').setAttribute('aria-labelledby', t.id);
       if (on && focus) t.focus();
     });
-    nameField.hidden = m !== 'criar';
-    $('[data-title]').textContent = m === 'criar' ? 'Crie sua conta' : 'Entre na sua conta';
-    $('[data-sub]').textContent =
-      m === 'criar'
-        ? 'Só nome e e-mail. Você entra pelo link que enviamos, sem criar senha.'
-        : 'Sem senha: use o Google ou receba um link no seu e-mail.';
+    const criar = m === 'criar';
+    nameField.hidden = !criar;
+    $('[data-pass-hint]').hidden = !criar;
+    $('[data-forgot]').hidden = criar;
+    passInput.autocomplete = criar ? 'new-password' : 'current-password';
+    $('[data-title]').textContent = criar ? 'Crie sua conta' : 'Entre na sua conta';
+    $('[data-sub]').textContent = criar
+      ? 'Use o Google ou crie uma senha. Em seguida, confirme seu e-mail com o código que enviamos.'
+      : 'Use o Google ou seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.';
+    submit.textContent = criar ? 'Criar conta' : 'Continuar';
     clearErrors();
   }
   tabs.forEach((t, i) => {
-    t.addEventListener('click', () => setMode(t.dataset.mode as 'entrar' | 'criar'));
+    t.addEventListener('click', () => setMode(t.dataset.mode as Mode));
     t.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
-        setMode(tabs[(i + 1) % 2].dataset.mode as 'entrar' | 'criar', true);
+        setMode(tabs[(i + 1) % 2].dataset.mode as Mode, true);
       }
     });
   });
 
+  /* ---------- Mensagens ---------- */
   function fieldError(input: HTMLInputElement, msg: string) {
     const out = document.getElementById(`${input.id}-msg`)!;
     out.textContent = msg;
@@ -263,36 +391,61 @@ const planData = JSON.stringify(
   }
   function clearErrors() {
     errorBox.hidden = true;
-    [nameInput, emailInput].forEach((i) => fieldError(i, ''));
+    [nameInput, emailInput, passInput].forEach((i) => fieldError(i, ''));
   }
   const showError = (msg: string) => {
     errorBox.textContent = msg;
     errorBox.hidden = false;
   };
-
-  // Estados vindos do link do e-mail
-  if (params.get('erro') === 'link-expirado')
-    showError('Esse link de acesso expirou ou já foi usado. Peça um novo abaixo; ele chega em instantes.');
-
-  // Contas de demonstração (só neste navegador), para mostrar o estado “e-mail já cadastrado”.
-  const demoKey = 'of-demo-contas';
-  const demoAccounts = (): string[] => {
-    try {
-      return JSON.parse(localStorage.getItem(demoKey) ?? '[]');
-    } catch {
-      return [];
-    }
+  const showCodeError = (msg: string) => {
+    codeError.textContent = msg;
+    codeError.hidden = !msg;
   };
 
-  let timer = 0;
-  function showSent(email: string, note = '') {
-    stepForm.hidden = true;
-    stepSent.hidden = false;
-    $('[data-sent-to]').textContent = email;
-    if (note) $('[data-sent-to]').textContent = `${email}. ${note}`;
+  if (params.get('erro') === 'codigo-expirado') showError('O código de verificação expirou. Entre de novo para receber outro.');
+
+  /* ---------- Senha: mostrar e ocultar ---------- */
+  const toggle = $<HTMLButtonElement>('[data-toggle-pass]');
+  toggle.addEventListener('click', () => {
+    const showing = passInput.type === 'text';
+    passInput.type = showing ? 'password' : 'text';
+    toggle.textContent = showing ? 'Mostrar' : 'Ocultar';
+    toggle.setAttribute('aria-pressed', String(!showing));
+  });
+
+  /* ---------- Demonstração: contas e código só neste navegador ---------- */
+  const demoKey = 'of-demo-contas-2fa';
+  type DemoAccounts = Record<string, { nome: string; hash: string }>;
+  const demoAccounts = (): DemoAccounts => {
     try {
-      sessionStorage.setItem('of-demo-email', email);
+      return JSON.parse(localStorage.getItem(demoKey) ?? '{}');
+    } catch {
+      return {};
+    }
+  };
+  const saveDemo = (a: DemoAccounts) => {
+    try {
+      localStorage.setItem(demoKey, JSON.stringify(a));
     } catch {}
+  };
+  // Mesmo na demonstração a senha não é guardada em texto: só o hash SHA-256.
+  async function hash(s: string) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  let demo = { code: '', expires: 0, tries: 5, email: '', pendingAccount: null as null | { email: string; nome: string; hash: string } };
+  function newDemoCode() {
+    const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000;
+    demo.code = String(n).padStart(6, '0');
+    demo.expires = Date.now() + 10 * 60_000;
+    demo.tries = 5;
+    $('[data-demo-value]').textContent = demo.code;
+    $('[data-demo-code]').hidden = false;
+  }
+
+  /* ---------- Etapa do código ---------- */
+  let timer = 0;
+  function startResendTimer() {
     const resend = $<HTMLButtonElement>('[data-resend]');
     let left = 60;
     resend.disabled = true;
@@ -305,75 +458,203 @@ const planData = JSON.stringify(
       if (left <= 0) {
         clearInterval(timer);
         resend.disabled = false;
-        resend.textContent = 'Reenviar link';
+        resend.textContent = 'Reenviar código';
       }
     }, 1000);
-    stepSent.focus();
+  }
+  function goToCode(destino: string) {
+    $('[data-code-to]').textContent = destino;
+    codeInput.value = '';
+    fieldError(codeInput, '');
+    showCodeError('');
+    show('code');
+    startResendTimer();
+    codeInput.focus();
   }
 
-  $('[data-other]').addEventListener('click', () => {
-    clearInterval(timer);
-    stepSent.hidden = true;
-    stepForm.hidden = false;
-    emailInput.focus();
-    emailInput.select();
+  $('[data-resend]').addEventListener('click', async () => {
+    showCodeError('');
+    if (!endpoint) {
+      newDemoCode();
+      return startResendTimer();
+    }
+    try {
+      const r = await api('/codigo/reenviar');
+      if (r.status === 429) return showCodeError('Muitos pedidos seguidos. Espere um minuto e tente de novo.');
+      if (!r.ok) throw new Error(String(r.status));
+      startResendTimer();
+    } catch {
+      showCodeError('Não conseguimos reenviar agora. Tente de novo em instantes.');
+    }
   });
-  $('[data-resend]').addEventListener('click', () => showSent(emailInput.value.trim()));
+
+  root.querySelectorAll('[data-back]').forEach((b) =>
+    b.addEventListener('click', () => {
+      clearInterval(timer);
+      $('[data-demo-code]').hidden = true;
+      show('form');
+      passInput.value = '';
+      emailInput.focus();
+    }),
+  );
+
+  // Só dígitos; com 6, confirma sozinho (também quando o celular preenche o código do e-mail).
+  codeInput.addEventListener('input', () => {
+    codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
+    if (codeInput.value.length === 6) $<HTMLFormElement>('[data-code-form]').requestSubmit();
+  });
+
+  $<HTMLFormElement>('[data-code-form]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showCodeError('');
+    const codigo = codeInput.value;
+    if (!/^\d{6}$/.test(codigo)) {
+      fieldError(codeInput, 'O código tem 6 números.');
+      return codeInput.focus();
+    }
+    fieldError(codeInput, '');
+    codeSubmit.disabled = true;
+    codeSubmit.setAttribute('aria-busy', 'true');
+    codeSubmit.textContent = 'Conferindo…';
+    try {
+      if (endpoint) {
+        const r = await api('/codigo', { codigo });
+        if (r.status === 410) return showCodeError('Esse código expirou. Peça outro abaixo.');
+        if (r.status === 429) return showCodeError('Muitas tentativas. Peça um código novo e tente de novo.');
+        if (r.status === 400) {
+          const { tentativas_restantes: left } = await r.json().catch(() => ({}));
+          return showCodeError(
+            typeof left === 'number' && left > 0
+              ? `Código incorreto. Você ainda tem ${left} ${left === 1 ? 'tentativa' : 'tentativas'}.`
+              : 'Código incorreto. Peça um código novo.',
+          );
+        }
+        if (!r.ok) throw new Error(String(r.status));
+      } else {
+        await wait(500);
+        if (Date.now() > demo.expires) return showCodeError('Esse código expirou. Peça outro abaixo.');
+        if (demo.tries <= 0) return showCodeError('Muitas tentativas. Peça um código novo.');
+        if (codigo !== demo.code) {
+          demo.tries -= 1;
+          return showCodeError(
+            demo.tries > 0
+              ? `Código incorreto. Você ainda tem ${demo.tries} ${demo.tries === 1 ? 'tentativa' : 'tentativas'}.`
+              : 'Código incorreto. Peça um código novo.',
+          );
+        }
+        if (demo.pendingAccount) {
+          const all = demoAccounts();
+          all[demo.pendingAccount.email] = { nome: demo.pendingAccount.nome, hash: demo.pendingAccount.hash };
+          saveDemo(all);
+        }
+        try {
+          sessionStorage.setItem('of-demo-email', demo.email);
+        } catch {}
+      }
+      codeSubmit.textContent = 'Tudo certo, entrando…';
+      location.href = nextUrl();
+    } catch {
+      showCodeError('Não conseguimos conferir o código agora. Confira sua conexão e tente de novo.');
+    } finally {
+      if (codeSubmit.textContent !== 'Tudo certo, entrando…') {
+        codeSubmit.disabled = false;
+        codeSubmit.removeAttribute('aria-busy');
+        codeSubmit.textContent = 'Confirmar e entrar';
+      }
+    }
+  });
+
+  /* ---------- Etapa 1: e-mail e senha ---------- */
+  const strong = (s: string) => s.length >= 8 && /[a-zA-Z]/.test(s) && /\d/.test(s);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearErrors();
-    const email = emailInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase();
+    const nome = nameInput.value.trim();
+    const senha = passInput.value;
     let ok = true;
-    if (mode === 'criar' && nameInput.value.trim().length < 2)
-      ok = fieldError(nameInput, 'Escreva seu nome para sabermos como chamar você.') && ok;
-    if (!email) ok = fieldError(emailInput, 'Escreva seu e-mail para receber o link.') && ok;
+    if (mode === 'criar' && nome.length < 2) ok = fieldError(nameInput, 'Escreva seu nome para sabermos como chamar você.') && ok;
+    if (!email) ok = fieldError(emailInput, 'Escreva seu e-mail.') && ok;
     else if (!isEmail(email)) ok = fieldError(emailInput, 'Confira o e-mail: falta algo como “@” ou o domínio.') && ok;
+    if (!senha) ok = fieldError(passInput, mode === 'criar' ? 'Crie uma senha.' : 'Escreva sua senha.') && ok;
+    else if (mode === 'criar' && !strong(senha))
+      ok = fieldError(passInput, 'Use pelo menos 8 caracteres, com letras e números.') && ok;
     if (!ok) {
       root.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
       return;
     }
 
+    const label = submit.textContent;
     submit.setAttribute('aria-busy', 'true');
     submit.disabled = true;
-    submit.textContent = 'Enviando…';
+    submit.textContent = 'Enviando código…';
     try {
       if (endpoint) {
-        const r = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modo: mode, nome: nameInput.value.trim(), email, plano: plan || null }),
-        });
-        if (r.status === 409) return showSent(email, 'Esse e-mail já tem conta: o link serve para entrar');
+        const r =
+          mode === 'criar'
+            ? await api('/cadastro', { nome, email, senha, plano: plan || null })
+            : await api('/login', { email, senha });
+        if (r.status === 409) return showError('Esse e-mail já tem conta. Entre com ele na aba Entrar.');
+        if (r.status === 401) return showError('E-mail ou senha não conferem. Confira e tente de novo.');
+        if (r.status === 429) return showError('Muitas tentativas seguidas. Espere alguns minutos e tente de novo.');
         if (!r.ok) throw new Error(String(r.status));
-        showSent(email);
       } else {
-        await new Promise((res) => setTimeout(res, 700));
-        const known = demoAccounts().includes(email.toLowerCase());
-        if (mode === 'criar' && !known) {
-          try {
-            localStorage.setItem(demoKey, JSON.stringify([...demoAccounts(), email.toLowerCase()]));
-          } catch {}
+        await wait(600);
+        const all = demoAccounts();
+        const h = await hash(senha);
+        if (mode === 'criar') {
+          if (all[email]) return showError('Esse e-mail já tem conta. Entre com ele na aba Entrar.');
+          demo.pendingAccount = { email, nome, hash: h };
+        } else {
+          if (!all[email] || all[email].hash !== h)
+            return showError('E-mail ou senha não conferem. Na demonstração, crie a conta antes na aba Criar conta.');
+          demo.pendingAccount = null;
         }
-        showSent(email, mode === 'criar' && known ? 'Esse e-mail já tem conta: o link serve para entrar' : '');
+        demo.email = email;
+        newDemoCode();
       }
+      goToCode(email);
     } catch {
-      showError('Não conseguimos enviar o link agora. Confira sua conexão e tente de novo em instantes.');
+      showError('Não conseguimos continuar agora. Confira sua conexão e tente de novo em instantes.');
     } finally {
       submit.removeAttribute('aria-busy');
       submit.disabled = false;
-      submit.textContent = 'Enviar link de acesso';
+      submit.textContent = label;
     }
   });
 
+  /* ---------- Esqueci a senha ---------- */
+  $('[data-forgot]').addEventListener('click', async () => {
+    clearErrors();
+    const email = emailInput.value.trim().toLowerCase();
+    if (!isEmail(email)) {
+      fieldError(emailInput, 'Escreva o e-mail da conta para receber o link de senha nova.');
+      return emailInput.focus();
+    }
+    try {
+      if (endpoint) await api('/senha/esqueci', { email });
+      else await wait(500);
+    } catch {}
+    $('[data-reset-to]').textContent = email;
+    show('reset');
+  });
+
+  /* ---------- Google ---------- */
   $('[data-google]').addEventListener('click', () => {
+    // Na volta do Google, a API manda o código ao e-mail da conta e reabre esta página na etapa do código.
+    const back = `/entrar?etapa=codigo${plan ? `&plano=${plan}` : ''}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ''}`;
     if (endpoint) {
-      location.href = `${endpoint.replace(/\/$/, '')}/google?next=${encodeURIComponent(nextUrl())}`;
+      location.href = `${endpoint}/google?modo=${mode}&next=${encodeURIComponent(back)}`;
       return;
     }
-    showError('No modo de demonstração o Google não é chamado. Use o e-mail para ver o fluxo completo.');
+    demo.email = 'conta.google@exemplo.com';
+    demo.pendingAccount = null;
+    newDemoCode();
+    goToCode('o e-mail da sua conta Google (demonstração)');
   });
 
   setMode(mode);
   renderPlan();
+  if (params.get('etapa') === 'codigo' && endpoint) goToCode('o e-mail da sua conta Google');
 </script>
