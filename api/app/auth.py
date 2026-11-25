@@ -7,6 +7,7 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
                                                               | 400 {tentativas_restantes} | 410 expirado | 429 sem tentativas
   POST /auth/codigo/reenviar  {}                           -> 202 | 429 espere 60 s | 410 sem desafio
   POST /auth/senha/esqueci    {email}                      -> 202 sempre (não revela se a conta existe)
+  GET  /auth/google                                         -> 303 de volta ao site (?erro=google-indisponivel), por ora
   GET  /auth/sessao                                        -> 200 {id, email, nome} | 401
   POST /auth/sair                                          -> 204
 
@@ -28,7 +29,7 @@ from collections import defaultdict, deque
 from typing import Callable
 
 from fastapi import APIRouter, Cookie, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
@@ -224,6 +225,11 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             # Troca de senha por link: etapa futura. Por ora, só registra o pedido.
             log.warning("Pedido de troca de senha para %s (envio do link: a definir)", email)
         return {"ok": True}
+
+    @r.get("/google")
+    def google():
+        # Login pelo Google ainda não existe: volta ao site com um aviso, em vez de uma página de erro.
+        return RedirectResponse(f"{get_settings().site_url}/entrar?erro=google-indisponivel", status_code=303)
 
     @r.get("/sessao")
     def sessao(req: Request, orbita_sessao: str | None = Cookie(None)):

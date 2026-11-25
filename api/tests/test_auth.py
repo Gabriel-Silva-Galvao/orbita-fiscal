@@ -142,3 +142,9 @@ def test_cors_libera_o_site_com_cookies(api):
     assert r.headers["access-control-allow-credentials"] == "true"
     r = http.options("/auth/login", headers={"Origin": "https://site-estranho.test", "Access-Control-Request-Method": "POST"})
     assert "access-control-allow-origin" not in r.headers
+
+
+def test_google_ainda_indisponivel_volta_ao_site(api):
+    http, _, _ = api
+    r = http.get("/auth/google?modo=entrar&next=/conta", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].endswith("/entrar?erro=google-indisponivel")

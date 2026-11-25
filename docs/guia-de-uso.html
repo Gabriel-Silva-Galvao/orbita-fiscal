@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · 24/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · etapa 7b · 24/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -127,8 +127,8 @@ td:first-child{font-weight:700;white-space:nowrap}
   <main>
     <section id="inicio">
       <h1>Como usar a Órbita, do site à API</h1>
-      <p class="lede">Clique, simule e confira cada recurso. Este guia cobre o que existe até a etapa 7a: site completo em modo de demonstração e API com cobrança simulada e login com código.</p>
-      <p class="note"><b>Modo de demonstração.</b> O site ainda não chama a API (isso é a etapa 7b). Nenhum e-mail é enviado, nenhum pagamento é cobrado e os dados ficam no navegador. Itens com "a confirmar" no site ainda não têm valor final.</p>
+      <p class="lede">Clique, simule e confira cada recurso. Este guia cobre o que existe até a etapa 7b: o site com a página Entrar e o middleware ligados à API de verdade, cobrança simulada e o Portal ainda em demonstração.</p>
+      <p class="note"><b>Dois modos.</b> Sem variáveis de ambiente, o site roda em demonstração: tudo no navegador, código na tela. Com <code>API_URL</code> e <code>PUBLIC_AUTH_ENDPOINT</code>, criar conta, entrar, a sessão e sair passam pela API (etapa 7b). Checkout e Portal ainda usam a demonstração até as etapas 7c e 7d. Nenhum e-mail é enviado ainda: em desenvolvimento, o código aparece na tela.</p>
     </section>
 
     <section id="rodar">
@@ -141,6 +141,10 @@ td:first-child{font-weight:700;white-space:nowrap}
       <div class="cmd"><pre>python -m venv .venv; .venv\Scripts\pip install -r requirements.txt</pre><button class="btn" data-copy>Copiar</button></div>
       <div class="cmd"><pre>.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000</pre><button class="btn" data-copy>Copiar</button></div>
       <p>Abre em <code>http://localhost:8000</code>, com a documentação automática em <code>/docs</code>. Copie <code>.env.example</code> para <code>.env</code>; em desenvolvimento, <code>AUTH_CODIGO_NA_RESPOSTA=true</code> devolve o código de 6 dígitos na resposta, já que ainda não há envio de e-mail.</p>
+      <h3>Site ligado à API</h3>
+      <p>No app do Claude, as configurações <code>api</code> e <code>site-com-api</code> de <code>.claude/launch.json</code> sobem os dois já ligados. No terminal, defina antes de <code>npm run dev</code>:</p>
+      <div class="cmd"><pre>$env:API_URL="http://localhost:8000"; $env:PUBLIC_AUTH_ENDPOINT="http://localhost:8000/auth"; npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
+      <p>Com isso, <code>/conta</code>, <code>/instalar</code> e <code>/assinar</code> só abrem com sessão; sem ela, levam ao Entrar.</p>
       <h3>Testes</h3>
       <div class="cmd"><pre>.venv\Scripts\python.exe -m pytest -q</pre><button class="btn" data-copy>Copiar</button></div>
     </section>
@@ -193,12 +197,12 @@ td:first-child{font-weight:700;white-space:nowrap}
     <section id="testes">
       <h2>Testes</h2>
       <div class="score">
-        <div class="num">40<small> de 40 testes da API passam</small></div>
+        <div class="num">41<small> de 41 testes da API passam</small></div>
         <div class="num">11<small> páginas respondem</small></div>
         <div class="num" data-mine>0<small> de 0 conferidos por você</small></div>
       </div>
       <div class="progress" aria-hidden="true"><i data-bar style="width:0"></i></div>
-      <p>Rodado em 24/11/2026: <code>pytest</code> (40 testes), <code>npm run build</code> e um percurso completo no navegador. Marque cada item quando conferir você mesmo; as marcas ficam só neste navegador.</p>
+      <p>Rodado em 24/11/2026 (etapa 7b): <code>pytest</code> (41 testes), <code>npm run build</code> e um percurso completo no navegador. Marque cada item quando conferir você mesmo; as marcas ficam só neste navegador.</p>
       <div class="filters" role="group" aria-label="Filtrar testes" data-filters></div>
       <div class="tests" data-tests></div>
       <button class="btn" type="button" data-reset style="justify-self:start">Desmarcar tudo</button>
@@ -226,11 +230,11 @@ document.querySelectorAll('main section[id]').forEach(s=>io.observe(s));
 /* Jornada */
 const passos=[
  {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
- {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres), ou use "Continuar com Google".','A conta só é criada depois que o código do e-mail for confirmado.']},
- {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código.']},
+ {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres, com letras e números).','A conta só é criada depois que o código do e-mail for confirmado.','Com a API ligada, um e-mail que já tem conta é recusado com aviso.','"Continuar com Google" ainda não existe: volta ao Entrar com o aviso para usar e-mail e senha.']},
+ {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, a sessão fica num cookie por 30 dias e o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código. Sem plano, o Entrar leva ao Portal.']},
  {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado na hora.','Pix: copie o código; na demonstração, use "Simular Pix confirmado".','Boleto: vence em 3 dias; na demonstração, use "Simular boleto pago". Na vida real, a confirmação leva até 3 dias úteis.','Ao confirmar aparece "Seu plugin está pronto".']},
  {t:'Instalar',onde:'/instalar',txt:'Quatro passos para ligar a Órbita ao Claude.',itens:['Baixe o plugin.','Envie o arquivo no menu de plugins do Claude.','Clique em "Gerar código de conexão" e digite o código quando o Claude pedir.','Copie a pergunta de teste e confira as fontes na resposta.']},
- {t:'Portal',onde:'/conta',txt:'A área do assinante, com 9 abas. Veja a seção "Portal: Pro e Max" abaixo para o detalhe de cada uma.',itens:['No celular, as abas rolam na horizontal; no teclado, use as setas.','Status do plugin mostra acesso, consultas, conexões e a novidade mais recente.','Cancelar ou reembolso: reembolso integral em até 7 dias, sem justificar.']}
+ {t:'Portal',onde:'/conta',txt:'A área do assinante, com 9 abas. Veja a seção "Portal: Pro e Max" abaixo para o detalhe de cada uma.',itens:['No celular, as abas rolam na horizontal; no teclado, use as setas.','Status do plugin mostra acesso, consultas, conexões e a novidade mais recente.','Cancelar ou reembolso: reembolso integral em até 7 dias, sem justificar.','Logado sem plano, o Portal mostra o e-mail da conta, "Ver planos" e "Sair". Sair encerra a sessão também no servidor.']}
 ];
 let passo=0;const visto=new Set([0]);
 function renderJornada(){
@@ -301,6 +305,7 @@ const rotas=[
  {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo',d:'Confirma o código e cria a sessão (cookie orbita_sessao, 30 dias).',body:'{"codigo":"123456"}',r:[['200','Sessão criada'],['400','Código incorreto, com tentativas_restantes',1],['410','Expirado (10 minutos)',1],['429','Acabaram as 5 tentativas',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo/reenviar',d:'Envia um código novo; o anterior deixa de valer.',body:'{}',r:[['202','Código novo enviado'],['429','Antes de 60 s, com espere_segundos',1],['410','Não há código pendente',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/senha/esqueci',d:'Pedido de troca de senha. Responde igual exista ou não a conta. O envio do link ainda será feito.',body:'{"email":"ana@exemplo.com"}',r:[['202','Sempre']]},
+ {g:'Conta e login (7a)',v:'GET',p:'/auth/google',d:'Login pelo Google ainda não existe. Por ora, devolve ao site com o aviso para usar e-mail e senha.',body:'',r:[['303','Volta para /entrar?erro=google-indisponivel']]},
  {g:'Conta e login (7a)',v:'GET',p:'/auth/sessao',d:'Diz quem está logado. É a rota que o middleware do site consulta antes de abrir /conta, /instalar e /assinar.',body:'',r:[['200','{id, email, nome}'],['401','Sem sessão',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/sair',d:'Encerra a sessão, também no servidor.',body:'',r:[['204','Sessão apagada']]},
  {g:'Cobrança (4)',v:'POST',p:'/billing/assinaturas',d:'Cria a assinatura: pro R$ 50,00 ou max R$ 75,90; cartão, Pix ou boleto (vence em 3 dias).',body:'{"plano":"pro","forma":"pix", ...}',r:[['201','Assinatura criada'],['409','ja_assinante',1]]},
@@ -342,6 +347,14 @@ const testes=[
  ['API','Sair apaga a sessão no servidor'],
  ['API','Cookies HttpOnly e CORS só para o site'],
  ['API','Servidor real: cadastro, código, sessão e sair pela rede'],
+ ['API','Botão do Google volta ao site com aviso'],
+ ['Site + API','Sem sessão, /conta, /instalar e /assinar levam ao Entrar'],
+ ['Site + API','Assinar o Max sem conta: criar conta, código da API na tela, checkout'],
+ ['Site + API','Código errado avisa; o certo cria a sessão (cookie invisível a scripts)'],
+ ['Site + API','Checkout recebe o e-mail da sessão pelo middleware'],
+ ['Site + API','Portal sem plano mostra a conta e Sair; Sair encerra a sessão'],
+ ['Site + API','E-mail repetido e senha errada mostram o aviso certo'],
+ ['Site + API','Entrar de novo leva ao Portal'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
@@ -355,7 +368,7 @@ const testes=[
 let marcados=new Set(store.get('guia-testes',[]));let filtro='Todos';
 function renderTestes(){
   const f=$('[data-filters]');f.innerHTML='';
-  ['Todos','API','Site','Navegador'].forEach(n=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.setAttribute('aria-pressed',n===filtro);if(n===filtro)b.classList.add('main');b.onclick=()=>{filtro=n;renderTestes()};f.append(b)});
+  ['Todos','API','Site + API','Site','Navegador'].forEach(n=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.setAttribute('aria-pressed',n===filtro);if(n===filtro)b.classList.add('main');b.onclick=()=>{filtro=n;renderTestes()};f.append(b)});
   const box=$('[data-tests]');box.innerHTML='';
   testes.forEach(([a,t],i)=>{if(filtro!=='Todos'&&a!==filtro)return;
     const l=document.createElement('label');l.className='test'+(marcados.has(i)?' checked':'');

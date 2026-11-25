@@ -1,6 +1,20 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "site", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 4321 }
+    { "name": "site", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 4321 },
+    {
+      "name": "api",
+      "runtimeExecutable": "api/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--app-dir", "api", "--port", "8000"],
+      "env": { "DATABASE_PATH": "api/orbita-dev.db", "AUTH_CODIGO_NA_RESPOSTA": "true", "SITE_URL": "http://localhost:4321" },
+      "port": 8000
+    },
+    {
+      "name": "site-com-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": { "API_URL": "http://localhost:8000", "PUBLIC_AUTH_ENDPOINT": "http://localhost:8000/auth" },
+      "port": 4321
+    }
   ]
 }

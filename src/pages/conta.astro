@@ -11,6 +11,9 @@ import { novidades, ORIGENS } from '../data/novidades';
 import { tutoriais } from '../data/tutoriais';
 import { contact } from '../data/site';
 
+const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
+// Com a API ligada, o middleware já conferiu a sessão e deixou o usuário aqui.
+const usuario = Astro.locals.usuario;
 const dataBr = (iso: string) => iso.split('-').reverse().join('/');
 
 // Rota do assinante: roda no servidor, atrás do middleware de sessão (src/middleware.ts).
@@ -33,15 +36,18 @@ const tabs = [
 ---
 
 <Focus title="Minha conta · Órbita" description="Baixe o plugin, veja seu plano, notas fiscais, cancele ou peça reembolso.">
-  <div class="wrap portal" data-portal data-plans={planData}>
+  <div class="wrap portal" data-portal data-plans={planData} data-auth-endpoint={authEndpoint}>
     <p class="demo"><strong>Modo de demonstração.</strong> Os dados abaixo existem só neste navegador. Nada é cobrado nem devolvido de verdade.</p>
 
     <section class="empty-state" data-no-sub hidden>
       <h1 class="display-md">Você ainda não tem um plano ativo</h1>
       <p class="mute">Escolha o Pro ou o Max para começar.</p>
+      {usuario && <p class="mute small">Você entrou como <strong>{usuario.email}</strong>.</p>}
       <div class="row-actions">
         <a class="btn-main" href="/#planos">Ver planos</a>
-        <a class="btn-alt" href="/entrar">Já assinei: entrar</a>
+        {usuario
+          ? <button type="button" class="btn-alt" data-logout>Sair</button>
+          : <a class="btn-alt" href="/entrar">Já assinei: entrar</a>}
       </div>
     </section>
 
@@ -1052,12 +1058,20 @@ const tabs = [
     update({ nome: $<HTMLInputElement>('#p-nome').value.trim() });
     $('[data-name-msg]').textContent = 'Nome salvo.';
   });
-  $('[data-logout]').addEventListener('click', () => {
+  const logout = async () => {
+    // Com a API ligada, encerra a sessão no servidor (apaga o cookie); sem ela, só a demonstração.
+    const authEndpoint = root.dataset.authEndpoint;
+    if (authEndpoint) {
+      try {
+        await fetch(`${authEndpoint}/sair`, { method: 'POST', credentials: 'include' });
+      } catch {}
+    }
     try {
       sessionStorage.removeItem('of-demo-email');
     } catch {}
     location.href = '/entrar';
-  });
+  };
+  root.querySelectorAll('[data-logout]').forEach((b) => b.addEventListener('click', logout));
   const confirmInput = $<HTMLInputElement>('#p-confirm');
   const del = $<HTMLButtonElement>('[data-delete]');
   confirmInput.addEventListener('input', () => (del.disabled = confirmInput.value.trim().toUpperCase() !== 'EXCLUIR'));

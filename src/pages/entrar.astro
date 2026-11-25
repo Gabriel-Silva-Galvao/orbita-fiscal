@@ -402,6 +402,8 @@ const planData = JSON.stringify(
     codeError.hidden = !msg;
   };
 
+  if (params.get('erro') === 'google-indisponivel')
+    showError('O acesso pelo Google ainda não está disponível. Use e-mail e senha.');
   if (params.get('erro') === 'codigo-expirado') showError('O código de verificação expirou. Entre de novo para receber outro.');
 
   /* ---------- Senha: mostrar e ocultar ---------- */
@@ -440,6 +442,15 @@ const planData = JSON.stringify(
     demo.expires = Date.now() + 10 * 60_000;
     demo.tries = 5;
     $('[data-demo-value]').textContent = demo.code;
+    $('[data-demo-code]').hidden = false;
+  }
+
+  // Desenvolvimento: sem provedor de e-mail, a API pode devolver o código em codigo_dev
+  // (AUTH_CODIGO_NA_RESPOSTA=true). Mostra no mesmo aviso da demonstração. Em produção não vem.
+  async function showDevCode(r: Response) {
+    const { codigo_dev: c } = await r.json().catch(() => ({}));
+    if (typeof c !== 'string') return;
+    $('[data-demo-value]').textContent = c;
     $('[data-demo-code]').hidden = false;
   }
 
@@ -482,6 +493,7 @@ const planData = JSON.stringify(
       const r = await api('/codigo/reenviar');
       if (r.status === 429) return showCodeError('Muitos pedidos seguidos. Espere um minuto e tente de novo.');
       if (!r.ok) throw new Error(String(r.status));
+      await showDevCode(r);
       startResendTimer();
     } catch {
       showCodeError('Não conseguimos reenviar agora. Tente de novo em instantes.');
@@ -598,7 +610,9 @@ const planData = JSON.stringify(
         if (r.status === 409) return showError('Esse e-mail já tem conta. Entre com ele na aba Entrar.');
         if (r.status === 401) return showError('E-mail ou senha não conferem. Confira e tente de novo.');
         if (r.status === 429) return showError('Muitas tentativas seguidas. Espere alguns minutos e tente de novo.');
+        if (r.status === 422) return showError('Confira os dados: nome, um e-mail válido e senha com pelo menos 8 caracteres.');
         if (!r.ok) throw new Error(String(r.status));
+        await showDevCode(r);
       } else {
         await wait(600);
         const all = demoAccounts();
