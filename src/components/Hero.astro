@@ -3,7 +3,8 @@ import Symbol from './Symbol.astro';
 import Button from './Button.astro';
 import { citacoes } from '../data/citacoes';
 
-const title = 'Pesquise o direito brasileiro e prepare suas peças na IA que você já usa.';
+// Título de venda (etapa 10f-1, plano da landing): nomeia o resultado que o advogado quer.
+const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa.';
 
 // Quatro citações fixas em volta do símbolo (as quatro primeiras de src/data/citacoes.ts).
 // Desde a etapa 10c não se revezam no topo; o revezamento segue nos livros e em Brasília.
@@ -43,14 +44,14 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
         {title}
       </h1>
       <p class="lead">
-        O plugin da Órbita conecta a base jurídica ao seu Claude. Você pergunta como sempre perguntou e
-        recebe o fundamento para conferir.
+        Pergunte no Claude como sempre. A Órbita busca na base de legislação e jurisprudência brasileira e
+        devolve a resposta com a norma, a súmula ou o julgado para você conferir.
       </p>
       <div class="hero-actions">
-        <Button href="#planos">Ver planos</Button>
-        <Button href="#exemplo" variant="secondary">Ver um exemplo</Button>
+        <Button href="#planos">Assinar a partir de R$ 50/mês</Button>
+        <Button href="#exemplo" variant="secondary">Ver com e sem a Órbita</Button>
       </div>
-      <p class="small mute">A partir de R$ 50 por mês.</p>
+      <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude</p>
     </div>
 
     <div class="hero-art" aria-hidden="false">

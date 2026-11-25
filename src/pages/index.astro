@@ -63,7 +63,7 @@ const trust = [
       { href: '#planos', label: 'Planos' },
     ]}
     signIn="/entrar"
-    cta={{ href: '#planos', label: 'Ver planos' }}
+    cta={{ href: '#planos', label: 'Assinar' }}
   />
 
   <main id="conteudo">
@@ -159,7 +159,7 @@ const trust = [
             href="/assinar/max"
             cta="Assinar o Max"
             featured
-            badge="Completo"
+            badge="Mais completo"
             items={[
               { text: 'Tudo do Pro' },
               { text: 'Conferência de processos: o que ainda falta reunir' },
@@ -214,6 +214,34 @@ const trust = [
         <div data-reveal>
           <Faq>
             <details open>
+              <summary>E se a IA errar?</summary>
+              <div class="faq-a">
+                <p>
+                  Cada resposta traz a norma, a súmula ou o julgado de onde saiu, para você abrir e conferir antes
+                  de usar. A Órbita entrega um rascunho fundamentado; a análise e a decisão continuam com você.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Posso cancelar quando quiser?</summary>
+              <div class="faq-a">
+                <p>
+                  Sim, no seu Portal, sem multa. A assinatura para de renovar e o acesso continua até o fim do
+                  período já pago. Veja os <a href="/termos">Termos de uso</a>.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Qual a diferença entre o Pro e o Max?</summary>
+              <div class="faq-a">
+                <p>
+                  O Pro pesquisa legislação e jurisprudência com a fonte de cada resultado. O Max inclui tudo do Pro
+                  e soma a conferência de processos, a preparação de peças com citações marcadas, alertas por tema,
+                  resumo semanal e suporte prioritário.
+                </p>
+              </div>
+            </details>
+            <details>
               <summary>Funciona com qual IA?</summary>
               <div class="faq-a">
                 <p>
@@ -246,6 +274,18 @@ const trust = [
         </div>
       </div>
     </section>
+    <!-- Chamada final (etapa 10f-1): terceira chance de compra, com os dois planos. -->
+    <section class="section final-cta" aria-labelledby="final-title">
+      <div class="wrap final" data-reveal>
+        <h2 id="final-title" class="display-lg" data-split>Comece hoje.</h2>
+        <p class="lead">Leva poucos minutos para fazer a primeira pergunta.</p>
+        <div class="final-actions">
+          <Button href="/assinar/pro" variant="secondary">Assinar o Pro · R$ 50/mês</Button>
+          <Button href="/assinar/max">Assinar o Max · R$ 75,90/mês</Button>
+        </div>
+        <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser</p>
+      </div>
+    </section>
     <Contact />
   </main>
   </div>
@@ -254,6 +294,21 @@ const trust = [
 </Base>
 
 <style>
+  .final {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+    text-align: center;
+  }
+  .final .lead {
+    margin: 0;
+  }
+  .final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
   .cmp-cta {
     margin: var(--space-6) 0 0;
   }

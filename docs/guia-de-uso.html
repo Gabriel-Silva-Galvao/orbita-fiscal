@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 10e · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · etapa 10f-1 · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -152,6 +152,16 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Etapa 10c pronta: o topo da página ficou parado. Sem entrada animada, sem profundidade com o mouse, sem o átomo girando e sem os cartões de lei em revezamento. O conteúdo é o mesmo, e o resto das animações do site continua como estava.</p>
       <p>Etapa 10d pronta: a seção "Do monte de papel à peça revisada" (quatro momentos com a foto que trocava ao rolar) virou uma linha: "Menos tempo caçando lei e julgado em várias bases. Mais tempo revisando e assinando a peça." As quatro fotos que só ela usava saíram também dos créditos.</p>
       <p>Etapa 10e pronta: a seção de exemplos virou "A mesma pergunta. Com e sem a Órbita.". São cinco perguntas tributárias, cada uma com as duas respostas reais do Claude Opus 5.5 lado a lado, sem cortes. Elas vêm do painel de comparação de 16/11/2026, com quantas fontes cada resposta citou, de onde veio a resposta sem plugin, se as duas convergem e o que a Órbita acrescentou. A primeira aba é a que diverge (crime tributário). Abaixo fica o botão "Assinar a partir de R$ 50/mês".</p>
+      <p>Etapa 10f-1 pronta (textos e botões de venda). Mudou:</p>
+      <ul>
+        <li><strong>Topo:</strong> título "A lei e o julgado certos, com a fonte, na IA que você já usa."; botões "Assinar a partir de R$ 50/mês" e "Ver com e sem a Órbita"; e a linha "Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude".</li>
+        <li><strong>Cabeçalho:</strong> o botão virou "Assinar".</li>
+        <li><strong>Planos:</strong> o Max ganhou o selo "Mais completo".</li>
+        <li><strong>Perguntas:</strong> as objeções de compra vêm primeiro (e se a IA errar, cancelamento, Pro ou Max).</li>
+        <li><strong>Fim da página:</strong> chamada final "Comece hoje." com os dois planos.</li>
+        <li><strong>Imagem de compartilhamento:</strong> refeita com o título novo.</li>
+      </ul>
+      <p>Faltam a 10f-2 (o átomo do topo vira um trecho real de resposta), a 10f-3 (a cena da biblioteca vira uma lista do que a base consulta) e a 10f-4 (sai a cena de Brasília e o formulário vai para a Ajuda).</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>
       <h3>Plugin e servidor MCP</h3>
       <p>O cliente instala só o plugin, e o que se vende é a assinatura. O servidor MCP com a base jurídica já existe e será ligado depois; o site não depende dele. Até lá, "Baixar o plugin", "Gerar código de conexão" e os números do Status do plugin funcionam em demonstração, marcados "a definir". A lista de cada lugar está em <code>docs/planejamento.md</code>, seção "Servidor MCP".</p>
@@ -414,6 +424,9 @@ const testes=[
  ['Site','Comparativo: cinco perguntas, com e sem a Órbita lado a lado e o texto original'],
  ['Site','Comparativo: abas por clique e pelas setas, e "Ler a resposta inteira" abre e fecha'],
  ['Site','Comparativo no celular: uma resposta embaixo da outra, sem rolagem lateral'],
+ ['Site','Topo com título de venda, botão "Assinar a partir de R$ 50/mês" e linha de pagamento'],
+ ['Site','Sete botões de assinar na página: topo, cabeçalho, comparativo, planos e chamada final'],
+ ['Site','Perguntas de compra primeiro e chamada final "Comece hoje." com os dois planos'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
