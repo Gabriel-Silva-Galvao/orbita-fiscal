@@ -1,23 +1,25 @@
 ---
-import Symbol from './Symbol.astro';
 import Button from './Button.astro';
-import { citacoes } from '../data/citacoes';
+import { comparacoes } from '../data/comparacao';
 
 // Título de venda (etapa 10f-1, plano da landing): nomeia o resultado que o advogado quer.
 const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa.';
 
-// Quatro citações fixas em volta do símbolo (as quatro primeiras de src/data/citacoes.ts).
-// Desde a etapa 10c não se revezam no topo; o revezamento segue nos livros e em Brasília.
-const slots = [
-  { pos: 'c1', depth: 1.6 },
-  { pos: 'c2', depth: 2.2 },
-  { pos: 'c3', depth: 1.2 },
-  { pos: 'c4', depth: 2.6 },
+// Ao lado do título (etapa 10f-2): um trecho real da resposta do Claude Opus 5.5 com a Órbita, a da
+// pergunta de crime tributário do comparativo (src/data/comparacao.ts). O trecho é o primeiro parágrafo
+// da resposta, sem mudar nada; as fontes listadas aparecem todas, com esses nomes, no texto da resposta.
+const exemplo = comparacoes.find((c) => c.id === 'crime')!;
+const trecho = exemplo.com.texto.split('\n')[0];
+const fontes = [
+  'Súmula Vinculante 24 do STF',
+  'Lei 8.137/1990, art. 1º',
+  'Lei 9.430/1996, art. 83',
+  'ARE 1.618.979 AgR (STF, 13/10/2026)',
+  'LC 225/2026',
 ];
-const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
 ---
 
-<!-- Etapa 10c: o topo fica parado (sem entrada animada, profundidade com o mouse, órbita girando nem cartões em revezamento). -->
+<!-- Etapa 10c: o topo fica parado. Etapa 10f-2: no lugar do átomo, um trecho real de resposta com a fonte. -->
 <section class="hero" data-hero aria-labelledby="hero-title">
   <!-- Fundo: órbitas largas que atravessam a página, com um ponto viajando. -->
   <svg class="hero-bg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -54,25 +56,23 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
       <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude</p>
     </div>
 
-    <div class="hero-art" aria-hidden="false">
-      <div class="hero-ring hero-ring-1"></div>
-      <div class="hero-ring hero-ring-2"></div>
-      <div class="hero-disc">
-        <Symbol on="bg" orbit={false} label="Símbolo da Órbita: um átomo com elétrons em órbita" />
+    <figure class="hero-art hero-answer" aria-label="Exemplo de resposta com a Órbita">
+      <p class="ha-q">
+        <span class="ha-label">Pergunta no Claude</span>
+        {exemplo.pergunta}
+      </p>
+      <div class="ha-a">
+        <p class="ha-who">Claude Opus 5.5 com a Órbita</p>
+        <p class="ha-text">{trecho}</p>
+        <p class="ha-label">Fontes citadas na resposta</p>
+        <ul class="ha-sources">
+          {fontes.map((f) => <li>{f}</li>)}
+        </ul>
       </div>
-      {
-        chips.map((c, i) => (
-          <span class:list={['chip-pos', c.pos]} aria-hidden="true">
-            <span class="chip-swap" data-chip data-chip-i={c.i}>
-              <span class="chip" style={`--r:${i % 2 ? 4 : -5}deg; --d:${5 + i * 1.3}s`}>
-                <span class="chip-kind" data-chip-kind>{c.kind}</span>
-                <span class="chip-text" data-chip-text>{c.text}</span>
-              </span>
-            </span>
-          </span>
-        ))
-      }
-    </div>
+      <figcaption class="small">
+        Resposta real, com {exemplo.com.fontes} fontes citadas. <a href="#exemplo">Compare com a resposta sem a Órbita</a>
+      </figcaption>
+    </figure>
   </div>
 
   <a class="hero-cue" href="#a-base">
@@ -131,127 +131,86 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
     margin-top: var(--space-2);
   }
 
-  /* Arte: disco, dois anéis tracejados girando e citações em órbita. */
-  .hero-art {
+  /* Cartão de resposta real (etapa 10f-2). */
+  .hero-answer {
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 480px;
     position: relative;
-    order: -1;
-    justify-self: center;
-    width: min(300px, 74vw);
-    aspect-ratio: 1;
-    margin-block: var(--space-4);
+    z-index: 1;
   }
-  .hero-disc {
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius-round);
+  .ha-q {
+    margin: 0;
+    justify-self: end;
+    max-width: 92%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+    background: var(--soft);
+    color: var(--ink);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .ha-a {
     display: grid;
-    place-items: center;
-    cursor: pointer;
-  }
-  .hero-disc :global(.symbol) {
-    width: 80%;
-  }
-  .hero-ring {
-    position: absolute;
-    pointer-events: none;
-  }
-  .hero-ring::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius-round);
-    border: 1.5px dashed var(--line-strong);
-  }
-  .hero-ring-1 {
-    inset: -9%;
-    opacity: 0.7;
-  }
-  .hero-ring-2 {
-    inset: -20%;
-    opacity: 0.4;
-  }
-  .hero-ring-2::before {
-    border-style: dotted;
-    border-color: var(--brand);
-  }
-
-  .chip-pos {
-    position: absolute;
-    z-index: 2;
-  }
-  .c1 {
-    top: -2%;
-    left: -10%;
-  }
-  .c2 {
-    top: 18%;
-    right: -12%;
-  }
-  .c3 {
-    bottom: 6%;
-    left: -10%;
-  }
-  .c4 {
-    bottom: -6%;
-    right: -2%;
-  }
-  .chip {
-    display: grid;
-    gap: 3px;
-    padding: 9px 14px 10px;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--brand);
     background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    white-space: nowrap;
-    transform: rotate(var(--r));
   }
-  /* Camada só do motor de troca: o GSAP mexe aqui sem brigar com a flutuação do .chip. */
-  .chip-swap {
+  .ha-label {
     display: block;
-    perspective: 600px;
-  }
-  .chip-kind {
+    margin: 0;
     font: var(--text-label);
-    font-size: 9px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--brand);
+    color: var(--mute);
   }
-  .chip-text {
-    font-family: var(--font-display);
-    font-size: 15px;
-    line-height: 18px;
+  .ha-q .ha-label {
     color: var(--ink);
+    opacity: 0.75;
+    margin-bottom: 4px;
   }
-  @media (max-width: 899px) {
-    .c1 {
-      left: -8%;
-    }
-    .c2 {
-      right: -12%;
-    }
-    .c3 {
-      left: -12%;
-    }
-    .c4,
-    .hero-ring-2 {
-      display: none;
-    }
+  .ha-who {
+    margin: 0;
+    font-weight: 600;
+    color: var(--brand);
+    font-size: 0.875rem;
   }
-  @media (max-width: 420px) {
-    .chip-text {
-      font-size: 13px;
-    }
+  .ha-text {
+    margin: 0 0 var(--space-2);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .ha-sources {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ha-sources li {
+    font-size: 0.8125rem;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+  }
+  .hero-answer figcaption {
+    color: var(--mute);
+  }
+  .hero-answer figcaption a {
+    color: var(--brand);
   }
   @media (min-width: 900px) {
     .hero-grid {
       grid-template-columns: 1.1fr 1fr;
       gap: var(--space-7);
     }
-    .hero-art {
-      order: 0;
-      justify-self: center;
-      width: min(400px, 90%);
+    .hero-answer {
+      justify-self: end;
     }
   }
 

@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 10f-1 · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · etapa 10f-2 · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -161,7 +161,8 @@ td:first-child{font-weight:700;white-space:nowrap}
         <li><strong>Fim da página:</strong> chamada final "Comece hoje." com os dois planos.</li>
         <li><strong>Imagem de compartilhamento:</strong> refeita com o título novo.</li>
       </ul>
-      <p>Faltam a 10f-2 (o átomo do topo vira um trecho real de resposta), a 10f-3 (a cena da biblioteca vira uma lista do que a base consulta) e a 10f-4 (sai a cena de Brasília e o formulário vai para a Ajuda).</p>
+      <p>Etapa 10f-2 pronta: no lugar do átomo e dos cartões de lei, o topo mostra um trecho real da resposta do Claude Opus 5.5 com a Órbita (a pergunta de crime tributário) e cinco das fontes citadas, com o link "Compare com a resposta sem a Órbita". No celular, o botão de assinar subiu para o meio da primeira tela.</p>
+      <p>Faltam a 10f-3 (a cena da biblioteca vira uma lista do que a base consulta) e a 10f-4 (sai a cena de Brasília e o formulário vai para a Ajuda).</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>
       <h3>Plugin e servidor MCP</h3>
       <p>O cliente instala só o plugin, e o que se vende é a assinatura. O servidor MCP com a base jurídica já existe e será ligado depois; o site não depende dele. Até lá, "Baixar o plugin", "Gerar código de conexão" e os números do Status do plugin funcionam em demonstração, marcados "a definir". A lista de cada lugar está em <code>docs/planejamento.md</code>, seção "Servidor MCP".</p>
@@ -427,6 +428,8 @@ const testes=[
  ['Site','Topo com título de venda, botão "Assinar a partir de R$ 50/mês" e linha de pagamento'],
  ['Site','Sete botões de assinar na página: topo, cabeçalho, comparativo, planos e chamada final'],
  ['Site','Perguntas de compra primeiro e chamada final "Comece hoje." com os dois planos'],
+ ['Site','Topo com um trecho real de resposta e as fontes, nos temas claro e escuro'],
+ ['Site','No celular, o botão de assinar aparece na primeira tela (antes ficava no fim)'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
