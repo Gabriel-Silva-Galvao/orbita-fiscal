@@ -16,7 +16,6 @@ declare global {
 }
 
 const root = document.documentElement;
-const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 if (root.classList.contains('anim')) {
   window.__ofMotion = true;
@@ -28,13 +27,10 @@ if (root.classList.contains('anim')) {
   startOrbits();
   progressBar();
   stickyNav();
-  heroIntro();
-  heroPointer();
   startHeroChips();
   parallax();
   reveals();
   stepsLine();
-  story();
   orbitReveal();
   drawOnView();
   // Fontes e imagens mudam alturas: recalcula os gatilhos quando tudo carrega.
@@ -62,74 +58,8 @@ function stickyNav() {
     onUpdate(self) {
       const y = self.scroll();
       nav.classList.toggle('is-scrolled', y > 24);
-      const hide = y > 520 && self.direction === 1 && !nav.contains(document.activeElement);
-      nav.classList.toggle('is-hidden', hide);
+      // O cabeçalho fica sempre fixo à vista (25/11/2026): não se esconde mais ao rolar para baixo.
     },
-  });
-}
-
-/* Entrada do hero: palavras sobem uma a uma, o símbolo cresce, as citações chegam em órbita. */
-function heroIntro() {
-  const hero = document.querySelector<HTMLElement>('[data-hero]');
-  if (!hero) return;
-  const q = gsap.utils.selector(hero);
-  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-  tl.fromTo(q('.overline'), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5 })
-    // O título (h1) não entra animado: é o LCP e precisa aparecer sem esperar este script (SEO, etapa 8d).
-    .fromTo(q('[data-hero-in="copy"]'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1 }, 0.55)
-    .fromTo(
-      q('.hero-disc'),
-      { autoAlpha: 0, scale: 0.82, rotate: -8 },
-      { autoAlpha: 1, scale: 1, rotate: 0, duration: 1.3, ease: 'elastic.out(1, 0.75)' },
-      0.15,
-    )
-    .fromTo(q('.hero-ring'), { autoAlpha: 0, scale: 0.9 }, { autoAlpha: 1, scale: 1, duration: 1.1, stagger: 0.12 }, 0.35)
-    .fromTo(
-      q('.chip-pos'),
-      { autoAlpha: 0, scale: 0.9, y: 16 },
-      { autoAlpha: 1, scale: 1, y: 0, duration: 0.7, stagger: 0.12, ease: 'back.out(1.8)' },
-      0.8,
-    )
-    .fromTo(q('.hero-cue'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, 1.3);
-
-  // Ao rolar, o hero se afasta: o texto sobe mais devagar e o símbolo afunda.
-  gsap.to(q('.hero-copy'), {
-    y: -60,
-    autoAlpha: 0.2,
-    ease: 'none',
-    scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.5 },
-  });
-  gsap.to(q('.hero-art'), {
-    y: 90,
-    rotate: 6,
-    ease: 'none',
-    scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: 0.5 },
-  });
-}
-
-/* Profundidade com o mouse no hero: cada camada anda conforme seu data-depth. */
-function heroPointer() {
-  const hero = document.querySelector<HTMLElement>('[data-hero]');
-  if (!hero || !finePointer) return;
-  const layers = Array.from(hero.querySelectorAll<HTMLElement>('[data-depth]')).map((el) => ({
-    depth: Number(el.dataset.depth),
-    x: gsap.quickTo(el, 'x', { duration: 0.9, ease: 'power3.out' }),
-    y: gsap.quickTo(el, 'y', { duration: 0.9, ease: 'power3.out' }),
-  }));
-  hero.addEventListener('pointermove', (e) => {
-    const r = hero.getBoundingClientRect();
-    const nx = (e.clientX - r.left) / r.width - 0.5;
-    const ny = (e.clientY - r.top) / r.height - 0.5;
-    for (const l of layers) {
-      l.x(nx * 28 * l.depth);
-      l.y(ny * 22 * l.depth);
-    }
-  });
-  hero.addEventListener('pointerleave', () => {
-    for (const l of layers) {
-      l.x(0);
-      l.y(0);
-    }
   });
 }
 
@@ -216,61 +146,6 @@ function splitHeadings() {
       if (i < all.length - 1) vis.append(' ');
     });
     h.replaceChildren(sr, vis);
-  });
-}
-
-/*
- * “O dia a dia”: o momento no meio da tela fica ativo e a moldura fixa troca para a foto dele.
- * A linha da esquerda se preenche com a rolagem. Só no desktop; no celular cada momento tem a própria foto.
- */
-function story() {
-  const grid = document.querySelector<HTMLElement>('[data-story]');
-  if (!grid) return;
-  const list = grid.querySelector<HTMLElement>('.story-steps')!;
-  const steps = Array.from(grid.querySelectorAll<HTMLElement>('.story-step'));
-  const shots = Array.from(grid.querySelectorAll<HTMLElement>('.story-shot'));
-  const counter = grid.querySelector<HTMLElement>('[data-story-n]');
-  let current = 0;
-
-  const activate = (i: number) => {
-    if (i === current) return;
-    current = i;
-    steps.forEach((s, j) => s.classList.toggle('is-active', j === i));
-    shots.forEach((s, j) => s.classList.toggle('is-active', j === i));
-    if (counter) counter.textContent = String(i + 1).padStart(2, '0');
-  };
-
-  gsap.matchMedia().add('(min-width: 900px)', () => {
-    steps.forEach((s, i) =>
-      ScrollTrigger.create({
-        trigger: s,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => self.isActive && activate(i),
-      }),
-    );
-    ScrollTrigger.create({
-      trigger: list,
-      start: 'top 55%',
-      end: 'bottom 55%',
-      scrub: true,
-      onUpdate: (self) => list.style.setProperty('--p', self.progress.toFixed(3)),
-    });
-  });
-
-  gsap.matchMedia().add('(max-width: 899px)', () => {
-    grid.querySelectorAll<HTMLElement>('.story-inline').forEach((fig) =>
-      gsap.fromTo(
-        fig,
-        { clipPath: 'inset(100% 0 0 0 round 14px)' },
-        {
-          clipPath: 'inset(0% 0 0 0 round 14px)',
-          duration: 1,
-          ease: 'expo.out',
-          scrollTrigger: { trigger: fig, start: 'top 85%', once: true },
-        },
-      ),
-    );
   });
 }
 

@@ -5,8 +5,8 @@ import { citacoes } from '../data/citacoes';
 
 const title = 'Pesquise o direito brasileiro e prepare suas peças na IA que você já usa.';
 
-// Citações que orbitam o símbolo. Abrem com as quatro do exemplo; depois se revezam entre
-// as mais de cem de src/data/citacoes.ts (motor em scripts/hero-chips.ts).
+// Quatro citações fixas em volta do símbolo (as quatro primeiras de src/data/citacoes.ts).
+// Desde a etapa 10c não se revezam no topo; o revezamento segue nos livros e em Brasília.
 const slots = [
   { pos: 'c1', depth: 1.6 },
   { pos: 'c2', depth: 2.2 },
@@ -16,9 +16,10 @@ const slots = [
 const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
 ---
 
+<!-- Etapa 10c: o topo fica parado (sem entrada animada, profundidade com o mouse, órbita girando nem cartões em revezamento). -->
 <section class="hero" data-hero aria-labelledby="hero-title">
   <!-- Fundo: órbitas largas que atravessam a página, com um ponto viajando. -->
-  <svg class="hero-bg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true" data-depth="-0.4">
+  <svg class="hero-bg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <g transform="rotate(-28 980 380)" fill="none" stroke="var(--line)" stroke-width="1.2">
       <ellipse cx="980" cy="380" rx="760" ry="300"></ellipse>
       <ellipse cx="980" cy="380" rx="520" ry="200" stroke-dasharray="2 10"></ellipse>
@@ -36,31 +37,31 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
 
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <p class="overline" data-hero-in>Plugin para Claude</p>
+      <p class="overline">Plugin para Claude</p>
       <!-- SEO (etapa 8d): o título é o maior elemento da primeira tela (LCP). Aparece já pintado, sem entrada animada. -->
       <h1 id="hero-title" class="display-xl hero-title">
         {title}
       </h1>
-      <p class="lead" data-hero-in="copy">
+      <p class="lead">
         O plugin da Órbita conecta a base jurídica ao seu Claude. Você pergunta como sempre perguntou e
         recebe o fundamento para conferir.
       </p>
-      <div class="hero-actions" data-hero-in="copy">
+      <div class="hero-actions">
         <Button href="#planos">Ver planos</Button>
         <Button href="#exemplo" variant="secondary">Ver um exemplo</Button>
       </div>
-      <p class="small mute" data-hero-in="copy">A partir de R$ 50 por mês.</p>
+      <p class="small mute">A partir de R$ 50 por mês.</p>
     </div>
 
-    <div class="hero-art" aria-hidden="false" data-chips={JSON.stringify(citacoes)} data-chips-mode="orbita">
-      <div class="hero-ring hero-ring-1" data-hero-in data-depth="0.5"></div>
-      <div class="hero-ring hero-ring-2" data-hero-in data-depth="0.8"></div>
-      <div class="hero-disc" data-hero-in data-depth="0.9" data-orbit-host>
-        <Symbol on="bg" pace={0.8} label="Símbolo da Órbita: um átomo com elétrons em órbita" />
+    <div class="hero-art" aria-hidden="false">
+      <div class="hero-ring hero-ring-1"></div>
+      <div class="hero-ring hero-ring-2"></div>
+      <div class="hero-disc">
+        <Symbol on="bg" orbit={false} label="Símbolo da Órbita: um átomo com elétrons em órbita" />
       </div>
       {
         chips.map((c, i) => (
-          <span class:list={['chip-pos', c.pos]} data-depth={c.depth} data-hero-in aria-hidden="true">
+          <span class:list={['chip-pos', c.pos]} aria-hidden="true">
             <span class="chip-swap" data-chip data-chip-i={c.i}>
               <span class="chip" style={`--r:${i % 2 ? 4 : -5}deg; --d:${5 + i * 1.3}s`}>
                 <span class="chip-kind" data-chip-kind>{c.kind}</span>
@@ -73,7 +74,7 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
     </div>
   </div>
 
-  <a class="hero-cue" href="#a-base" data-hero-in>
+  <a class="hero-cue" href="#a-base">
     <span>Role para conhecer</span>
     <span class="hero-cue-line" aria-hidden="true"></span>
   </a>
@@ -172,12 +173,6 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
     border-style: dotted;
     border-color: var(--brand);
   }
-  :global(.anim) .hero-ring-1::before {
-    animation: spin 60s linear infinite;
-  }
-  :global(.anim) .hero-ring-2::before {
-    animation: spin 90s linear infinite reverse;
-  }
 
   .chip-pos {
     position: absolute;
@@ -209,21 +204,10 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
     white-space: nowrap;
     transform: rotate(var(--r));
   }
-  :global(.anim) .chip {
-    animation: float-a var(--d) ease-in-out infinite;
-  }
-  :global(.anim) .chip-pos:nth-of-type(2n) .chip {
-    animation-name: float-b;
-  }
   /* Camada só do motor de troca: o GSAP mexe aqui sem brigar com a flutuação do .chip. */
   .chip-swap {
     display: block;
     perspective: 600px;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    :global(.anim) .chip-swap {
-      cursor: pointer;
-    }
   }
   .chip-kind {
     font: var(--text-label);
@@ -299,9 +283,6 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
     inset: 0;
     background: var(--brand);
     transform: translateY(-100%);
-  }
-  :global(.anim) .hero-cue-line::after {
-    animation: cue 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
   }
   @keyframes cue {
     0% {

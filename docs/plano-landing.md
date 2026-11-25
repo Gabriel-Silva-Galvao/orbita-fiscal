@@ -82,16 +82,17 @@ Mantido, enxuto: links legais, contato, tema claro/escuro e cookies.
 | Linhas animadas das quatro IAs | Uma linha de texto (bloco 5) |
 | Cena de Brasília | Sai; os três pontos de confiança ficam |
 | Formulário de contato na landing | Vai para a Ajuda (decisão 3) |
-| Rolagem suave forçada (Lenis), parallax, títulos palavra por palavra, entradas em cascata, barra de progresso | Saem (etapa 10c) |
+| Efeitos do topo: entrada animada, profundidade com o mouse, átomo girando, cartões em revezamento, "role para conhecer" pulsando | Saem (etapa 10c). O topo fica parado. |
+| Animações do resto da página: títulos letra a letra, entradas em cascata, rolagem suave, cartões nos livros e em Brasília | **Ficam como estão** (decisão de 25/11/2026) |
 | Botão "Ver planos" | "Assinar a partir de R$ 50/mês", repetido em 3 pontos |
 
-**O que fica com movimento:** só o retorno ao toque (hover e foco nos botões e abas) e a troca de abas do comparativo. O símbolo da marca no logo fica parado.
+**O que fica com movimento:** tudo o que já existia fora do topo. Correção de 25/11/2026: na primeira versão da 10c tirei todas as animações do site. Você pediu para mexer só no que tinha falado: os efeitos do topo e o carrossel vertical.
 
 ---
 
 ## Ordem das etapas
 
-1. **10c:** tirar os efeitos, sem mudar o conteúdo.
+1. **10c:** tirar só os efeitos do topo, sem mudar o conteúdo.
 2. **10d:** o "carrossel vertical" vira uma linha.
 3. **10e:** o comparativo com e sem a Órbita.
 4. **10f:** os demais blocos e o visual de vendas deste plano.

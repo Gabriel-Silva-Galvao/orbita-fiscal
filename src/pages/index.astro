@@ -9,7 +9,6 @@ import ExampleTabs from '../components/ExampleTabs.astro';
 import PlanCard from '../components/PlanCard.astro';
 import Faq from '../components/Faq.astro';
 import Footer from '../components/Footer.astro';
-import Story from '../components/Story.astro';
 import Contact from '../components/Contact.astro';
 import AiConnections from '../components/AiConnections.astro';
 import StructuredData from '../components/StructuredData.astro';
@@ -84,7 +83,14 @@ const trust = [
       </div>
     </section>
 
-    <Story />
+    <!-- O dia a dia numa linha (etapa 10d): substitui os quatro momentos com a foto que trocava ao rolar. -->
+    <section id="dia-a-dia" class="section linha" aria-label="O dia a dia">
+      <div class="wrap">
+        <p class="display-md linha-texto" data-reveal>
+          Menos tempo caçando lei e julgado em várias bases. <span class="linha-destaque">Mais tempo revisando e assinando a peça.</span>
+        </p>
+      </div>
+    </section>
 
     <!-- Como funciona -->
     <section id="como-funciona" class="section section-alt" aria-labelledby="como-title">
@@ -246,6 +252,18 @@ const trust = [
 </Base>
 
 <style>
+  .linha {
+    padding-block: var(--space-8);
+  }
+  .linha-texto {
+    margin: 0 auto;
+    max-width: 30em;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .linha-destaque {
+    color: var(--brand);
+  }
   .section-alt {
     background: var(--surface);
   }
