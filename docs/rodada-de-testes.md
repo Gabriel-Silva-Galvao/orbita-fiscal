@@ -310,59 +310,207 @@ estadual (TIT-SP, CCMG, TATEs, CONSEF, conselhos); consultas e pareceres (RFB, P
 
 ---
 
+## Bloco E: mudança dos planos e do público (25/11/2026)
+
+Mudança de teoria pedida pelo Gabriel depois de fechar o bloco C. **Vem antes do bloco C na execução**, porque muda os
+planos que o Portal, o checkout, a boas-vindas e o header usam.
+
+### 25. Três planos: Bronze, Prata e Ouro — Executado e testado (25/11/2026)
+
+**Feito.** API (`PLANOS` e validação; 72 testes), `src/data/plans.ts` (planos, `planList`, `aPartirDe`, `upgradeDe`),
+novo `PlanCard.astro` (card branco, preço grande, ✓, "a definir" em cinza, selo "Mais escolhido" no Prata), landing
+(título "Três planos: escolha pelo quanto você pesquisa", três cards, FAQ, CTA final), checkout (`/assinar/bronze|prata|ouro`,
+"Trocar para" com os outros dois), Entrar (troca de plano em ciclo), middleware, Portal (upgrade Bronze → Prata → Ouro,
+recursos do Ouro), header (Upgrade para o Prata/Ouro; selo Ouro), Instalar, Ajuda, Termos, /bases e textos
+"a partir de R$ 19,90". Banco de desenvolvimento migrado (Pro → Prata, Max → Ouro). `/assinar/pro` agora dá 404.
+**Pendências.** As especificações de cada plano (quando vierem, editar `plans.ts` e `PLANOS` na API). A imagem de
+compartilhamento ainda não fala de preço. O guia antigo ainda cita Pro/Max em trechos de histórico.
+
+**Pedido.** Sai Pro (R$ 50) e Max (R$ 75,90). Entram três planos de assinatura mensal:
+
+| Plano | Preço | Papel |
+|---|---|---|
+| Bronze | R$ 19,90/mês | entrada |
+| **Prata** | R$ 59,90/mês | **em destaque, "Mais escolhido"** |
+| Ouro | R$ 119,90/mês | o mais completo |
+
+**Especificações de cada plano: serão definidas no futuro.** Até lá, cada card mostra o que é comum aos três (a base
+inteira, a fonte em cada resposta, funciona no Claude, cancelar quando quiser, garantia de 7 dias) e, no lugar do que
+diferencia os planos, a marca "a definir". **O Ouro herda os recursos que hoje são do Max**: alertas por tema, resumo
+semanal e acesso antecipado. Quando as especificações chegarem, basta editar `src/data/plans.ts` (site) e a tabela de
+planos da API; o resto lê dali.
+
+**Design dos cards** (referências: páginas de planos da Anthropic e do ChatGPT):
+- três cards lado a lado (no celular, um embaixo do outro, com o Prata primeiro), **sempre brancos**, também no modo
+  escuro, texto quase preto e cantos arredondados;
+- uma cor só de destaque, no Prata: borda e selo "Mais escolhido", e o botão principal; nos outros, botão com contorno;
+- em cada card: nome, para quem é (uma linha), preço grande com "/mês", botão, e a lista de itens com um ícone de
+  check; os itens "a definir" aparecem em cinza;
+- abaixo dos três, uma faixa "Planos empresariais" (item 26) e a linha de garantia e formas de pagamento.
+
+**O que muda no código.** Tudo que fala em Pro/Max:
+- API: `PLANOS` em `billing.py` (`bronze`, `prata`, `ouro`, com os preços), validação dos planos, testes;
+- site: `src/data/plans.ts`, os cards da landing, `/assinar/[plano]` (agora `/assinar/bronze|prata|ouro`), o middleware
+  (`pro|max`), `/entrar?plano=`, Portal (marca "Max" vira "Ouro"), Instalar, Ajuda, Termos, Reembolso, FAQ, header
+  (item 24: Bronze → "Upgrade para o Prata", Prata → "Upgrade para o Ouro", Ouro → selo "Ouro" e "Criar alerta"),
+  textos do bloco C e o guia.
+- Contas de teste locais com Pro/Max: migrar para Prata/Ouro no banco de desenvolvimento (não há clientes reais).
+
+### 26. Área de planos empresariais com contato animado — Fechado na teoria (25/11/2026)
+
+**Pedido.** Área de planos empresariais; "Entrar em contato" com o e-mail da Órbita para negociar; animação de abrir uma
+caixa de e-mail ao clicar (explorar a ideia).
+
+**Como vai ser.**
+- Na seção de planos, abaixo dos três cards: faixa "Para escritórios, empresas e equipes", com o que costuma entrar
+  numa negociação (vários usuários, cobrança única, nota para a empresa, condições sob medida) e o botão
+  **"Entrar em contato"**. Também uma página `/empresas` com o mesmo conteúdo mais completo (o link "Para escritórios"
+  do rodapé, que hoje leva a uma página que não existe, passa a levar para ela).
+- **Animação da caixa de e-mail (ideia explorada):**
+  1. ao clicar, um envelope fechado sobe do botão até o centro da tela, com o fundo escurecendo;
+  2. a aba do envelope abre (giro 3D de cima para baixo) e uma carta desliza para fora;
+  3. a carta cresce e vira uma janela de e-mail: "Para: contato@… (Órbita)", "Assunto: Plano empresarial", e os
+     campos nome, empresa, e-mail, número de usuários e mensagem, já com o cursor na mensagem;
+  4. ao enviar, a carta dobra, volta para o envelope, o envelope fecha e "voa" para fora com um rastro, e aparece
+     "Mensagem enviada. Respondemos em até X dias úteis" (prazo a definir);
+  5. fechar (X, Esc ou clique fora) faz o caminho inverso, sem enviar.
+  Com movimento reduzido, a janela de e-mail aparece direto, sem envelope. Acessível: foco preso na janela, Esc fecha,
+  leitor de tela anuncia "Escrever para a equipe da Órbita".
+- **Envio:** formulário na própria janela; a API recebe (`POST /contato/empresarial`, com limite de envios por IP e
+  verificação contra robôs) e manda para o e-mail da Órbita pelo SMTP (`app/correio.py`), com cópia de confirmação
+  para quem escreveu. Sem SMTP configurado (desenvolvimento), a mensagem fica registrada e a tela mostra que é
+  demonstração. O e-mail de destino continua "a confirmar" (`src/data/site.ts`).
+
+### 27. Público: advogados, contadores e empresários em todo o site — Fechado na teoria (25/11/2026)
+
+**Pedido.** Deixar claro que a Órbita é para **advogados, contadores e empresários**, nessa ordem, e nunca limitar o
+público a advogados, no site inteiro.
+
+**Como vai ser.**
+- Revisar todos os textos (landing, /bases, planos, Ajuda, Termos, FAQ, meta descrições e dados estruturados, imagem de
+  compartilhamento) trocando o que fala só de advogado, escritório de advocacia ou "peça" por formulações que valem
+  para os três, ou citando os três nessa ordem.
+- Topo da landing: uma linha "Para advogados, contadores e empresários" acima ou abaixo do título.
+- Exemplos de uso por público na seção de planos ou numa faixa própria: advogado (fundamentar a peça), contador
+  (conferir crédito, regime, obrigação acessória), empresário (entender o risco antes de decidir).
+- Termos de uso: o texto que hoje fala em "revisão profissional" continua, sem restringir a advogados.
+- Levantamento inicial: as palavras "advogado", "escritório", "peça", "Pro" e "Max" aparecem em cerca de 20 arquivos
+  do site (o Portal e a landing concentram a maior parte).
+
+**Ordem de execução do bloco E.** 25 (planos, API e site) → 27 (público, no site inteiro) → 26 (empresarial e a
+animação do e-mail). Depois, o bloco C, já com os planos novos.
+
 ## Bloco C: plataforma do assinante
 
-### 3. Página de boas-vindas depois da compra — Em aberto
+### 3. Página de boas-vindas depois da compra — Fechado na teoria (25/11/2026)
 
-**Pedido.** Página receptiva, com animações como as da landing, apresentando o produto, o que a compra
-liberou e por que confiar.
+**Pedido.** Página receptiva depois da compra, com animações como as da landing, apresentando o produto, o que a
+compra liberou e por que confiar.
 
-**Proposta inicial.** Saudação com o nome, o átomo e uma animação de "acesso liberado"; o que o plano dá
-(Pro ou Max); três passos para começar (instalar, conectar, primeira pergunta) com progresso; uma pergunta
-guiada com resposta animada; sinais de confiança (garantia de 7 dias, bases consultadas, LGPD, contato humano) e os três pontos
-que saíram da landing no item 22 (fonte para conferir, rascunho não sentença, seus dados).
-É também onde a animação de explosão do átomo, já planejada, pode tocar.
+**Decidido.**
+- É **diferente do Início**: aparece uma vez só, depois da compra (itens 5 e 8).
+- **Primeira ação: instalar o plugin**, em três passos guiados (baixar/instalar, conectar a conta, primeira pergunta).
+- **Pro e Max diferentes:** o Max destaca o que tem a mais (alertas por tema, resumo semanal, acesso antecipado), com
+  atalho para configurar; o Pro vê o mesmo sem esses itens e uma linha discreta sobre o Max.
+- Os **três pontos de confiança** que saíram da landing (item 22) voltam aqui: fonte para conferir, rascunho não
+  sentença, seus dados.
 
-**Dúvidas.**
-1. Qual a primeira ação: instalar, fazer uma pergunta de teste ou conhecer o plano?
-2. Pro e Max com conteúdo diferente?
-3. Primeira pergunta guiada com resposta pronta animada?
-4. Quais sinais de confiança?
+**Proposta de estrutura.**
+1. Abertura: "Bem-vindo à Órbita, {nome}" com a animação de "acesso liberado" (lugar da explosão do átomo).
+2. O que o plano dá, em cartões (Pro ou Max).
+3. Três passos guiados, com progresso salvo, levando ao Plugin e conexões.
+4. Uma resposta real animada, como no topo da landing, para mostrar o resultado.
+5. Por que confiar: os três pontos, garantia de 7 dias, as bases consultadas (com o número da página /bases) e o
+   contato humano.
+6. Saída: "Ir para o meu painel" (Início).
 
-### 5. Cabeçalho e interface de quem está logado — Em aberto
+**Decidido também.**
+- A **explosão do átomo toca na abertura**, uma vez, ao chegar depois do pagamento. Até ela ser feita (última etapa),
+  a abertura usa uma animação simples de "acesso liberado".
+- **Depoimentos só quando houver reais**, com autorização: a estrutura fica pronta no código e nada aparece até lá.
 
-**Pedido.** Elementos de login no cabeçalho (inclusive na landing) e um Portal com cara de produto novo,
-no mesmo design.
+### 5 e 8. Portal com cara de produto: páginas próprias, cabeçalho e navegação — Fechado na teoria (25/11/2026)
 
-**Proposta.** Ver item 1 para o cabeçalho. No Portal: barra lateral com o símbolo e o nome do plano, painel
-inicial com status do plugin e atalhos, e o mesmo sistema visual da landing (cores, tipografia, átomo).
+**Pedido.** Interface de quem está logado com cara de produto novo (mesmo design); cada aba vira uma página própria,
+mais completa; cabeçalho mais intuitivo; navegação boa no celular.
 
-### 8. Uma página com design próprio para cada aba — Em aberto
+**Decisões.**
+- **Páginas** (cada uma com endereço próprio):
 
-**Pedido.** Cada aba vira página própria, mais complexa; cabeçalho mais intuitivo; responsividade com
-interação no celular.
+| Página | Endereço | O que tem |
+|---|---|---|
+| Início (painel) | `/conta` | Visão do dia a dia (ver abaixo). |
+| Plugin e conexões | `/conta/plugin` | Baixar o plugin, conexão por IA (Claude, ChatGPT, Copilot, Gemini), tutoriais, uso do mês e limite do plano. |
+| Plano, pagamento e faturas | `/conta/plano` | Plano atual, forma de pagamento, faturas e notas, upgrade/troca, cancelar e reembolso. |
+| Alertas e resumo (Max) | `/conta/alertas` | Alertas por tema e resumo semanal; no Pro, a página mostra o que o Max dá, com o upgrade. |
+| Novidades da base | `/conta/novidades` | O que entrou na base, por data e por tribunal/órgão; marca o que é novo desde a última visita. |
+| Suporte | `/conta/suporte` | Falar com a equipe, chamados abertos, artigos da Ajuda mais usados. |
+| Conta e segurança | `/conta/configuracoes` | Item 9: dados, senha, aparelhos conectados, preferências, LGPD. |
 
-**Proposta inicial de páginas.** Início (painel), Plano e pagamento, Faturas, Uso e status do plugin,
-Instalar e conexões, Novidades da base, Ajuda e suporte, Conta e segurança.
+- **Navegação:** no computador, menu lateral fixo com o logo, o nome do plano e as 7 páginas; no celular, barra
+  inferior estilo app com 4 ícones (Início, Plugin, Novidades, Plano) e "Mais" (Alertas, Suporte, Conta).
+- **Cabeçalho de produto:** logo, nome da página atual, busca na Ajuda e o avatar com menu (o mesmo do site), mais
+  "Voltar ao site". Não repete os links do site.
 
-**Dúvidas.** Quais páginas entram? No celular: menu inferior (estilo app) ou lateral que abre?
+**Início é diferente da boas-vindas (proposta de Claude, confirmada pelo Gabriel em 25/11/2026).**
+- **Boas-vindas** (`/boas-vindas`, item 3) é **uma vez só**, logo depois da compra: comemora, apresenta o que a pessoa
+  ganhou, guia os três primeiros passos (instalar, conectar, primeira pergunta) e passa confiança. Tem animação de
+  apresentação, como a landing, e é onde a explosão do átomo pode tocar. Depois de concluída, não volta mais
+  (fica um link "Rever a apresentação" no Início).
+- **Início** (`/conta`) é **o painel de todo dia**: rápido de ler, sem apresentação. Mostra:
+  1. faixa de estado: plano, próxima cobrança e, se houver, um aviso (Pix pendente, pagamento atrasado, cancelamento
+     agendado);
+  2. status do plugin por IA (conectado ou não) e consultas do mês com o limite do plano;
+  3. "Continue de onde parou": o que falta da instalação, só enquanto não estiver tudo feito;
+  4. novidades da base desde a última visita (3 a 5 itens) e o link para Novidades;
+  5. atalhos: baixar o plugin, abrir o Claude, falar com o suporte; no Max, criar alerta.
+- **Regra de entrada:** depois da compra, a pessoa cai na boas-vindas; nas próximas vezes, no Início.
 
-### 9. Aba de conta completa — Proposto
+**Como vai ser feito.** Um layout novo `Portal.astro` (cabeçalho de produto, menu lateral, barra inferior no
+celular, área de conteúdo) usado pelas 7 páginas; as páginas reaproveitam o que já existe no `conta.astro` (abas
+de hoje) e ganham conteúdo novo. Os dados de plugin (conexões, uso, versão) continuam em demonstração até o servidor
+MCP; ficam marcados "a definir" como hoje.
 
-**Básico.** Nome, e-mail, senha, foto ou iniciais.
-**Avançado.** Aparelhos conectados e sair de todos (item 10), preferências de e-mail (novidades, resumo
-semanal no Max), tema, dados da nota fiscal (CPF ou CNPJ, razão social), baixar meus dados (LGPD),
-excluir conta.
+**Teste.** Cada página no computador e no celular; menu lateral e barra inferior com a página atual marcada; teclado
+e leitor de tela; o Portal só abre com sessão; nada de rolagem lateral.
 
-### 11. Checkout com cara de pagamento — Em aberto
+### 9. Conta e segurança completa — Fechado na teoria (25/11/2026)
 
-**Pedido.** Visual sóbrio, branco e com as cores usuais de pagamento (como Amazon e Mercado Livre), sem seguir
-o design do site.
+Página `/conta/configuracoes` do Portal (itens 5 e 8).
 
-**Proposta.** Fundo branco, tipografia de sistema, cinzas neutros e um azul ou verde de ação; resumo do pedido
-fixo ao lado; selos de segurança e do Asaas; passos numerados; nada de animação.
+**Decisões.** Básico + aparelhos conectados + preferências de e-mail + dados da nota fiscal. "Meus dados (LGPD)" fica
+de fora desta rodada.
 
-**Dúvidas.** Fica branco também quando o site está no modo escuro?
+**Conteúdo.**
+- **Perfil:** nome, e-mail (troca com código enviado ao e-mail novo), iniciais no avatar.
+- **Senha:** trocar a senha (pede a atual e confirma com o código de 6 dígitos); ao trocar, **todas as outras sessões
+  caem** (anotado no item 1 e no documento de segurança, S13).
+- **Aparelhos conectados:** lista com navegador e sistema, criada em, último uso e "Este aparelho"; "Sair deste
+  aparelho" em cada um e "Sair de todos" (a API já existe: `GET/DELETE /auth/sessoes`, `POST /auth/sair-de-todos`).
+- **Preferências de e-mail:** novidades da base, avisos de cobrança (obrigatórios, só informativo) e resumo semanal
+  (só no Max). Precisa de API nova (`GET/PUT /auth/preferencias`).
+- **Dados da nota fiscal:** CPF ou CNPJ, nome ou razão social e endereço; editar atualiza o cliente no Asaas.
+  Precisa de API nova (`GET/PUT /billing/nota`).
+- **Excluir conta:** continua como hoje (pede cancelar a assinatura antes).
+
+**Fica para depois.** "Baixar meus dados" (direito de acesso da LGPD): enquanto não houver o botão, o pedido é atendido
+pelo suporte, e a Política de privacidade precisa dizer isso.
+
+### 11. Checkout com cara de pagamento — Fechado na teoria (25/11/2026)
+
+**Decisão.** Sempre branco, mesmo com o site no modo escuro (como Amazon e Mercado Livre).
+
+**Como vai ser.** Página `/assinar/[plano]` com tema próprio: fundo branco e cinza bem claro, texto quase preto,
+tipografia do sistema (a do celular/computador da pessoa), um azul de ação para o botão de pagar e verde só para
+"pagamento aprovado"; sem animação de entrada e sem o átomo. Estrutura:
+1. topo enxuto: logo pequeno, "Pagamento seguro" com cadeado e "Voltar";
+2. passos numerados (1 Dados da nota · 2 Pagamento · 3 Confirmação);
+3. coluna principal: dados da nota, forma de pagamento (cartão, Pix, boleto) em cartões selecionáveis;
+4. resumo do pedido fixo ao lado (no celular, no topo, recolhível): plano, valor, próxima cobrança, "cancele quando
+   quiser" e a garantia de 7 dias;
+5. selos: "Pagamento processado pelo Asaas", conexão segura, formas aceitas;
+6. rodapé curto (item 2).
+Os campos do cartão passam a ser os do Asaas quando a tokenização entrar (risco S3 do documento de segurança).
 
 ---
 
@@ -403,8 +551,11 @@ saem do painel da pesquisa?
 
 ## Ordem proposta de execução
 
-1. Bloco A, um item por vez: 1 e 10, 4, 2, 19, 21, 22, 15, 14, 6.
-2. Documento do item 17.
-3. Bloco B: 13 e 20 (depois das respostas).
-4. Bloco C: 5 e 8 juntos, depois 9, 11 e 3.
-5. Bloco D e a animação de explosão.
+1. ~~Bloco A~~ feito: 1 e 10, 2, 4, 6, 14, 15, 19, 21 a 24.
+2. ~~Documento do item 17~~ feito, com os dois riscos críticos corrigidos.
+3. ~~Bloco B~~ feito: 13 e 20.
+4. **Bloco E** (mudança dos planos e do público): 25 → 27 → 26.
+5. Bloco C, teoria fechada em 25/11/2026 (ajustar Pro/Max para Bronze/Prata/Ouro). Ordem de execução: 5 e 8 (layout do Portal e as 7 páginas), 9 (conta e
+   segurança), 11 (checkout branco), 3 (boas-vindas).
+6. Riscos altos de segurança (S3 a S5) antes de publicar.
+7. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.

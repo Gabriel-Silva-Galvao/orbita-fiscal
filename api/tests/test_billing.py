@@ -15,7 +15,7 @@ TOKEN = get_settings().asaas_webhook_token
 CARTAO = {"titular": "TESTE SILVA", "numero": "4444444444444444", "mes": "12", "ano": "2030", "cvv": "123"}
 
 
-def assinar(http, forma: str, plano: str = "pro", **extra):
+def assinar(http, forma: str, plano: str = "prata", **extra):
     corpo = {"nome": "Teste Silva", "cpf_cnpj": "529.982.247-25", "plano": plano, "forma": forma, **extra}
     return http.post("/billing/assinatura", json=corpo)
 
@@ -35,7 +35,7 @@ def test_pix_fica_pendente_e_libera_com_o_webhook(api):
     r = assinar(http, "pix")
     assert r.status_code == 201, r.text
     dados = r.json()
-    assert dados["status_acesso"] == "pendente" and dados["valor"] == 50.0
+    assert dados["status_acesso"] == "pendente" and dados["valor"] == 59.9
     [cob] = dados["cobrancas"]
     assert cob["status"] == "PENDING" and cob["pix"]["copia_e_cola"].startswith("000201")
     confirmar(http, cob["id"])
@@ -45,9 +45,9 @@ def test_pix_fica_pendente_e_libera_com_o_webhook(api):
 def test_boleto_vence_em_3_dias_e_libera_na_compensacao(api):
     http, *_ = api
     entrar(http, api[2])
-    dados = assinar(http, "boleto", plano="max").json()
+    dados = assinar(http, "boleto", plano="ouro").json()
     [cob] = dados["cobrancas"]
-    assert dados["valor"] == 75.9 and cob["vencimento"] == (date.today() + timedelta(days=3)).isoformat()
+    assert dados["valor"] == 119.9 and cob["vencimento"] == (date.today() + timedelta(days=3)).isoformat()
     assert len(cob["boleto"]["linha_digitavel"]) == 47
     assert dados["status_acesso"] == "pendente"
     confirmar(http, cob["id"])
@@ -275,7 +275,7 @@ def test_plano_leve_para_o_header(api):
     r = assinar(http, "pix")
     assert r.status_code == 201
     p = http.get("/billing/plano").json()
-    assert p["plano"] == "pro" and p["status_acesso"] == "pendente" and p["tem_acesso"] is False
+    assert p["plano"] == "prata" and p["status_acesso"] == "pendente" and p["tem_acesso"] is False
     confirmar(http, r.json()["cobrancas"][0]["id"])
     p = http.get("/billing/plano").json()
     assert p["status_acesso"] == "ativo" and p["tem_acesso"] is True

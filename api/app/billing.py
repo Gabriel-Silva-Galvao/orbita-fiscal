@@ -25,7 +25,12 @@ from app.auth import usuario_logado
 from app.config import get_settings
 from app.db import Banco
 
-PLANOS = {"pro": {"nome": "Pro", "valor": 50.00}, "max": {"nome": "Max", "valor": 75.90}}
+# Item 25 da rodada de testes (25/11/2026): três planos. As especificações de cada um serão definidas depois.
+PLANOS = {
+    "bronze": {"nome": "Bronze", "valor": 19.90},
+    "prata": {"nome": "Prata", "valor": 59.90},
+    "ouro": {"nome": "Ouro", "valor": 119.90},
+}
 FORMAS = {"cartao": "CREDIT_CARD", "pix": "PIX", "boleto": "BOLETO"}
 FORMA_DE = {v: k for k, v in FORMAS.items()}
 PRAZO_REEMBOLSO_DIAS = 7  # CDC, art. 49
@@ -72,7 +77,7 @@ class NovaAssinatura(BaseModel):
     # Nome ou razão social e CPF/CNPJ da nota fiscal; o e-mail vem da conta.
     nome: str
     cpf_cnpj: str
-    plano: Literal["pro", "max"]
+    plano: Literal["bronze", "prata", "ouro"]
     forma: Literal["cartao", "pix", "boleto"]
     cartao: Cartao | None = None
 

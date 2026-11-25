@@ -11,6 +11,7 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Button from '../components/Button.astro';
 import cobertura from '../data/cobertura.json';
+import { aPartirDe } from '../data/plans';
 // Mapa do Brasil por estado: @svg-maps/brazil (Victor Cazanave, CC BY 4.0). Crédito na nota final e no rodapé.
 import brasil from '@svg-maps/brazil';
 
@@ -77,7 +78,7 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
             <li><strong data-count={ufsCobertas.size}>{ufsCobertas.size}</strong><span>estados com base própria</span></li>
           </ul>
           <div class="cb-actions">
-            <Button href="/#planos">Assinar a partir de R$ 50/mês</Button>
+            <Button href="/#planos">Assinar a partir de {aPartirDe}/mês</Button>
             <Button href="#todas" variant="secondary">Ver todas as bases</Button>
           </div>
         </div>
@@ -229,11 +230,11 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
       <!-- CTA final -->
       <section class="section section-alt final-cta">
         <div class="wrap cb-final">
-          <h2 class="display-lg">Tudo isso dentro do Claude, a partir de R$ 50/mês</h2>
+          <h2 class="display-lg">Tudo isso dentro do Claude, a partir de {aPartirDe}/mês</h2>
           <p class="lead">Reembolso integral em até 7 dias. Cancele quando quiser.</p>
           <div class="cb-actions">
-            <Button href="/assinar/pro" variant="secondary">Assinar o Pro</Button>
-            <Button href="/assinar/max">Assinar o Max</Button>
+            <Button href="/#planos">Ver os três planos</Button>
+            <Button href="/ajuda#contato" variant="secondary">Falar com a equipe</Button>
           </div>
           <p class="small mute">
             Números levantados em {levantado} nas próprias bases da Órbita. "Documentos" são acórdãos, decisões, consultas,

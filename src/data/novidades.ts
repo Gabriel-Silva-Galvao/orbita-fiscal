@@ -11,7 +11,7 @@ export type Novidade = {
   origem: 'orbita' | 'ias';
   titulo: string;
   texto: string;
-  /** Acesso antecipado: aparece para o Max primeiro. */
+  /** Acesso antecipado: aparece para o Ouro primeiro. */
   max?: boolean;
 };
 

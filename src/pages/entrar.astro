@@ -5,7 +5,7 @@
  * código enviado ao e-mail. Vale para criar conta e para entrar.
  *
  * Fluxo: formulário -> etapa "código" (6 dígitos, 10 minutos) -> destino.
- * Parâmetros: ?plano=pro|max mostra a faixa do plano e segue para o Checkout;
+ * Parâmetros: ?plano=bronze|prata|ouro mostra a faixa do plano e segue para o Checkout;
  * ?modo=criar abre "Criar conta";
  * ?next=<rota> volta para a página pedida pelo middleware; ?erro=codigo-expirado avisa.
  *
@@ -339,17 +339,19 @@ const planData = JSON.stringify(
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   /* ---------- Plano ---------- */
+  // Item 25: três planos; "Trocar" passa para o próximo na ordem Bronze, Prata, Ouro.
+  const ordem = Object.keys(plans);
+  const proximo = () => ordem[(ordem.indexOf(plan) + 1) % ordem.length];
   function renderPlan() {
     const band = $('[data-plan-band]');
     band.hidden = !plan;
     if (!plan) return;
-    const other = plan === 'max' ? 'pro' : 'max';
     $('[data-plan-name]').textContent = plans[plan].name;
     $('[data-plan-price]').textContent = plans[plan].price;
-    $('[data-plan-other]').textContent = plans[other].name;
+    $('[data-plan-other]').textContent = plans[proximo()].name;
   }
   $('[data-plan-swap]').addEventListener('click', () => {
-    plan = plan === 'max' ? 'pro' : 'max';
+    plan = proximo();
     params.set('plano', plan);
     history.replaceState(null, '', `?${params}`);
     renderPlan();

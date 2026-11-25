@@ -7,6 +7,7 @@ import Pending from '../components/Pending.astro';
 import Comparativo from '../components/Comparativo.astro';
 import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
+import { planList, aPartirDe } from '../data/plans';
 import Faq from '../components/Faq.astro';
 import Footer from '../components/Footer.astro';
 import AiConnections from '../components/AiConnections.astro';
@@ -16,7 +17,7 @@ const steps = [
   {
     n: '1',
     title: 'Assine',
-    text: 'Escolha o Pro ou o Max e pague. Você recebe o plugin logo depois.',
+    text: 'Escolha o Bronze, o Prata ou o Ouro e pague. Você recebe o plugin logo depois.',
   },
   {
     n: '2',
@@ -34,7 +35,7 @@ const steps = [
 
 <Base
   title="Órbita: pesquise o direito brasileiro na IA que você já usa"
-  description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças. A partir de R$ 50 por mês."
+  description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças. A partir de R$ 19,90 por mês."
 >
   <div class="page-sheet">
   <StructuredData />
@@ -65,7 +66,7 @@ const steps = [
         </div>
         <div data-reveal>
           <Comparativo />
-          <p class="cmp-cta"><Button href="#planos">Assinar a partir de R$ 50/mês</Button></p>
+          <p class="cmp-cta"><Button href="#planos">Assinar a partir de {aPartirDe}/mês</Button></p>
         </div>
       </div>
     </section>
@@ -113,36 +114,11 @@ const steps = [
     <section id="planos" class="section" aria-labelledby="planos-title">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <h2 id="planos-title" class="display-lg" data-split>Dois planos: escolha pelo trabalho que você faz</h2>
+          <h2 id="planos-title" class="display-lg" data-split>Três planos: escolha pelo quanto você pesquisa</h2>
+          <p class="lead">O que cada plano inclui a mais será detalhado em breve. Todos têm a base inteira e a fonte em cada resposta.</p>
         </div>
         <div class="plans" data-reveal>
-          <PlanCard
-            name="Pro"
-            price="R$ 50"
-            count={50}
-            href="/assinar/pro"
-            cta="Assinar o Pro"
-            items={[
-              { text: 'Pesquisa de legislação e jurisprudência na base atualizada' },
-              { text: 'Fonte para conferir em cada resultado', pending: 'confirmar' },
-              { text: 'Funciona dentro do Claude' },
-            ]}
-          />
-          <PlanCard
-            name="Max"
-            price="R$ 75,90"
-            count={75.9}
-            href="/assinar/max"
-            cta="Assinar o Max"
-            featured
-            badge="Mais completo"
-            items={[
-              { text: 'Tudo do Pro' },
-              { text: 'Conferência de processos: o que ainda falta reunir' },
-              { text: 'Preparação de peças com citações marcadas para conferência' },
-              { text: 'Limite de uso', pending: 'definir' },
-            ]}
-          />
+          {planList.map((p) => <PlanCard plan={p} badge="Mais escolhido" />)}
         </div>
         <ul class="plans-foot small mute" data-reveal>
           <li>Cobrança mensal</li>
@@ -182,12 +158,12 @@ const steps = [
               </div>
             </details>
             <details>
-              <summary>Qual a diferença entre o Pro e o Max?</summary>
+              <summary>Qual a diferença entre o Bronze, o Prata e o Ouro?</summary>
               <div class="faq-a">
                 <p>
-                  O Pro pesquisa legislação e jurisprudência com a fonte de cada resultado. O Max inclui tudo do Pro
-                  e soma a conferência de processos, a preparação de peças com citações marcadas, alertas por tema,
-                  resumo semanal e suporte prioritário.
+                  Os três pesquisam legislação e jurisprudência com a fonte de cada resultado, na base inteira. O que cada
+                  um inclui a mais (limites de uso e recursos) será detalhado em breve<Pending kind="definir" />. O Ouro já
+                  tem alertas por tema, resumo semanal e acesso antecipado às novidades.
                 </p>
               </div>
             </details>
@@ -230,8 +206,7 @@ const steps = [
         <h2 id="final-title" class="display-lg" data-split>Comece hoje</h2>
         <p class="lead">Leva poucos minutos para fazer a primeira pergunta.</p>
         <div class="final-actions">
-          <Button href="/assinar/pro" variant="secondary">Assinar o Pro · R$ 50/mês</Button>
-          <Button href="/assinar/max">Assinar o Max · R$ 75,90/mês</Button>
+          <Button href="#planos">Ver os planos, a partir de {aPartirDe}/mês</Button>
         </div>
         <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser</p>
       </div>
@@ -407,14 +382,23 @@ const steps = [
   }
 
   /* Planos */
+  /* Item 25: três cards brancos; no celular, o Prata (em destaque) vem primeiro. */
   .plans {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-6) var(--space-4);
+    align-items: stretch;
+    padding-top: 14px;
   }
-  @media (min-width: 768px) {
+  .plans > :global(.plan-featured) {
+    order: -1;
+  }
+  @media (min-width: 900px) {
     .plans {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: var(--space-5);
+    }
+    .plans > :global(.plan-featured) {
+      order: 0;
     }
   }
   .plans-foot {

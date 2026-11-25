@@ -52,7 +52,7 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
           data-nav-avatar
         >
           <span data-nav-iniciais aria-hidden="true"></span>
-          <span class="nav-max" data-nav-max aria-hidden="true" hidden>Max</span>
+          <span class="nav-max" data-nav-max aria-hidden="true" hidden>Ouro</span>
           <span class="sr-only" data-nav-rotulo>Menu da conta</span>
         </button>
         <div class="nav-menu" id="nav-menu" role="menu" hidden data-nav-menu>
@@ -161,13 +161,15 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   // Item 24: o botão ao lado do avatar muda com o plano.
   // - sem plano (ou cancelado/reembolsado sem acesso): "Assinar", para saber que existe um plano;
   // - pagamento pendente: "Concluir assinatura", no Portal;
-  // - Pro: "Upgrade para o Max", no Portal (troca de plano);
-  // - Max: selo "Max" no avatar e atalho para o que é só do Max: "Criar alerta" (alertas por tema).
+  // - Bronze: "Upgrade para o Prata"; Prata: "Upgrade para o Ouro" (no Portal, troca de plano);
+  // - Ouro: selo "Ouro" no avatar e atalho para o que é só do Ouro: "Criar alerta" (alertas por tema).
+  //   (Item 25: Bronze, Prata e Ouro substituem Pro e Max.)
   const ACOES: Record<string, { rotulo: string; href: string; destaque?: boolean }> = {
     sem: { rotulo: 'Assinar', href: '/#planos', destaque: true },
     pendente: { rotulo: 'Concluir assinatura', href: '/conta#plano', destaque: true },
-    pro: { rotulo: 'Upgrade para o Max', href: '/conta#plano', destaque: true },
-    max: { rotulo: 'Criar alerta', href: '/conta#alertas' },
+    bronze: { rotulo: 'Upgrade para o Prata', href: '/conta#plano', destaque: true },
+    prata: { rotulo: 'Upgrade para o Ouro', href: '/conta#plano', destaque: true },
+    ouro: { rotulo: 'Criar alerta', href: '/conta#alertas' },
   };
   const botaoPlano = box?.querySelector<HTMLAnchorElement>('[data-nav-plano]');
   const bep = box?.dataset.billing ?? '';
@@ -180,7 +182,7 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     botaoPlano.classList.toggle('btn-primary', !!a.destaque);
     botaoPlano.classList.toggle('btn-secondary', !a.destaque);
     botaoPlano.hidden = false;
-    box!.querySelector<HTMLElement>('[data-nav-max]')!.hidden = chave !== 'max';
+    box!.querySelector<HTMLElement>('[data-nav-max]')!.hidden = chave !== 'ouro';
   }
 
   if (ep && box) {
@@ -334,7 +336,7 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     white-space: nowrap;
     animation: nav-menu 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  /* Selo do Max no canto do avatar. */
+  /* Selo do Ouro no canto do avatar. */
   .nav-avatar {
     position: relative;
   }

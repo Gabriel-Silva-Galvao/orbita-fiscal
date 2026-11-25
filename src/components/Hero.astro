@@ -3,6 +3,7 @@ import Button from './Button.astro';
 import MiniAtomo from './MiniAtomo.astro';
 import { comparacoes } from '../data/comparacao';
 import topo from '../data/topo.json';
+import { aPartirDe } from '../data/plans';
 
 // Título de venda (etapa 10f-1, plano da landing): nomeia o resultado que o advogado quer.
 const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa';
@@ -57,7 +58,7 @@ const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
         devolve a resposta com a norma, a súmula ou o julgado para você conferir.
       </p>
       <div class="hero-actions">
-        <Button href="#planos">Assinar a partir de R$ 50/mês</Button>
+        <Button href="#planos">Assinar a partir de {aPartirDe}/mês</Button>
         <Button href="#exemplo" variant="secondary">Ver com e sem a Órbita</Button>
       </div>
       <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude</p>

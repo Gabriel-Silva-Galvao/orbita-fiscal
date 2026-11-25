@@ -3,7 +3,7 @@
  * Instalar e Portal leem a assinatura que o Checkout de demonstração gravou.
  */
 export interface DemoSub {
-  plano: 'pro' | 'max';
+  plano: 'bronze' | 'prata' | 'ouro';
   email: string;
   desde: string;
   metodo: 'cartao' | 'pix' | 'boleto';
@@ -18,7 +18,7 @@ const KEY = 'of-demo-assinatura';
 export function getSub(): DemoSub | null {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    return v && (v.plano === 'pro' || v.plano === 'max') ? v : null;
+    return v && ['bronze', 'prata', 'ouro'].includes(v.plano) ? v : null;
   } catch {
     return null;
   }

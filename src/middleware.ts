@@ -51,7 +51,7 @@ async function jaLogado(context: APIContext): Promise<Response | null> {
   const next = q.get('next') ?? '';
   const plano = q.get('plano');
   const seguro = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
-  return context.redirect(plano === 'pro' || plano === 'max' ? `/assinar/${plano}` : seguro ? next : '/conta');
+  return context.redirect(plano && ['bronze', 'prata', 'ouro'].includes(plano) ? `/assinar/${plano}` : seguro ? next : '/conta');
 }
 
 async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {
@@ -66,7 +66,7 @@ async function porta(context: APIContext, next: MiddlewareNext): Promise<Respons
 
   // Decisão de 24/11/2026: primeiro a conta, depois a compra. Quem chega ao Checkout sem
   // sessão vai criar a conta com o plano já escolhido; o Entrar leva de volta ao Checkout.
-  const plano = pathname.match(/^\/assinar\/(pro|max)$/)?.[1];
+  const plano = pathname.match(/^\/assinar\/(bronze|prata|ouro)$/)?.[1];
   const entrar = () =>
     context.redirect(plano ? `/entrar?plano=${plano}&modo=criar` : `/entrar?next=${encodeURIComponent(pathname + search)}`);
   const cookie = context.request.headers.get('cookie');

@@ -20,15 +20,15 @@
 import Focus from '../../layouts/Focus.astro';
 import Pending from '../../components/Pending.astro';
 import Icon from '../../components/Icon.astro';
-import { plans, brl, type Plan } from '../../data/plans';
+import { plans, planList, brl, type PlanSlug } from '../../data/plans';
 
 export const prerender = false;
 
-const slug = Astro.params.plano as Plan['slug'];
-if (slug !== 'pro' && slug !== 'max') return new Response(null, { status: 404 });
+const slug = Astro.params.plano as PlanSlug;
+if (!(slug in plans)) return new Response(null, { status: 404 });
 const accountEmail = Astro.locals.usuario?.email ?? '';
 const plan = plans[slug];
-const other = plans[slug === 'max' ? 'pro' : 'max'];
+const outros = planList.filter((p) => p.slug !== slug);
 const price = brl(plan.cents);
 const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
@@ -51,7 +51,15 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
           ))
         }
       </ul>
-      <a class="swap small" href={`/assinar/${other.slug}`}>Trocar para o {other.name} ({brl(other.cents)} por mês)</a>
+      <p class="swap small">
+        Trocar para:
+        {outros.map((o, i) => (
+          <>
+            {i > 0 && ' · '}
+            <a href={`/assinar/${o.slug}`}>{o.name} ({brl(o.cents)})</a>
+          </>
+        ))}
+      </p>
       <div class="terms-box">
         <p><strong>Cobrança mensal.</strong></p>
         <dl>

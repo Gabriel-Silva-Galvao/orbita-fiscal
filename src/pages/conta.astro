@@ -43,7 +43,7 @@ const tabs = [
 
     <section class="empty-state" data-no-sub hidden>
       <h1 class="display-md">Você ainda não tem um plano ativo</h1>
-      <p class="mute" data-no-sub-text>Escolha o Pro ou o Max para começar.</p>
+      <p class="mute" data-no-sub-text>Escolha o Bronze, o Prata ou o Ouro para começar.</p>
       {usuario && <p class="mute small">Você entrou como <strong>{usuario.email}</strong>.</p>}
       <div class="row-actions">
         <a class="btn-main" href="/#planos" data-no-sub-cta>Ver planos</a>
@@ -69,7 +69,7 @@ const tabs = [
           <a role="tab" id={`tab-${t.id}`} href={`#${t.id}`} aria-controls={`p-${t.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-tab={t.id}>
             {t.label}
             {t.id === 'novidades' && <span class="badge" data-news-badge hidden></span>}
-            {t.max && <>{' '}<span class="max-tag">Max</span></>}
+            {t.max && <>{' '}<span class="max-tag">Ouro</span></>}
           </a>
         ))}
       </div>
@@ -138,7 +138,7 @@ const tabs = [
             <li data-origem={n.origem} data-id={n.id}>
               <p class="news-meta">
                 <time datetime={n.data}>{dataBr(n.data)}</time> · {ORIGENS[n.origem]}
-                {n.max && <span class="max-tag">Acesso antecipado do Max</span>}
+                {n.max && <span class="max-tag">Acesso antecipado do Ouro</span>}
                 <span class="new-tag" data-new hidden>Nova</span>
               </p>
               <h2 class="news-title">{n.titulo}</h2>
@@ -177,9 +177,9 @@ const tabs = [
 
       <section id="p-alertas" role="tabpanel" aria-labelledby="tab-alertas" class="panel" data-panel="alertas" hidden>
         <div class="locked" data-locked>
-          <h2 class="news-title">Alertas por tema, no plano Max</h2>
+          <h2 class="news-title">Alertas por tema, no plano Ouro</h2>
           <p class="small">Salve os temas que você acompanha, como ICMS-ST ou crédito de PIS/Cofins. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail.</p>
-          <a class="btn-main" href="/assinar/max">Conhecer o Max</a>
+          <a class="btn-main" href="/assinar/ouro">Conhecer o Ouro</a>
         </div>
         <div class="unlocked" data-unlocked hidden>
           <p class="mute small">Salve os temas que você acompanha. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail<Pending kind="confirmar" />.</p>
@@ -206,9 +206,9 @@ const tabs = [
 
       <section id="p-resumo" role="tabpanel" aria-labelledby="tab-resumo" class="panel" data-panel="resumo" hidden>
         <div class="locked" data-locked>
-          <h2 class="news-title">Resumo semanal, no plano Max</h2>
+          <h2 class="news-title">Resumo semanal, no plano Ouro</h2>
           <p class="small">Toda semana, as decisões e normas mais relevantes das áreas que você escolher, aqui e por e-mail.</p>
-          <a class="btn-main" href="/assinar/max">Conhecer o Max</a>
+          <a class="btn-main" href="/assinar/ouro">Conhecer o Ouro</a>
         </div>
         <div class="unlocked" data-unlocked hidden>
           <p class="mute small">Escolha as áreas. O resumo chega toda semana<Pending kind="confirmar" />, aqui e por e-mail.</p>
@@ -231,7 +231,7 @@ const tabs = [
           <div><span>Forma de pagamento</span><strong data-method></strong></div>
         </div>
         <div class="row-actions">
-          <a class="btn-alt" data-switch href="/assinar/max"></a>
+          <a class="btn-alt" data-switch href="/assinar/ouro"></a>
         </div>
         <p class="small mute">Como fica a cobrança ao trocar de plano no meio do mês<Pending kind="definir" />.</p>
         <h2 class="title">Notas fiscais</h2>
@@ -277,12 +277,12 @@ const tabs = [
 
         <article class="action-card" data-onboarding hidden>
           <h2 class="title">Conversa de implantação</h2>
-          <p class="small">No Max, uma conversa curta com a equipe para configurar a Órbita no seu escritório e mostrar as pesquisas que mais rendem no dia a dia.</p>
+          <p class="small">No Ouro, uma conversa curta com a equipe para configurar a Órbita no seu escritório ou empresa e mostrar as pesquisas que mais rendem no dia a dia.</p>
           <a class="btn-alt" href="/ajuda#contato">Pedir a conversa</a>
         </article>
         <article class="locked" data-onboarding-pro hidden>
-          <p class="small"><strong>No Max, o suporte é prioritário</strong> e inclui uma conversa de implantação com a equipe.</p>
-          <a class="btn-alt" href="/assinar/max">Conhecer o Max</a>
+          <p class="small"><strong>No Ouro, o suporte é prioritário</strong> e inclui uma conversa de implantação com a equipe.</p>
+          <a class="btn-alt" href="/assinar/ouro">Conhecer o Ouro</a>
         </article>
       </section>
 
@@ -502,7 +502,7 @@ const tabs = [
     width: auto;
   }
 
-  /* Alertas e Resumo (Max) */
+  /* Alertas e Resumo (Ouro) */
   .locked {
     display: grid;
     gap: var(--space-3);
@@ -761,7 +761,7 @@ const tabs = [
   let status = '';
   let apiPlano = '';
   type Resumo = {
-    plano: 'pro' | 'max'; forma: DemoSub['metodo']; final_cartao: string | null; status_acesso: string;
+    plano: 'bronze' | 'prata' | 'ouro'; forma: DemoSub['metodo']; final_cartao: string | null; status_acesso: string;
     criada_em: string | null; primeira_paga_em: string | null; cancelada_em: string | null; reembolso_em: string | null;
   };
   const call = (base: string, path: string, method = 'GET', body?: unknown) =>
@@ -896,7 +896,7 @@ const tabs = [
       $('[data-news-empty]').hidden = shown > 0;
     }),
   );
-  // Alertas por tema (Max). Na demonstração, os temas ficam neste navegador; depois, na API.
+  // Alertas por tema (Ouro). Na demonstração, os temas ficam neste navegador; depois, na API.
   const THEMES_KEY = 'of-demo-temas';
   const getThemes = (): string[] => {
     try {
@@ -948,7 +948,7 @@ const tabs = [
   });
   root.querySelectorAll<HTMLButtonElement>('[data-suggest]').forEach((b) => b.addEventListener('click', () => addTheme(b.dataset.suggest!)));
 
-  // Resumo semanal (Max): áreas escolhidas.
+  // Resumo semanal (Ouro): áreas escolhidas.
   const AREAS_KEY = 'of-demo-areas';
   const areaInputs = Array.from(root.querySelectorAll<HTMLInputElement>('[data-areas] input'));
   try {
@@ -1024,7 +1024,7 @@ const tabs = [
         $('[data-no-sub] h1').textContent = 'Seu pagamento ainda não foi confirmado';
         $('[data-no-sub-text]').textContent = 'O acesso começa quando o Pix ou o boleto for confirmado. Se ainda não pagou, gere o pagamento de novo.';
         cta.textContent = 'Ir para o pagamento';
-        cta.href = `/assinar/${apiPlano || 'pro'}`;
+        cta.href = `/assinar/${apiPlano || 'prata'}`;
       } else if (status === 'cancelado') {
         $('[data-no-sub] h1').textContent = 'Sua assinatura terminou';
         $('[data-no-sub-text]').textContent = 'Para voltar a usar a Órbita, escolha um plano.';
@@ -1032,7 +1032,8 @@ const tabs = [
       return;
     }
     const plan = plans[sub.plano];
-    const other = sub.plano === 'max' ? 'pro' : 'max';
+    // Item 25: o botão sobe um plano (Bronze → Prata → Ouro); no Ouro, oferece voltar ao Prata.
+    const other = sub.plano === 'bronze' ? 'prata' : sub.plano === 'prata' ? 'ouro' : 'prata';
     const since = new Date(sub.desde);
     const next = nextCharge(sub.desde);
     const days = daysSince(sub.desde);
@@ -1046,17 +1047,17 @@ const tabs = [
       sub.metodo === 'pix' ? 'Pix' : sub.metodo === 'boleto' ? 'Boleto' : `Cartão final ${sub.final || '••••'}`;
     const sw = $<HTMLAnchorElement>('[data-switch]');
     sw.href = `/assinar/${other}`;
-    sw.textContent = `Trocar para o ${plans[other].name} (${plans[other].price} por mês)`;
+    sw.textContent = `${sub.plano === 'ouro' ? 'Trocar para o' : 'Fazer upgrade para o'} ${plans[other].name} (${plans[other].price} por mês)`;
     $('[data-email]').textContent = sub.email;
     $<HTMLInputElement>('#p-nome').value = sub.nome ?? '';
 
-    // Seções do Max: no Pro, bloqueadas com convite.
-    const isMax = sub.plano === 'max';
+    // Seções do Ouro (antes, do Max): nos outros planos, bloqueadas com convite.
+    const isMax = sub.plano === 'ouro';
     root.querySelectorAll<HTMLElement>('[data-locked]').forEach((el) => (el.hidden = isMax));
     root.querySelectorAll<HTMLElement>('[data-unlocked]').forEach((el) => (el.hidden = !isMax));
     renderThemes();
 
-    // Suporte: prazos ainda a confirmar; o Max é prioritário e tem conversa de implantação.
+    // Suporte: prazos ainda a confirmar; o Ouro é prioritário e tem conversa de implantação.
     $('[data-sla]').textContent = isMax ? 'Prioritário: no mesmo dia útil (a confirmar)' : 'Até 2 dias úteis (a confirmar)';
     $('[data-onboarding]').hidden = !isMax;
     $('[data-onboarding-pro]').hidden = isMax;

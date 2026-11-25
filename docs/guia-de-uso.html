@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · rodada de testes, itens 19 a 22 · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · planos Bronze, Prata e Ouro · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -180,6 +180,7 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Item 6 (download): em Instalar, com assinatura ativa, "Baixar o plugin" baixa <code>orbita-plugin-0.0.0-demo.zip</code>, um pacote de DEMONSTRAÇÃO (o plugin real depende do servidor MCP). O link vale 15 minutos. Rotas: <code>POST /plugin/link</code> e <code>GET /plugin/baixar/{token}</code>.</p>
       <p>Item 17: documentação completa do backend e da segurança em <code>docs/backend-e-seguranca.md</code>, com todas as rotas, a configuração de produção, os riscos classificados (os 2 críticos já corrigidos: a API não sobe com a simulação em produção nem com segredos de exemplo; os 3 altos continuam abertos). Para rodar a API fora do <code>launch.json</code>, use <code>ASAAS_SIM_ENABLED=true</code> no <code>api/.env</code> e a lista do dia da publicação.</p>
       <p>Item 13: a cada visita, o cartão do topo mostra uma das 11 perguntas reais do painel da pesquisa (recarregue para ver outra). A logo da Órbita, animada, marca a resposta com o plugin no topo e no comparativo.</p>
+      <p><strong>Item 25 (planos novos):</strong> Pro e Max saíram. Agora são Bronze (R$ 19,90), Prata (R$ 59,90, em destaque) e Ouro (R$ 119,90), em cards brancos. Os checkouts são <code>/assinar/bronze</code>, <code>/assinar/prata</code> e <code>/assinar/ouro</code>. O Ouro tem o que era do Max (alertas, resumo semanal, acesso antecipado); o que diferencia os planos aparece como "a definir". Onde este guia ainda citar Pro ou Max, leia Prata ou Ouro.</p>
       <p>Falta só a animação de explosão do átomo.</p>
       <p>O que falta fora do código está em tópicos no <a href="https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm">painel de progresso</a>.</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>

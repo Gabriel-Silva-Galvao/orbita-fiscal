@@ -17,7 +17,7 @@ def caixa(monkeypatch):
 
 
 def cadastrar(http, caixa, email="ana@exemplo.test", senha="senha-forte-1"):
-    r = http.post("/auth/cadastro", json={"nome": "Ana", "email": email, "senha": senha, "plano": "pro"})
+    r = http.post("/auth/cadastro", json={"nome": "Ana", "email": email, "senha": senha, "plano": "prata"})
     assert r.status_code == 202
     r = http.post("/auth/codigo", json={"codigo": caixa[email]})
     assert r.status_code == 200
@@ -189,7 +189,7 @@ def test_trocar_nome(api, caixa):
 def test_excluir_conta_exige_cancelar_antes(api, caixa):
     http, _, banco = api
     cadastrar(http, caixa)
-    http.post("/billing/assinatura", json={"nome": "Ana", "cpf_cnpj": "52998224725", "plano": "pro", "forma": "pix"})
+    http.post("/billing/assinatura", json={"nome": "Ana", "cpf_cnpj": "52998224725", "plano": "prata", "forma": "pix"})
     r = http.delete("/auth/conta")
     assert r.status_code == 409 and r.json()["codigo"] == "assinatura_ativa"
     http.delete("/billing/assinatura")  # nunca pago: encerra na hora
