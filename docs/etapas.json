@@ -113,7 +113,15 @@
     ["Notas fiscais para baixar", false],
     ["Novidades da base com data", false],
     ["Regra de troca de plano no meio do mês", false],
-    ["Aviso de pagamento atrasado", false]
+    ["Aviso de pagamento atrasado", false],
+    ["Portal em 7 páginas próprias (Início, Plugin, Plano, Alertas, Novidades, Suporte, Conta)", true],
+    ["Menu lateral no computador e barra inferior no celular", true],
+    ["Pix ou boleto pendente e faturas em Plano e pagamento", true],
+    ["Visual mais vivo: saudação, plano com selo, anel de instalação, entrada em cascata", true],
+    ["Seletor de tema claro/escuro no Portal", false],
+    ["Pergunte agora no Início, com exemplos por público", false],
+    ["Formulário de suporte dentro do Portal", false],
+    ["Prévia de alerta para quem não é Ouro", false]
   ]},
   {"id": "e11", "titulo": "Ajuda", "itens": [
     ["Seis artigos curtos", true],

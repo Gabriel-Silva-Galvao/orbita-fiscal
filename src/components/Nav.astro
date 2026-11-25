@@ -166,10 +166,10 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   //   (Item 25: Bronze, Prata e Ouro substituem Pro e Max.)
   const ACOES: Record<string, { rotulo: string; href: string; destaque?: boolean }> = {
     sem: { rotulo: 'Assinar', href: '/#planos', destaque: true },
-    pendente: { rotulo: 'Concluir assinatura', href: '/conta#plano', destaque: true },
-    bronze: { rotulo: 'Upgrade para o Prata', href: '/conta#plano', destaque: true },
-    prata: { rotulo: 'Upgrade para o Ouro', href: '/conta#plano', destaque: true },
-    ouro: { rotulo: 'Criar alerta', href: '/conta#alertas' },
+    pendente: { rotulo: 'Concluir assinatura', href: '/conta/plano', destaque: true },
+    bronze: { rotulo: 'Upgrade para o Prata', href: '/conta/plano', destaque: true },
+    prata: { rotulo: 'Upgrade para o Ouro', href: '/conta/plano', destaque: true },
+    ouro: { rotulo: 'Criar alerta', href: '/conta/alertas' },
   };
   const botaoPlano = box?.querySelector<HTMLAnchorElement>('[data-nav-plano]');
   const bep = box?.dataset.billing ?? '';

@@ -1,0 +1,159 @@
+---
+/**
+ * Novidades da base (itens 5 e 8): o que entrou na base e mudanças que afetam a Órbita, por data e por
+ * origem; marca o que é novo desde a última visita. Abre em qualquer estado da assinatura.
+ * As novidades ficam em src/data/novidades.ts até haver o painel de administração.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import { novidades, ORIGENS } from '../../data/novidades';
+
+export const prerender = false;
+const dataBr = (iso: string) => iso.split('-').reverse().join('/');
+// Agrupadas por mês, da mais nova para a mais antiga.
+const meses = new Map<string, typeof novidades>();
+for (const n of novidades) {
+  const chave = n.data.slice(0, 7);
+  meses.set(chave, [...(meses.get(chave) ?? []), n]);
+}
+const nomeMes = (aaaamm: string) => {
+  const [a, m] = aaaamm.split('-').map(Number);
+  const s = new Date(a, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return s[0].toUpperCase() + s.slice(1);
+};
+---
+
+<Portal
+  titulo="Novidades da base"
+  descricao="O que entrou na base da Órbita e o que mudou no Claude e nas outras IAs, sempre com a data."
+  pagina="novidades"
+  aceita={['ativo', 'pendente', 'encerrado', 'sem', 'erro']}
+>
+  <p class="pt-intro small mute">
+    Bases novas, melhorias do plugin e mudanças no Claude e nas outras IAs que afetam a Órbita, sempre com a data.
+    A frequência de atualização da base<Pending kind="definir" />.
+  </p>
+  <p class="small" data-resumo role="status"></p>
+
+  <div class="filtros" role="group" aria-label="Filtrar novidades">
+    <button type="button" aria-pressed="true" data-filtro="todas">Todas</button>
+    {Object.entries(ORIGENS).map(([k, v]) => <button type="button" aria-pressed="false" data-filtro={k}>{v}</button>)}
+  </div>
+
+  <div class="meses" data-meses>
+    {[...meses].map(([mes, itens]) => (
+      <section class="mes" data-mes aria-labelledby={`mes-${mes}`}>
+        <h2 class="mes-t" id={`mes-${mes}`}>{nomeMes(mes)}</h2>
+        <ol class="lista">
+          {itens.map((n) => (
+            <li id={n.id} data-origem={n.origem} data-id={n.id}>
+              <p class="meta">
+                <time datetime={n.data}>{dataBr(n.data)}</time> · {ORIGENS[n.origem]}
+                {n.max && <span class="selo">Acesso antecipado do Ouro</span>}
+                <span class="selo is-brand" data-nova hidden>Nova</span>
+              </p>
+              <h3 class="titulo">{n.titulo}</h3>
+              <p class="small">{n.texto}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+  </div>
+  <p class="vazio small" data-vazio hidden>Nenhuma novidade nesta categoria ainda. Quando o Claude ou outra IA mudar algo que afete plugins, aparece aqui.</p>
+</Portal>
+
+<style>
+  .meses {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .mes {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .mes-t {
+    margin: 0;
+    font: 600 0.8125rem/1.4 var(--font-body);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+  .lista li {
+    display: grid;
+    gap: 6px;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: 96px;
+  }
+  .lista li:target {
+    background: color-mix(in srgb, var(--soft) 35%, transparent);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-md);
+  }
+  .lista p {
+    margin: 0;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font: var(--text-small);
+    font-size: 0.8125rem;
+    color: var(--mute);
+  }
+  .titulo {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+</style>
+
+<script>
+  import { novidadesVistas, VISTAS, $ } from '../../scripts/portal';
+
+  // O que não foi visto ganha "Nova" nesta visita; ao sair, tudo conta como visto.
+  const itens = Array.from(document.querySelectorAll<HTMLElement>('[data-meses] li'));
+  const vistas = novidadesVistas();
+  let novas = 0;
+  itens.forEach((li) => {
+    const nova = !vistas.includes(li.dataset.id!);
+    li.querySelector<HTMLElement>('[data-nova]')!.hidden = !nova;
+    if (nova) novas++;
+  });
+  $('[data-resumo]').textContent = novas
+    ? `${novas} ${novas === 1 ? 'novidade nova' : 'novidades novas'} desde a sua última visita.`
+    : 'Você está em dia com as novidades.';
+  try {
+    localStorage.setItem(VISTAS, JSON.stringify(itens.map((li) => li.dataset.id)));
+  } catch {}
+
+  // Filtro por origem; meses sem item visível somem.
+  const botoes = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-filtro]'));
+  botoes.forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.filtro!;
+      botoes.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      let total = 0;
+      document.querySelectorAll<HTMLElement>('[data-mes]').forEach((mes) => {
+        let n = 0;
+        mes.querySelectorAll<HTMLElement>('li').forEach((li) => {
+          li.hidden = f !== 'todas' && li.dataset.origem !== f;
+          if (!li.hidden) n++;
+        });
+        mes.hidden = n === 0;
+        total += n;
+      });
+      $('[data-vazio]').hidden = total > 0;
+    }),
+  );
+</script>

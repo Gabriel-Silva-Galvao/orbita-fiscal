@@ -1,0 +1,577 @@
+---
+/**
+ * Início do Portal (itens 5 e 8 da rodada de testes): o painel de todo dia, rápido de ler e sem apresentação.
+ * 1. faixa de estado (plano, próxima cobrança e o aviso do momento);
+ * 2. plugin por IA e consultas do mês;
+ * 3. "Continue de onde parou" (instalação), só enquanto não estiver tudo feito;
+ * 4. novidades desde a última visita;
+ * 5. atalhos (no Ouro, criar alerta).
+ * A boas-vindas (item 3) é outra página, mostrada uma vez depois da compra.
+ * Endereços antigos com âncora (/conta#plano etc.) vão para as páginas novas.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import Icon from '../../components/Icon.astro';
+import MiniAtomo from '../../components/MiniAtomo.astro';
+import { novidades, ORIGENS } from '../../data/novidades';
+import { tutoriais } from '../../data/tutoriais';
+
+export const prerender = false;
+const dataBr = (iso: string) => iso.split('-').reverse().join('/');
+const recentes = novidades.slice(0, 5);
+// Os 4 passos da página Instalar (mesma ordem e mesmos números guardados em of-demo-instalacao).
+const passosInst = ['Baixar o plugin', 'Enviar o arquivo ao Claude', 'Conectar a conta Órbita', 'Fazer a primeira pergunta'];
+---
+
+
+<Portal titulo="Início" descricao="Seu plano, o plugin e as novidades da base, num só lugar." pagina="inicio">
+  <script is:inline>
+    (function () {
+      var mapa = {
+        plugin: 'plugin', tutoriais: 'plugin', novidades: 'novidades', alertas: 'alertas', resumo: 'alertas',
+        plano: 'plano', cancelar: 'plano#cancelar', suporte: 'suporte', conta: 'configuracoes',
+      };
+      var h = location.hash.slice(1);
+      if (mapa[h]) location.replace('/conta/' + mapa[h]);
+    })();
+  </script>
+  <header class="saudacao">
+    <p class="small mute" data-hoje></p>
+    <p class="saudacao-t" data-saudacao>Olá</p>
+  </header>
+
+  <section class="estado cartao is-marca" aria-labelledby="estado-t">
+    <div class="estado-topo">
+      <span class="estado-atomo"><MiniAtomo size={44} /></span>
+      <div class="estado-info">
+        <p class="small mute" id="estado-t">Seu plano</p>
+        <p class="estado-plano">
+          <span data-plano-nome></span>
+          <span class="estado-selo" data-selo><span class="estado-ponto" aria-hidden="true"></span><span data-selo-texto></span></span>
+        </p>
+        <p class="small"><span data-plano-preco></span> · <span data-proxima></span></p>
+      </div>
+      <a class="btn-alt" href="/conta/plano">Plano e pagamento</a>
+    </div>
+    <p class="notice" data-aviso hidden></p>
+  </section>
+
+  <div class="grade">
+    <section class="cartao" aria-labelledby="plugin-t">
+      <h2 class="h3" id="plugin-t">Plugin por IA</h2>
+      <ul class="ias">
+        <li>
+          <span>Claude</span>
+          <span class="ia-estado" data-claude></span>
+        </li>
+        {tutoriais.filter((t) => !t.disponivel).map((t) => (
+          <li>
+            <span>{t.nome}</span>
+            <span class="ia-estado">Em preparação</span>
+          </li>
+        ))}
+      </ul>
+      <a class="small" href="/conta/plugin">Plugin e conexões →</a>
+    </section>
+
+    <section class="cartao" aria-labelledby="uso-t">
+      <h2 class="h3" id="uso-t">Consultas neste mês</h2>
+      <p class="numero" data-uso>0</p>
+      <p class="small mute">Limite do plano<Pending kind="definir" /></p>
+      <p class="small mute">A contagem começa na primeira pergunta feita no Claude com a Órbita.</p>
+    </section>
+  </div>
+
+  <section class="cartao continuar" aria-labelledby="cont-t" data-continuar hidden>
+    <div class="cont-topo">
+      <span class="anel" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <circle class="anel-fundo" cx="32" cy="32" r="27"></circle>
+          <circle class="anel-valor" cx="32" cy="32" r="27" pathLength="100" data-anel></circle>
+        </svg>
+        <span class="anel-num" data-anel-num>0/4</span>
+      </span>
+      <div>
+        <h2 class="h3" id="cont-t">Continue de onde parou</h2>
+        <p class="small" data-cont-texto></p>
+      </div>
+    </div>
+    <ol class="passos-inst">
+      {passosInst.map((t, i) => (
+        <li data-passo={i + 1}><span class="passo-marca" aria-hidden="true"></span><span>{t}</span><span class="sr-only" data-passo-estado></span></li>
+      ))}
+    </ol>
+    <a class="btn-main" href="/instalar" data-cont-link>Continuar a instalação</a>
+  </section>
+
+  <section class="pt-secao" aria-labelledby="nov-t">
+    <div class="secao-topo">
+      <h2 id="nov-t">Novidades da base</h2>
+      <a class="small" href="/conta/novidades">Ver todas</a>
+    </div>
+    <p class="small mute" data-nov-resumo></p>
+    <ol class="novs" data-novs>
+      {recentes.map((n) => (
+        <li data-id={n.id}>
+          <p class="small mute">
+            <time datetime={n.data}>{dataBr(n.data)}</time> · {ORIGENS[n.origem]}
+            <span class="selo is-brand" data-nova hidden>Nova</span>
+          </p>
+          <a href={`/conta/novidades#${n.id}`}>{n.titulo}</a>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="pt-secao" aria-labelledby="atalhos-t">
+    <h2 id="atalhos-t">Atalhos</h2>
+    <div class="atalhos">
+      <a class="atalho" href="/conta/plugin#baixar">
+        <Icon name="solar:download-minimalistic-linear" size={22} />
+        <span>Baixar o plugin</span>
+      </a>
+      <a class="atalho" href="https://claude.ai" target="_blank" rel="noopener">
+        <Icon name="solar:chat-round-dots-linear" size={22} />
+        <span>Abrir o Claude <span class="sr-only">(abre em nova aba)</span></span>
+      </a>
+      <a class="atalho" href="/conta/suporte">
+        <Icon name="solar:user-circle-linear" size={22} />
+        <span>Falar com o suporte</span>
+      </a>
+      <a class="atalho" href="/conta/alertas" data-atalho-alerta hidden>
+        <Icon name="solar:bell-linear" size={22} />
+        <span>Criar alerta</span>
+      </a>
+    </div>
+  </section>
+</Portal>
+
+<style>
+  .saudacao {
+    display: grid;
+    gap: 2px;
+  }
+  .saudacao p {
+    margin: 0;
+  }
+  .saudacao-t {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+  .estado-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+  }
+  .estado-topo p {
+    margin: 0;
+  }
+  .estado-atomo {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
+    background: var(--bg);
+  }
+  .estado-info {
+    display: grid;
+    gap: 4px;
+    flex: 1 1 220px;
+  }
+  .estado-topo .btn-alt {
+    margin-left: auto;
+  }
+  @media (max-width: 600px) {
+    .estado-topo .btn-alt {
+      margin-left: 0;
+    }
+  }
+  .estado-plano {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  /* Selo da situação: o ponto pulsa duas vezes ao abrir, como a luz de "ligado", e para. */
+  .estado-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 12px 3px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font: 600 0.8125rem/1.4 var(--font-body);
+  }
+  .estado-ponto {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+  .estado-selo[data-tom='alerta'] .estado-ponto {
+    background: var(--ink);
+  }
+  .estado-selo[data-tom='calmo'] .estado-ponto {
+    background: var(--mute);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .estado-selo[data-tom='ativo'] .estado-ponto::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--brand);
+      animation: pulso 1.6s var(--ease-out) 0.5s 2 both;
+    }
+  }
+  @keyframes pulso {
+    from {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    to {
+      transform: scale(3.2);
+      opacity: 0;
+    }
+  }
+  .estado > p {
+    margin: 0;
+  }
+  .estado .notice {
+    width: 100%;
+  }
+  .grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-4);
+  }
+  .h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+  .cartao p {
+    margin: 0;
+  }
+  .ias {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    border-top: 1px solid var(--line);
+  }
+  .ias li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .ia-estado {
+    color: var(--mute);
+  }
+  .ia-estado.is-on {
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .numero {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cont-topo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .cont-topo > div {
+    display: grid;
+    gap: 4px;
+  }
+  .anel {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    flex: none;
+  }
+  .anel svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+  }
+  .anel circle {
+    fill: none;
+    stroke-width: 6;
+  }
+  .anel-fundo {
+    stroke: var(--line);
+  }
+  .anel-valor {
+    stroke: var(--brand);
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: var(--falta, 100);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .anel-valor {
+      transition: stroke-dashoffset 1s var(--ease-out) 0.35s;
+    }
+  }
+  .anel-num {
+    font: 600 0.9375rem/1 var(--font-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .passos-inst {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  /* 2 × 2 por padrão; os 4 numa linha quando o cartão tem largura para isso. */
+  .continuar {
+    container-type: inline-size;
+  }
+  @container (min-width: 720px) {
+    .passos-inst {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .passos-inst li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .passo-marca {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border: 2px solid var(--line-strong);
+    border-radius: 50%;
+  }
+  .passos-inst li.is-feito {
+    color: var(--ink);
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  }
+  .passos-inst li.is-feito .passo-marca {
+    border-color: var(--brand);
+    background: var(--brand);
+  }
+  .passos-inst li.is-feito .passo-marca::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--on-brand);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .passos-inst li.is-proximo {
+    color: var(--ink);
+    border-style: dashed;
+    border-color: var(--brand);
+  }
+  .secao-topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .secao-topo h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+  }
+  .novs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .novs li {
+    display: grid;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .novs p {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+  .novs a {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .novs a:hover {
+    text-decoration: underline;
+  }
+  .atalhos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: var(--space-3);
+  }
+  .atalho {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink) !important;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 160ms var(--ease-out);
+  }
+  .atalho :global(.icon) {
+    color: var(--brand);
+    flex: none;
+  }
+  /* Sem movimento sob o cursor (regra do projeto): o atalho só ganha cor. */
+  .atalho:hover {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--soft) 28%, var(--surface));
+  }
+  .atalho:hover :global(.icon) {
+    color: var(--ink);
+  }
+  .atalho:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+</style>
+
+<script>
+  import { aoCarregar, plans, passosInstalacao, novidadesVistas, usuario, fmt, $ } from '../../scripts/portal';
+
+  aoCarregar((ctx) => {
+    if (ctx.estado !== 'ativo' || !ctx.sub) return;
+    const sub = ctx.sub;
+    const plan = plans[sub.plano];
+    $('[data-plano-nome]').textContent = `Plano ${plan.name}`;
+    $('[data-plano-preco]').textContent = `${plan.price} por mês`;
+    const proxima = ctx.proxima ? fmt(ctx.proxima) : '';
+    $('[data-proxima]').textContent = sub.reembolso
+      ? 'sem próxima cobrança'
+      : sub.cancelada
+        ? `acesso até ${proxima}`
+        : `próxima cobrança em ${proxima}`;
+    const [selo, tom] =
+      ctx.status === 'suspenso' ? ['Suspenso', 'alerta']
+      : sub.reembolso ? ['Encerrado', 'calmo']
+      : sub.cancelada ? ['Cancelamento agendado', 'calmo']
+      : ['Ativo', 'ativo'];
+    $('[data-selo-texto]').textContent = selo;
+    $('[data-selo]').dataset.tom = tom;
+
+    // Aviso do momento: pagamento atrasado, cancelamento agendado ou reembolso.
+    const aviso = $('[data-aviso]');
+    aviso.hidden = true;
+    const avisar = (texto: string, erro = false) => {
+      aviso.className = erro ? 'notice is-error' : 'notice';
+      aviso.replaceChildren(texto + ' ');
+      const a = document.createElement('a');
+      a.href = '/conta/plano';
+      a.textContent = 'Ver em Plano e pagamento';
+      aviso.append(a);
+      aviso.hidden = false;
+    };
+    if (ctx.status === 'suspenso') avisar('Pagamento em atraso: o acesso está suspenso até o pagamento ser confirmado.', true);
+    else if (sub.reembolso) avisar(`Reembolso pedido em ${fmt(new Date(sub.reembolso))}.`);
+    else if (sub.cancelada) avisar(`Assinatura cancelada. O acesso segue até ${proxima}.`);
+
+    // Plugin: na demonstração, a conexão vem dos passos marcados em Instalar.
+    const passos = passosInstalacao();
+    const conectado = passos.includes('3');
+    const claude = $('[data-claude]');
+    claude.textContent = conectado ? 'Conectado' : passos.length ? 'Instalação em andamento' : 'Não conectado';
+    claude.classList.toggle('is-on', conectado);
+
+    // Continue de onde parou: só enquanto faltar algum dos 4 passos.
+    const feitos = passos.length;
+    const cont = $('[data-continuar]');
+    cont.hidden = feitos >= 4;
+    if (feitos < 4) {
+      $('[data-cont-texto]').textContent = feitos
+        ? `Você fez ${feitos} de 4 passos da instalação. Falta pouco para a primeira pergunta.`
+        : 'Instale o plugin e conecte sua conta para fazer a primeira pergunta com a Órbita.';
+      $('[data-cont-link]').textContent = feitos ? 'Continuar a instalação' : 'Instalar o plugin';
+      $('[data-anel-num]').textContent = `${feitos}/4`;
+      // Com zero passos, a ponta arredondada deixaria um ponto verde: o traço só aparece com progresso.
+      $('[data-anel]').style.opacity = feitos ? '1' : '0';
+      // O anel parte do zero e enche até o progresso (com movimento reduzido, aparece pronto).
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => $('[data-anel]').style.setProperty('--falta', String(100 - feitos * 25))),
+      );
+      const proximo = ['1', '2', '3', '4'].find((n) => !passos.includes(n));
+      document.querySelectorAll<HTMLElement>('[data-passo]').forEach((li) => {
+        const feito = passos.includes(li.dataset.passo!);
+        const eProximo = li.dataset.passo === proximo;
+        li.classList.toggle('is-feito', feito);
+        li.classList.toggle('is-proximo', eProximo);
+        li.querySelector('[data-passo-estado]')!.textContent = feito ? ' (feito)' : eProximo ? ' (próximo)' : '';
+      });
+    }
+
+    $('[data-atalho-alerta]').hidden = !ctx.ouro;
+  });
+
+  // Saudação pela hora do aparelho e pelo primeiro nome.
+  aoCarregar((ctx) => {
+    const agora = new Date();
+    const h = agora.getHours();
+    const nome = (usuario.nome || ctx.sub?.nome || '').trim().split(/\s+/)[0];
+    $('[data-saudacao]').textContent = `${h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'}${nome ? `, ${nome}` : ''}`;
+    const hoje = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('[data-hoje]').textContent = hoje[0].toUpperCase() + hoje.slice(1);
+  });
+
+  // Novidades desde a última visita (as vistas são marcadas ao abrir a página Novidades).
+  const vistas = novidadesVistas();
+  const itens = Array.from(document.querySelectorAll<HTMLElement>('[data-novs] li'));
+  let novas = 0;
+  itens.forEach((li) => {
+    const nova = !vistas.includes(li.dataset.id!);
+    li.querySelector<HTMLElement>('[data-nova]')!.hidden = !nova;
+    if (nova) novas++;
+  });
+  $('[data-nov-resumo]').textContent = novas
+    ? `${novas} ${novas === 1 ? 'novidade' : 'novidades'} desde a sua última visita.`
+    : 'Nada novo desde a sua última visita. Estas são as mais recentes.';
+  if (!novas) itens.slice(3).forEach((li) => (li.hidden = true));
+</script>

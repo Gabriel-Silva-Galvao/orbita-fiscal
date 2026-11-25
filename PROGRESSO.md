@@ -1,6 +1,6 @@
 # Órbita: progresso do site
 
-Atualizado em 24/11/2026. As 7 páginas do MVP existem e o fluxo completo funciona em **modo de demonstração**: nada é cobrado, nenhum e-mail é enviado e a “conta” fica só no navegador. Para ir ao ar, faltam decisões da empresa, a revisão jurídica e a parte de servidor.
+Atualizado em 25/11/2026. As 7 páginas do MVP existem e o fluxo completo funciona em **modo de demonstração**: nada é cobrado, nenhum e-mail é enviado e a “conta” fica só no navegador. Para ir ao ar, faltam decisões da empresa, a revisão jurídica e a parte de servidor.
 
 Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm (republicado em 24/11/2026 na conta atual; o link antigo não abre mais).
 
@@ -10,39 +10,40 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 | --- | --- | --- | --- |
 | 1. Landing | `/` | Pronta | Revisão jurídica dos exemplos e das 125 citações em revezamento; contatos reais |
 | 2. Entrar e criar conta | `/entrar` | Tela pronta, demonstração | Servidor de autenticação (Google ou e-mail e senha + código por e-mail) |
-| 3. Checkout | `/assinar/pro`, `/assinar/max` | Tela pronta, demonstração | Provedor de pagamento, campos seguros do cartão, Pix, nota fiscal |
+| 3. Checkout | `/assinar/bronze`, `/assinar/prata`, `/assinar/ouro` | Tela pronta, demonstração | Provedor de pagamento, campos seguros do cartão, Pix, nota fiscal |
 | 4. Instalar o plugin | `/instalar` | Tela pronta, demonstração | Arquivo real do plugin, link expirável, código de conexão real, nomes dos menus do Claude |
-| 5. Portal do cliente | `/conta` | Tela pronta, demonstração | Dados reais da assinatura, notas, reembolso e cancelamento pelo provedor |
+| 5. Portal do cliente | `/conta` e `/conta/*` (7 páginas) | Telas prontas, com a API local | Dados reais em produção, notas fiscais, troca de plano no meio do mês |
 | 6. Ajuda | `/ajuda` | Pronta | Canal de suporte e prazo de resposta definitivos |
 | 7. Textos legais | `/privacidade`, `/termos`, `/reembolso` | Rascunho | Revisão por advogado; razão social, CNPJ, prazos |
 | 8. Para equipes | `/equipes` | Depois do MVP | Só depois do fluxo individual no ar |
 
 ## Passo a passo
 
-86 de 159 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
+124 de 182 subtarefas feitas. Cada etapa separa o que já foi feito do que falta. O mesmo conteúdo, com caixas que dá para marcar, está no painel interativo. A fonte das etapas é `docs/etapas.json`.
 
 | Etapa | Feito | Situação |
 | --- | --- | --- |
 | 1. Base do projeto | 7 de 7 | Concluída |
-| 2. Landing | 12 de 16 | Em andamento |
+| 2. Landing | 14 de 17 | Em andamento |
 | 3. Movimento | 9 de 10 | Em andamento |
 | 4. Fotos reais | 4 de 5 | Em andamento |
 | 5. Auditoria de traços de IA | 6 de 6 | Concluída |
 | 6. Textos legais | 4 de 9 | Em andamento |
-| 7. Entrar e criar conta | 7 de 10 | Em andamento |
+| 7. Entrar e criar conta | 9 de 10 | Em andamento |
 | 8. Checkout | 6 de 11 | Em andamento |
 | 9. Instalar o plugin | 5 de 11 | Em andamento |
-| 10. Portal do cliente | 5 de 10 | Em andamento |
+| 10. Portal do cliente | 10 de 18 | Em andamento |
 | 11. Ajuda | 3 de 4 | Em andamento |
-| 12. Arquitetura e servidor | 6 de 9 | Em andamento |
+| 12. Arquitetura e servidor | 9 de 10 | Em andamento |
 | 13. Artefatos e entregas | 5 de 5 | Concluída |
 | 14. Entrega do plugin (loja do Claude e outras IAs) | 2 de 10 | Em andamento |
-| 15. Área do assinante | 1 de 8 | Em andamento |
-| 16. Pagamentos (Asaas) | 2 de 8 | Em andamento |
-| 17. Ranqueamento no Google | 1 de 9 | Em andamento |
-| 18. Animação da explosão do átomo | 1 de 3 | Em andamento |
-| 19. Publicação | 0 de 6 | Não iniciada |
-| 20. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
+| 15. Área do assinante | 4 de 9 | Em andamento |
+| 16. Pagamentos (Asaas) | 7 de 8 | Em andamento |
+| 17. Ranqueamento no Google | 6 de 9 | Em andamento |
+| 18. Landing de vendas (reformulação) | 12 de 12 | Concluída |
+| 19. Animação da explosão do átomo | 1 de 3 | Em andamento |
+| 20. Publicação | 1 de 6 | Em andamento |
+| 21. Para equipes (depois do MVP) | 0 de 2 | Não iniciada |
 
 ### 1. Base do projeto (7 de 7)
 
@@ -60,7 +61,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 
 - Nada pendente.
 
-### 2. Landing (12 de 16)
+### 2. Landing (14 de 17)
 
 **Feito**
 
@@ -76,13 +77,14 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [x] Rodapé revelado ao final, com tema e cookies
 - [x] Reembolso só em letra miúda abaixo dos planos
 - [x] Logo e átomo do topo sem o disco verde
+- [x] Imagem de compartilhamento (Open Graph)
+- [x] Header fixo e nav com botão Assinar
 
 **Falta**
 
 - [ ] Revisão jurídica das 8 citações dos exemplos
 - [ ] Revisão jurídica das 125 citações em revezamento
 - [ ] Trocar contatos provisórios pelos reais
-- [ ] Imagem de compartilhamento (Open Graph)
 
 ### 3. Movimento (9 de 10)
 
@@ -109,7 +111,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [x] 8 fotos do Unsplash escolhidas pela folha de contato
 - [x] Créditos no código e no rodapé
 - [x] Foto da base em duotone, sem lente que segue o mouse
-- [x] Foto de Brasília que se abre em órbita
+- [x] Foto de Brasília que acende do desfoque e respira (sem cartões)
 
 **Falta**
 
@@ -147,23 +149,23 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Decidir se as consultas são guardadas e se treinam modelos
 - [ ] Definir a data de vigência
 
-### 7. Entrar e criar conta (7 de 10)
+### 7. Entrar e criar conta (9 de 10)
 
 **Feito**
 
 - [x] Tela com abas Entrar e Criar conta
-- [x] Botão Continuar com Google
 - [x] E-mail e senha, com mostrar senha e Esqueci a senha
 - [x] Verificação em duas etapas por código no e-mail, no cadastro e no login
 - [x] Faixa do plano escolhido, com troca
 - [x] Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro
 - [x] Volta para a página pedida depois de entrar
+- [x] Servidor de autenticação na API FastAPI
+- [x] Login pelo Google retirado (só e-mail e senha)
+- [x] Envio do código 2FA por SMTP (falta só configurar o provedor)
 
 **Falta**
 
-- [ ] Servidor de autenticação na API FastAPI
-- [ ] Login com Google de verdade (OAuth)
-- [ ] Envio dos e-mails com o código e com o link de senha nova
+- [ ] Envio do link de senha nova
 
 ### 8. Checkout (6 de 11)
 
@@ -203,7 +205,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Confirmar quais planos do Claude aceitam plugins
 - [ ] Imagem curta do caminho no Claude
 
-### 10. Portal do cliente (5 de 10)
+### 10. Portal do cliente (10 de 18)
 
 **Feito**
 
@@ -212,14 +214,22 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [x] Reembolso com prazo de 7 dias à vista e acompanhamento
 - [x] Cancelar e reativar a assinatura
 - [x] Nome, sair e excluir conta
+- [x] Dados reais da assinatura vindos do servidor
+- [x] Portal em 7 páginas próprias (Início, Plugin, Plano, Alertas, Novidades, Suporte, Conta)
+- [x] Menu lateral no computador e barra inferior no celular
+- [x] Pix ou boleto pendente e faturas em Plano e pagamento
+- [x] Visual mais vivo: saudação, plano com selo, anel de instalação, entrada em cascata
 
 **Falta**
 
-- [ ] Dados reais da assinatura vindos do servidor
 - [ ] Notas fiscais para baixar
 - [ ] Novidades da base com data
 - [ ] Regra de troca de plano no meio do mês
 - [ ] Aviso de pagamento atrasado
+- [ ] Seletor de tema claro/escuro no Portal
+- [ ] Pergunte agora no Início, com exemplos por público
+- [ ] Formulário de suporte dentro do Portal
+- [ ] Prévia de alerta para quem não é Ouro
 
 ### 11. Ajuda (3 de 4)
 
@@ -233,7 +243,7 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 
 - [ ] Canal de suporte e prazo de resposta definitivos
 
-### 12. Arquitetura e servidor (6 de 9)
+### 12. Arquitetura e servidor (9 de 10)
 
 **Feito**
 
@@ -243,11 +253,12 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [x] Rotas do assinante e Checkout renderizadas no servidor
 - [x] Middleware que protege as rotas pela sessão da API
 - [x] Contrato da API de login documentado
+- [x] Criar a API em FastAPI
+- [x] GET /auth/sessao e rotas de cadastro, login e código
+- [x] Servidor MCP: só o "buraco" documentado, liga depois
 
 **Falta**
 
-- [ ] Criar a API em FastAPI
-- [ ] GET /auth/sessao e rotas de cadastro, login e código
 - [ ] Escolher onde hospedar o servidor Node e a API
 
 ### 13. Artefatos e entregas (5 de 5)
@@ -282,56 +293,78 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Submeter no diretório do ChatGPT
 - [ ] Guia para o TI do cliente no Copilot Studio e no Gemini Enterprise
 
-### 15. Área do assinante (1 de 8)
+### 15. Área do assinante (4 de 9)
 
 **Feito**
 
 - [x] Definir as abas e as diferenças entre Pro e Max
+- [x] Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini
+- [x] As quatro IAs na landing, com animação
+- [x] Status do plugin na tela, em demonstração (espera o servidor MCP)
 
 **Falta**
 
 - [ ] Status do plugin: conexão por IA, uso do mês, versão
 - [ ] Novidades (painel de admin na API: integração ainda em aberto)
-- [ ] Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini
 - [ ] Alertas por tema (Max)
 - [ ] Resumo semanal por área (Max)
 - [ ] Acesso antecipado e suporte prioritário (Max)
-- [ ] As quatro IAs na landing, com animação
 
-### 16. Pagamentos (Asaas) (2 de 8)
+### 16. Pagamentos (Asaas) (7 de 8)
 
 **Feito**
 
 - [x] Mapear a API do Asaas
 - [x] Integração real suspensa até haver CNPJ
+- [x] Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)
+- [x] Cartão, Pix e boleto no Checkout
+- [x] Formas de pagamento e faturas no Portal
+- [x] Liberar acesso só com pagamento confirmado (simulado)
+- [x] Ajustar Termos, Reembolso, Ajuda e landing para as três formas
 
 **Falta**
 
-- [ ] Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)
-- [ ] Cartão, Pix e boleto no Checkout
-- [ ] Formas de pagamento e faturas no Portal
-- [ ] Liberar acesso só com pagamento confirmado (simulado)
-- [ ] Ajustar Termos, Reembolso, Ajuda e landing para as três formas
 - [ ] Trocar a simulação pela API real (quando houver CNPJ)
 
-### 17. Ranqueamento no Google (1 de 9)
+### 17. Ranqueamento no Google (6 de 9)
 
 **Feito**
 
 - [x] Pesquisa aprofundada de SEO
+- [x] Sitemap, robots.txt e noindex na área logada
+- [x] Canonical, títulos, descrições e Open Graph por página
+- [x] Dados estruturados: Organization, WebSite, SoftwareApplication
+- [x] Página 404 real e domínio único com redirecionamentos
+- [x] Core Web Vitals: topo sem atraso no LCP, imagens e fontes
 
 **Falta**
 
-- [ ] Sitemap, robots.txt e noindex na área logada
-- [ ] Canonical, títulos, descrições e Open Graph por página
-- [ ] Dados estruturados: Organization, WebSite, SoftwareApplication
-- [ ] Página 404 real e domínio único com redirecionamentos
-- [ ] Core Web Vitals: topo sem atraso no LCP, imagens e fontes
 - [ ] Banner de cookies LGPD e GA4 com Consent Mode v2
 - [ ] Search Console, Bing Webmaster e IndexNow na publicação
 - [ ] Página Sobre com autores e conteúdo revisado
 
-### 18. Animação da explosão do átomo (1 de 3)
+### 18. Landing de vendas (reformulação) (12 de 12)
+
+**Feito**
+
+- [x] Pesquisa aprofundada: o que uma landing de vendas precisa ter
+- [x] Plano da nova landing (ordem e papel das seções), aprovado
+- [x] Tirar efeitos visuais desnecessários, inclusive no topo
+- [x] Tirar o carrossel vertical e resumir numa linha
+- [x] Exemplos como respostas do Claude Opus 5.5, com e sem o plugin
+- [x] Reformular o visual para vender o máximo
+- [x] Apresentação visual: IA gerando as respostas e átomo de lítio de volta
+- [x] Respostas geradas ao vivo com e sem a Órbita e átomo de volta na landing
+- [x] Bloco "O que a Órbita consulta" no lugar da cena da biblioteca
+- [x] Foto de Brasília sem cartões, entrada suave
+- [x] Formulário de contato na Ajuda e prévia na inicial
+- [x] Átomo mais lento no topo e na logo
+
+**Falta**
+
+- Nada pendente.
+
+### 19. Animação da explosão do átomo (1 de 3)
 
 **Feito**
 
@@ -342,22 +375,21 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Explosão do átomo e elétrons virando as abas novas
 - [ ] Versão para movimento reduzido e botão Pular
 
-### 19. Publicação (0 de 6)
+### 20. Publicação (1 de 6)
 
 **Feito**
 
-- Nada concluído ainda.
+- [x] sitemap.xml e robots.txt
 
 **Falta**
 
 - [ ] Escolher hospedagem e domínio
 - [ ] Formulário de contato enviando de verdade
-- [ ] sitemap.xml e robots.txt
 - [ ] Teste com leitor de tela
 - [ ] Tirar o modo de demonstração
 - [ ] Publicar o site
 
-### 20. Para equipes (depois do MVP) (0 de 2)
+### 21. Para equipes (depois do MVP) (0 de 2)
 
 **Feito**
 
@@ -368,15 +400,55 @@ Painel interativo (status, bloqueios e etapas editáveis): https://claude.ai/art
 - [ ] Página /equipes
 - [ ] Formulário de interesse
 
+## Rodada de testes (25/11/2026)
+
+Os pedidos da rodada, com diagnóstico, decisões e testes, estão em [docs/rodada-de-testes.md](docs/rodada-de-testes.md).
+
+**Feito**
+
+- [x] Bloco A, correções: login que "não salvava" e sessão com "manter conectado", rodapé, QR do Pix, download do plugin (pacote de demonstração), cards vivos, títulos sem ponto, topo sem o átomo, seções removidas, header igual em todo o site e botão do header conforme o plano
+- [x] Bloco B, landing: exemplos sorteados no topo e a página `/bases` (O que a Órbita cobre)
+- [x] Bloco E: planos Bronze, Prata e Ouro, área empresarial com o envelope animado e o público "advogados, contadores e empresários"
+- [x] Item 17: documentação do backend e da segurança, com os riscos críticos S1 e S2 corrigidos
+- [x] Itens 5 e 8: Portal em 7 páginas, com layout de produto (detalhe abaixo)
+
+**Portal do assinante (itens 5 e 8, 25/11/2026)**
+
+- Layout `src/layouts/Portal.astro`: menu lateral com o plano e as 7 páginas; no celular, barra inferior (Início, Plugin, Novidades, Plano) e a folha "Mais"; cabeçalho com o nome da página, busca na Ajuda, avatar com menu e "Voltar ao site".
+- Páginas em `src/pages/conta/`: Início, Plugin e conexões, Plano e pagamento, Alertas e resumo (Ouro), Novidades da base, Suporte e Conta e segurança. Novidades, Suporte e Conta abrem mesmo sem plano.
+- Plano e pagamento mostra o Pix (QR e copia e cola) ou o boleto da cobrança pendente e a tabela de faturas da API.
+- Visual mais vivo, dentro das regras do projeto: saudação pelo nome, cartão do plano com o átomo e o selo de situação que pulsa ao abrir, anel de progresso da instalação com os 4 passos, entrada das páginas em cascata, esqueleto que respira enquanto carrega e o destaque da página atual deslizando no menu na troca de página. Com movimento reduzido, tudo fica parado.
+- Endereços antigos (`/conta#plano`, `#cancelar` etc.) levam às páginas novas.
+- Não verificado na tela: o modo de demonstração sem a API, o deslizar do menu entre páginas e o movimento reduzido.
+
+**Falta**
+
+- [ ] Bloco C: item 9 (Conta e segurança completa), item 11 (Checkout branco) e item 3 (boas-vindas)
+- [ ] Bloco F: 30 (FAQ), 31 (/bases), 32 (rodapé), 33 (compra só do que faz sentido e comparação de planos), 29 (Sandbox do Asaas) e 28 (avaliações)
+- [ ] Bloco G (ideias da revisão do Portal, aguardando decisão): ver abaixo
+- [ ] Riscos altos de segurança S3 a S5, antes de publicar
+
+**Bloco G: ideias da revisão do Portal (25/11/2026), para decidir**
+
+1. Seletor de tema claro/escuro no Portal (hoje só existe no rodapé do site), no menu do avatar.
+2. "Pergunte agora" no Início: 3 perguntas de exemplo, uma por público, com botão para copiar e abrir o Claude.
+3. Plugin e conexões: trocar os números zerados por uma frase até haver dados do servidor MCP, ou manter.
+4. Alertas para quem não é Ouro: prévia de um alerta, marcada como exemplo, ao lado do upgrade.
+5. Suporte: formulário dentro do Portal, com e-mail e plano já preenchidos, em vez de levar a `/ajuda#contato`.
+6. Novidades: filtro por tribunal ou órgão (depende das novidades terem esse dado).
+7. Esconder o selo "Ouro" do menu para quem já é Ouro.
+8. Levar o visual novo do Início para Plano, Plugin e Suporte.
+9. Fora do Portal, já no item 33: o Checkout ainda deixa quem assina o Prata comprar o Prata de novo.
+
 ## Onde está cada coisa
 
 | Caminho | O que é |
 | --- | --- |
-| `src/pages/` | Páginas: `index`, `entrar`, `assinar/[plano]`, `instalar`, `conta`, `ajuda`, `privacidade`, `termos`, `reembolso` |
+| `src/pages/` | Páginas: `index`, `entrar`, `assinar/[plano]`, `instalar`, `conta/` (7 páginas do Portal), `ajuda`, `privacidade`, `termos`, `reembolso` |
 | `src/components/` | Peças da landing e do site (Hero, Nav, Footer, Contact, Story, cenas, PlanCard, Icon, Photo…) |
-| `src/layouts/` | `Base` (tema e movimento), `Legal` (textos legais), `Focus` (Entrar e Checkout) |
-| `src/scripts/` | `motion.ts` (GSAP, Lenis), `orbit.ts` (logo), `hero-chips.ts` (cartões de lei em revezamento), `validate.ts` (CPF, CNPJ, cartão), `demo.ts` |
-| `src/data/` | `plans.ts`, `photos.ts` (créditos), `site.ts` (contatos provisórios), `examples.ts`, `citacoes.ts` (125 citações) |
+| `src/layouts/` | `Base` (tema e movimento), `Legal` (textos legais), `Focus` (Entrar e Checkout), `Portal` (área do assinante) |
+| `src/scripts/` | `motion.ts` (GSAP, Lenis), `orbit.ts` (logo), `hero-chips.ts` (cartões de lei em revezamento), `validate.ts` (CPF, CNPJ, cartão), `demo.ts`, `portal.ts` (estado do Portal) |
+| `src/data/` | `plans.ts`, `photos.ts` (créditos), `site.ts` (contatos provisórios), `ajuda.ts` (artigos para a busca do Portal), `examples.ts`, `citacoes.ts` (125 citações) |
 | `src/middleware.ts` | Porta das rotas do assinante e do Checkout, pela sessão da API FastAPI |
 | `src/styles/` | `tokens.css` (marca), `global.css`, `forms.css` |
 | `docs/` | Briefings, mapa, análise de animações, auditoria de IA, painel de progresso (`progresso.html`) |

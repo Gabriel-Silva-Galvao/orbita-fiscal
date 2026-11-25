@@ -1,0 +1,259 @@
+---
+/**
+ * Plugin e conexões (itens 5 e 8): baixar o plugin, conexão por IA, uso do mês e tutoriais por IA.
+ * O download usa a mesma rota da página Instalar (POST /plugin/link, link de 15 minutos). Os dados de uso,
+ * versão e conexão ficam em demonstração até o servidor MCP estar no ar.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import { tutoriais } from '../../data/tutoriais';
+
+export const prerender = false;
+---
+
+<Portal titulo="Plugin e conexões" descricao="Baixe o plugin da Órbita, veja as conexões por IA e o uso do mês." pagina="plugin">
+  <div class="stats">
+    <article class="stat">
+      <span class="stat-k">Acesso</span>
+      <strong class="stat-v" data-acesso></strong>
+      <span class="stat-n" data-acesso-nota></span>
+    </article>
+    <article class="stat">
+      <span class="stat-k">Consultas neste mês</span>
+      <strong class="stat-v">0</strong>
+      <span class="stat-n">Limite do plano<Pending kind="definir" /></span>
+    </article>
+    <article class="stat">
+      <span class="stat-k">Última consulta</span>
+      <strong class="stat-v">Nenhuma ainda</strong>
+      <span class="stat-n">Aparece depois da primeira pergunta</span>
+    </article>
+    <article class="stat">
+      <span class="stat-k">Versão do plugin</span>
+      <strong class="stat-v"><Pending kind="definir" /></strong>
+    </article>
+  </div>
+
+  <section class="cartao" id="baixar" aria-labelledby="baixar-t">
+    <h2 class="h2" id="baixar-t">Baixar o plugin</h2>
+    <p class="small">O arquivo é o mesmo para o Claude na web, no computador e no Claude Code. O link de download vale por 15 minutos.</p>
+    <div class="acoes">
+      <button type="button" class="btn-main" data-baixar>Baixar o plugin</button>
+      <a class="btn-alt" href="/instalar">Ver o passo a passo</a>
+    </div>
+    <p class="notice" data-baixar-msg role="status" hidden></p>
+  </section>
+
+  <section class="pt-secao" aria-labelledby="con-t">
+    <h2 id="con-t">Conexões por IA</h2>
+    <ul class="conn">
+      <li>
+        <span class="conn-ia">Claude</span>
+        <span class="conn-estado" data-conn-claude></span>
+        <a href="/instalar" data-conn-claude-link></a>
+      </li>
+      {tutoriais.filter((t) => !t.disponivel).map((t) => (
+        <li>
+          <span class="conn-ia">{t.nome}</span>
+          <span class="conn-estado">Em preparação</span>
+          <a href={`#tutoriais`} data-ia-link={t.id}>Como vai funcionar</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="pt-secao" id="tutoriais" aria-labelledby="tut-t">
+    <h2 id="tut-t">Tutoriais</h2>
+    <p class="pt-intro small mute">O plugin é o mesmo em todas as IAs; muda o caminho para instalar. Escolha a sua.</p>
+    <div class="filtros" role="group" aria-label="Escolher a IA">
+      {tutoriais.map((t, i) => (
+        <button type="button" aria-pressed={i === 0 ? 'true' : 'false'} data-ia={t.id}>{t.nome}</button>
+      ))}
+    </div>
+    {tutoriais.map((t, i) => (
+      <article class="cartao" data-tut={t.id} hidden={i !== 0}>
+        <div class="tut-topo">
+          <h3>{t.nome}</h3>
+          <span class:list={['tut-estado', t.disponivel && 'is-on']}>{t.disponivel ? 'Disponível' : 'Em preparação'}</span>
+        </div>
+        <p class="small"><strong>Quem instala:</strong> {t.quem}</p>
+        <p class="small"><strong>O que precisa:</strong> {t.requisitos}</p>
+        <ol class="passos">
+          {t.passos.map((p) => <li>{p}</li>)}
+        </ol>
+        <p class="small mute">{t.observacao}</p>
+        {t.disponivel && <a class="btn-main" href="/instalar">Abrir o passo a passo completo</a>}
+      </article>
+    ))}
+  </section>
+</Portal>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-3);
+  }
+  .stat {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .stat-k,
+  .stat-n {
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .stat-n {
+    font-size: 0.8125rem;
+  }
+  .stat-v {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+  }
+  .cartao p {
+    margin: 0;
+  }
+  .cartao .notice {
+    width: 100%;
+  }
+  .conn {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+  .conn li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px var(--space-3);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .conn-ia {
+    font-weight: 600;
+    flex: 1 1 160px;
+  }
+  .conn-estado {
+    color: var(--mute);
+  }
+  .conn-estado.is-on {
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .tut-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .tut-estado {
+    padding: 2px 10px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-pill);
+    font: 600 0.75rem/1.5 var(--font-body);
+    color: var(--mute);
+  }
+  .tut-estado.is-on {
+    border: 1px solid var(--brand);
+    color: var(--brand);
+  }
+  .passos {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 6px;
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+</style>
+
+<script>
+  import { aoCarregar, passosInstalacao, apiBase, fmt, $ } from '../../scripts/portal';
+
+  aoCarregar((ctx) => {
+    const sub = ctx.sub;
+    if (!sub) return;
+    const proxima = ctx.proxima ? fmt(ctx.proxima) : '';
+    $('[data-acesso]').textContent = sub.reembolso ? 'Encerrado' : ctx.status === 'suspenso' ? 'Suspenso' : 'Ativo';
+    $('[data-acesso-nota]').textContent = sub.reembolso
+      ? 'O reembolso encerrou a assinatura.'
+      : ctx.status === 'suspenso'
+        ? 'Pagamento em atraso. O acesso volta quando o pagamento for confirmado.'
+        : sub.cancelada
+          ? `Cancelada: o acesso segue até ${proxima}.`
+          : `Renova em ${proxima}.`;
+  });
+
+  const passos = passosInstalacao();
+  const conectado = passos.includes('3');
+  const claude = $('[data-conn-claude]');
+  claude.textContent = conectado ? 'Conectado' : passos.length ? `Instalação em andamento (${passos.length} de 4 passos)` : 'Não conectado';
+  claude.classList.toggle('is-on', conectado);
+  $('[data-conn-claude-link]').textContent = conectado ? 'Ver o passo a passo' : passos.length ? 'Continuar a instalação' : 'Instalar e conectar';
+
+  // Tutoriais: um por vez.
+  const iaBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-ia]'));
+  const escolher = (id: string) => {
+    iaBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ia === id)));
+    document.querySelectorAll<HTMLElement>('[data-tut]').forEach((t) => (t.hidden = t.dataset.tut !== id));
+  };
+  iaBtns.forEach((b) => b.addEventListener('click', () => escolher(b.dataset.ia!)));
+  document.querySelectorAll<HTMLAnchorElement>('[data-ia-link]').forEach((a) => a.addEventListener('click', () => escolher(a.dataset.iaLink!)));
+
+  // Download: igual à página Instalar (item 6). Sem API, só simula.
+  const dl = $<HTMLButtonElement>('[data-baixar]');
+  const msg = $('[data-baixar-msg]');
+  const avisar = (texto: string, ok = true) => {
+    msg.className = ok ? 'notice is-ok' : 'notice is-error';
+    msg.textContent = texto;
+    msg.hidden = false;
+  };
+  dl.addEventListener('click', async () => {
+    dl.disabled = true;
+    dl.setAttribute('aria-busy', 'true');
+    dl.textContent = 'Preparando o arquivo…';
+    msg.hidden = true;
+    try {
+      if (!apiBase) {
+        await new Promise((r) => setTimeout(r, 1200));
+        avisar('Arquivo pronto. Na versão real, o download começa agora e o link vale por 15 minutos.');
+        return;
+      }
+      const r = await fetch(`${apiBase}/plugin/link`, { method: 'POST', credentials: 'include' });
+      if (r.status === 403) return avisar('O download fica disponível quando a assinatura estiver ativa. Confira em Plano e pagamento.', false);
+      if (!r.ok) throw new Error(String(r.status));
+      const link = await r.json();
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.download = link.arquivo;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      const hora = new Date(link.expira_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      avisar(`Download iniciado: ${link.arquivo}. É um pacote de DEMONSTRAÇÃO: o plugin real chega quando o servidor da Órbita estiver no ar. O link vale até ${hora}.`);
+    } catch {
+      avisar('Não deu para preparar o arquivo agora. Tente de novo em instantes.', false);
+    } finally {
+      dl.disabled = false;
+      dl.removeAttribute('aria-busy');
+      dl.textContent = 'Baixar de novo';
+    }
+  });
+</script>

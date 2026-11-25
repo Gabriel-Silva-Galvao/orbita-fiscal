@@ -1,0 +1,226 @@
+---
+/**
+ * Alertas e resumo (itens 5 e 8): alertas por tema e resumo semanal, recursos do Ouro.
+ * Nos outros planos, a página mostra o que o Ouro dá, com o upgrade. Na demonstração, temas e áreas
+ * ficam neste navegador; depois, na API.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import { plans, brl } from '../../data/plans';
+
+export const prerender = false;
+const sugestoes = ['ICMS-ST', 'Exclusão do ICMS do PIS/Cofins', 'Prescrição intercorrente', 'Reforma tributária (IBS e CBS)'];
+const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'Previdenciário', 'Processo tributário', 'Reforma tributária (IBS e CBS)'];
+---
+
+<Portal titulo="Alertas e resumo" descricao="Alertas por tema e resumo semanal por área, no plano Ouro." pagina="alertas">
+  <section class="bloqueado is-marca" data-bloqueado hidden aria-labelledby="ouro-t">
+    <span class="selo">Plano Ouro</span>
+    <h2 class="h2" id="ouro-t">Seja avisado do que muda nos seus temas</h2>
+    <ul class="beneficios small">
+      <li><strong>Alertas por tema:</strong> salve os temas que você acompanha, como ICMS-ST ou crédito de PIS/Cofins. Quando sair julgado ou norma nova, avisamos aqui e por e-mail.</li>
+      <li><strong>Resumo semanal:</strong> toda semana, as decisões e normas mais relevantes das áreas que você escolher.</li>
+      <li><strong>Acesso antecipado:</strong> novidades da base chegam primeiro para o Ouro.</li>
+    </ul>
+    <a class="btn-main" href="/assinar/ouro">Fazer upgrade para o Ouro ({brl(plans.ouro.cents)} por mês)</a>
+  </section>
+
+  <section class="pt-secao" data-liberado hidden aria-labelledby="alertas-t">
+    <h2 id="alertas-t">Alertas por tema</h2>
+    <p class="pt-intro small mute">Salve os temas que você acompanha. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail<Pending kind="confirmar" />.</p>
+    <form class="tema-form" data-tema-form novalidate>
+      <div class="field">
+        <label for="tema">Novo tema</label>
+        <input id="tema" maxlength="60" placeholder="Ex.: crédito de PIS/Cofins sobre frete" aria-describedby="tema-msg" />
+        <p class="msg" id="tema-msg" aria-live="polite"></p>
+      </div>
+      <button type="submit" class="btn-alt">Salvar tema</button>
+    </form>
+    <p class="small mute">Sugestões:</p>
+    <div class="filtros">
+      {sugestoes.map((s) => <button type="button" data-sugestao={s}>+ {s}</button>)}
+    </div>
+    <h3 class="h3">Seus temas</h3>
+    <ul class="chips" data-temas></ul>
+    <p class="vazio small" data-temas-vazio>Nenhum tema salvo ainda.</p>
+    <p class="vazio small">Os alertas aparecem aqui quando houver decisão ou norma nova sobre os seus temas.</p>
+  </section>
+
+  <section class="pt-secao" data-liberado hidden aria-labelledby="resumo-t">
+    <h2 id="resumo-t">Resumo semanal</h2>
+    <p class="pt-intro small mute">Escolha as áreas. O resumo chega toda semana<Pending kind="confirmar" />, aqui e por e-mail.</p>
+    <fieldset class="areas" data-areas>
+      <legend class="sr-only">Áreas do resumo</legend>
+      {areas.map((a) => <label class="area"><input type="checkbox" value={a} /> {a}</label>)}
+    </fieldset>
+    <p class="small mute" data-areas-msg role="status"></p>
+    <p class="vazio small">O primeiro resumo aparece aqui na semana seguinte à escolha das áreas.</p>
+  </section>
+</Portal>
+
+<style>
+  .h2,
+  .h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+  .h2 {
+    font-size: 1.5rem;
+  }
+  .h3 {
+    font-size: 1.1875rem;
+  }
+  .beneficios {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 8px;
+    max-width: 62ch;
+  }
+  .tema-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--space-3);
+  }
+  .tema-form .field {
+    flex: 1 1 260px;
+  }
+  .tema-form .btn-alt {
+    width: auto;
+  }
+  .chips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chips :global(li) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px 4px 12px;
+    border-radius: var(--radius-pill);
+    background: var(--soft);
+    font: var(--text-small);
+  }
+  .chips :global(button) {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .chips :global(button:focus-visible) {
+    outline: 3px solid var(--brand);
+  }
+  .areas {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
+  }
+  .area {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .area input {
+    accent-color: var(--brand);
+  }
+</style>
+
+<script>
+  import { aoCarregar, $ } from '../../scripts/portal';
+
+  aoCarregar((ctx) => {
+    $('[data-bloqueado]').hidden = ctx.ouro;
+    document.querySelectorAll<HTMLElement>('[data-liberado]').forEach((el) => (el.hidden = !ctx.ouro));
+  });
+
+  const ler = (k: string): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem(k) ?? '[]');
+    } catch {
+      return [];
+    }
+  };
+  const gravar = (k: string, v: string[]) => {
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  };
+
+  // Temas (até 20, sem repetir).
+  const TEMAS = 'of-demo-temas';
+  const msg = $('#tema-msg');
+  function pintar() {
+    const lista = $('[data-temas]');
+    const temas = ler(TEMAS);
+    lista.replaceChildren();
+    temas.forEach((t) => {
+      const li = document.createElement('li');
+      li.append(t);
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '×';
+      x.setAttribute('aria-label', `Remover o tema ${t}`);
+      x.addEventListener('click', () => {
+        gravar(TEMAS, ler(TEMAS).filter((y) => y !== t));
+        pintar();
+      });
+      li.append(x);
+      lista.append(li);
+    });
+    $('[data-temas-vazio]').hidden = temas.length > 0;
+    document.querySelectorAll<HTMLButtonElement>('[data-sugestao]').forEach((b) => (b.hidden = temas.includes(b.dataset.sugestao!)));
+  }
+  function adicionar(bruto: string) {
+    const t = bruto.trim().replace(/\s+/g, ' ');
+    if (t.length < 3) return void (msg.textContent = 'Escreva o tema com pelo menos 3 letras.');
+    const temas = ler(TEMAS);
+    if (temas.some((x) => x.toLowerCase() === t.toLowerCase())) return void (msg.textContent = 'Esse tema já está salvo.');
+    if (temas.length >= 20) return void (msg.textContent = 'Você chegou ao máximo de 20 temas. Remova um para salvar outro.');
+    msg.textContent = '';
+    gravar(TEMAS, [...temas, t]);
+    pintar();
+  }
+  $<HTMLFormElement>('[data-tema-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const campo = $<HTMLInputElement>('#tema');
+    adicionar(campo.value);
+    if (!msg.textContent) campo.value = '';
+    campo.focus();
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-sugestao]').forEach((b) => b.addEventListener('click', () => adicionar(b.dataset.sugestao!)));
+  pintar();
+
+  // Áreas do resumo semanal.
+  const AREAS = 'of-demo-areas';
+  const caixas = Array.from(document.querySelectorAll<HTMLInputElement>('[data-areas] input'));
+  const salvas = ler(AREAS);
+  caixas.forEach((c) => (c.checked = salvas.includes(c.value)));
+  caixas.forEach((c) =>
+    c.addEventListener('change', () => {
+      const escolhidas = caixas.filter((x) => x.checked).map((x) => x.value);
+      gravar(AREAS, escolhidas);
+      $('[data-areas-msg]').textContent = escolhidas.length
+        ? `Salvo: ${escolhidas.length} ${escolhidas.length === 1 ? 'área' : 'áreas'}.`
+        : 'Nenhuma área escolhida: o resumo fica pausado.';
+    }),
+  );
+</script>

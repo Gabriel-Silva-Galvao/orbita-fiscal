@@ -1,0 +1,1137 @@
+---
+/**
+ * Layout do Portal do assinante (itens 5 e 8 da rodada de testes, 25/11/2026).
+ * - Computador: menu lateral fixo com o logo, o plano e as 7 páginas.
+ * - Celular: barra inferior estilo app (Início, Plugin, Novidades, Plano) e "Mais" (Alertas, Suporte, Conta).
+ * - Cabeçalho de produto: nome da página, busca na Ajuda, avatar com menu e "Voltar ao site". Não repete
+ *   os links do site.
+ * - Cada página diz em `aceita` com quais estados da assinatura ela abre; nos outros, o layout mostra um
+ *   estado vazio (sem plano, pagamento pendente, assinatura encerrada ou erro ao carregar).
+ * O estado vem de src/scripts/portal.ts, carregado uma vez por página.
+ */
+import Base from './Base.astro';
+import Logo from '../components/Logo.astro';
+import Icon from '../components/Icon.astro';
+import Pending from '../components/Pending.astro';
+import { company } from '../data/site';
+import { plans, brl } from '../data/plans';
+import { artigos } from '../data/ajuda';
+import { novidades } from '../data/novidades';
+import type { Estado } from '../scripts/portal';
+import '../styles/forms.css';
+
+export type PaginaPortal = 'inicio' | 'plugin' | 'plano' | 'alertas' | 'novidades' | 'suporte' | 'configuracoes';
+
+interface Props {
+  titulo: string;
+  descricao: string;
+  pagina: PaginaPortal;
+  /** Estados da assinatura em que o conteúdo aparece. Padrão: só com acesso. */
+  aceita?: Estado[];
+}
+const { titulo, descricao, pagina, aceita = ['ativo'] } = Astro.props;
+
+const paginas: { id: PaginaPortal; href: string; label: string; curto: string; icon: string; ouro?: boolean }[] = [
+  { id: 'inicio', href: '/conta', label: 'Início', curto: 'Início', icon: 'solar:home-2-linear' },
+  { id: 'plugin', href: '/conta/plugin', label: 'Plugin e conexões', curto: 'Plugin', icon: 'solar:plug-circle-linear' },
+  { id: 'plano', href: '/conta/plano', label: 'Plano e pagamento', curto: 'Plano', icon: 'solar:card-linear' },
+  { id: 'alertas', href: '/conta/alertas', label: 'Alertas e resumo', curto: 'Alertas', icon: 'solar:bell-linear', ouro: true },
+  { id: 'novidades', href: '/conta/novidades', label: 'Novidades da base', curto: 'Novidades', icon: 'solar:star-shine-linear' },
+  { id: 'suporte', href: '/conta/suporte', label: 'Suporte', curto: 'Suporte', icon: 'solar:chat-round-dots-linear' },
+  { id: 'configuracoes', href: '/conta/configuracoes', label: 'Conta e segurança', curto: 'Conta', icon: 'solar:settings-linear' },
+];
+const barra = ['inicio', 'plugin', 'novidades', 'plano'];
+const mais = paginas.filter((p) => !barra.includes(p.id));
+const maisAtual = mais.some((p) => p.id === pagina);
+
+const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
+const usuario = Astro.locals.usuario;
+const planData = JSON.stringify(
+  Object.fromEntries(Object.values(plans).map((p) => [p.slug, { name: p.name, price: brl(p.cents) }])),
+);
+const year = new Date().getFullYear();
+---
+
+<Base title={`${titulo} · Órbita`} description={descricao} noindex>
+  <div
+    class="pt"
+    data-portal
+    data-pagina={pagina}
+    data-aceita={aceita.join(' ')}
+    data-plans={planData}
+    data-auth-endpoint={authEndpoint}
+    data-billing={billing}
+    data-user-email={usuario?.email ?? ''}
+    data-user-name={usuario?.nome ?? ''}
+    data-novidades={novidades.map((n) => n.id).join(' ')}
+  >
+    <aside class="pt-side" aria-label="Portal">
+      <div class="pt-side-logo"><Logo /></div>
+      <p class="pt-plano" data-portal-plano aria-live="polite">&nbsp;</p>
+      <nav class="pt-menu" aria-label="Páginas da conta">
+        {paginas.map((p) => (
+          <a href={p.href} aria-current={p.id === pagina ? 'page' : undefined}>
+            {p.id === pagina && <span class="pt-ind" aria-hidden="true"></span>}
+            <Icon name={p.icon} size={20} />
+            <span>{p.label}</span>
+            {p.ouro && <span class="pt-tag">Ouro</span>}
+            {p.id === 'novidades' && <span class="pt-badge" data-portal-novas hidden></span>}
+          </a>
+        ))}
+      </nav>
+      <a class="pt-voltar" href="/"><Icon name="solar:arrow-left-linear" size={18} /> Voltar ao site</a>
+    </aside>
+
+    <div class="pt-corpo">
+      <header class="pt-head">
+        <div class="pt-head-logo"><Logo /></div>
+        <h1 class="pt-titulo">{titulo}</h1>
+        <form class="pt-busca" action="/ajuda" role="search" data-busca>
+          <label class="sr-only" for="pt-busca">Buscar na Ajuda</label>
+          <Icon name="solar:magnifer-linear" size={18} />
+          <input
+            id="pt-busca"
+            type="search"
+            placeholder="Buscar na Ajuda"
+            autocomplete="off"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="pt-busca-lista"
+            aria-autocomplete="list"
+          />
+          <ul id="pt-busca-lista" class="pt-busca-lista" role="listbox" aria-label="Artigos da Ajuda" hidden>
+            {artigos.map((a) => (
+              <li role="presentation" data-termos={`${a.titulo} ${a.termos}`.toLowerCase()}>
+                <a role="option" href={`/ajuda#${a.id}`} tabindex="-1">{a.titulo}</a>
+              </li>
+            ))}
+            <li role="presentation" class="pt-busca-vazio" data-busca-vazio hidden>Nada encontrado. <a href="/ajuda">Ver toda a Ajuda</a></li>
+          </ul>
+        </form>
+        <a class="pt-busca-icone" href="/ajuda" aria-label="Ajuda"><Icon name="solar:magnifer-linear" size={22} /></a>
+        <a class="pt-site small" href="/">Voltar ao site</a>
+        <div class="pt-user" data-pt-user>
+          <button type="button" class="pt-avatar" aria-haspopup="menu" aria-expanded="false" aria-controls="pt-menu-conta" data-pt-avatar>
+            <span data-pt-iniciais aria-hidden="true">·</span>
+            <span class="sr-only">Menu da conta</span>
+          </button>
+          <div class="pt-menu-conta" id="pt-menu-conta" role="menu" hidden data-pt-menu>
+            <p class="pt-quem"><strong data-pt-nome></strong><span data-pt-email></span></p>
+            <a role="menuitem" href="/conta">Início</a>
+            <a role="menuitem" href="/conta/configuracoes">Conta e segurança</a>
+            <a role="menuitem" href="/instalar">Instalar o plugin</a>
+            <a role="menuitem" href="/ajuda">Ajuda</a>
+            <a role="menuitem" href="/">Voltar ao site</a>
+            <button type="button" role="menuitem" data-pt-sair>Sair</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="conteudo" class="pt-main">
+        {!billing && (
+          <p class="demo"><strong>Modo de demonstração.</strong> Os dados existem só neste navegador. Nada é cobrado nem devolvido de verdade.</p>
+        )}
+        <p class="notice" data-portal-aviso role="status" hidden></p>
+
+        <section class="pt-vazio" data-portal-vazio hidden aria-live="polite">
+          <h2 class="display-md" data-vazio-titulo></h2>
+          <p class="mute" data-vazio-texto></p>
+          {usuario && <p class="mute small">Você entrou como <strong>{usuario.email}</strong>.</p>}
+          <div class="pt-acoes">
+            <a class="btn-main" href="/#planos" data-vazio-cta>Ver planos</a>
+            <a class="btn-alt" href="/conta/configuracoes" data-vazio-conta>Conta e segurança</a>
+          </div>
+        </section>
+
+        <div class="pt-carregando" data-portal-carregando aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+
+        <div class="pt-conteudo" data-portal-conteudo hidden>
+          <slot />
+        </div>
+      </main>
+
+      <footer class="pt-foot">
+        <p>
+          © {year} {company.legalName || 'Órbita'}{!company.legalName && <Pending kind="definir" />}
+          <span aria-hidden="true">·</span> CNPJ {company.cnpj}{!company.cnpj && <Pending kind="definir" />}
+          <span aria-hidden="true">·</span> Pagamento processado pelo Asaas
+        </p>
+        <nav aria-label="Links legais">
+          <a href="/termos">Termos de uso</a>
+          <a href="/privacidade">Privacidade</a>
+          <a href="/reembolso">Reembolso</a>
+        </nav>
+      </footer>
+    </div>
+
+    <nav class="pt-barra" aria-label="Páginas da conta">
+      {paginas.filter((p) => barra.includes(p.id)).map((p) => (
+        <a href={p.href} aria-current={p.id === pagina ? 'page' : undefined}>
+          <span class="pt-barra-ico">
+            {p.id === pagina && <span class="pt-ind-barra" aria-hidden="true"></span>}
+            <Icon name={p.icon} size={22} />
+            {p.id === 'novidades' && <span class="pt-ponto" data-portal-novas-ponto hidden></span>}
+          </span>
+          <span>{p.curto}</span>
+        </a>
+      ))}
+      <button type="button" aria-expanded="false" aria-controls="pt-mais" aria-current={maisAtual ? 'page' : undefined} data-pt-mais-btn>
+        <span class="pt-barra-ico">
+          {maisAtual && <span class="pt-ind-barra" aria-hidden="true"></span>}
+          <Icon name="solar:menu-dots-linear" size={22} />
+        </span>
+        <span>Mais</span>
+      </button>
+    </nav>
+    <div class="pt-mais" id="pt-mais" data-pt-mais hidden>
+      <div class="pt-mais-fundo" data-pt-mais-fechar></div>
+      <div class="pt-mais-folha" role="dialog" aria-modal="true" aria-label="Mais páginas da conta">
+        {mais.map((p) => (
+          <a href={p.href} aria-current={p.id === pagina ? 'page' : undefined}>
+            <Icon name={p.icon} size={22} />
+            <span>{p.label}</span>
+            {p.ouro && <span class="pt-tag">Ouro</span>}
+          </a>
+        ))}
+        <a href="/"><Icon name="solar:arrow-left-linear" size={22} /><span>Voltar ao site</span></a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .pt {
+    --side: 264px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: var(--side) minmax(0, 1fr);
+  }
+  /* Menu lateral */
+  .pt-side {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-4);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+    overflow-y: auto;
+  }
+  .pt-side-logo {
+    padding-inline: 4px;
+  }
+  .pt-side-logo :global(.logo),
+  .pt-head-logo :global(.logo) {
+    --mark: 44px;
+    --name: 24px;
+  }
+  .pt-head-logo :global(.logo) {
+    --mark: 38px;
+  }
+  .pt-plano {
+    margin: 0;
+    padding-inline: 10px;
+    font: var(--text-small);
+    font-size: 0.8125rem;
+    color: var(--mute);
+    min-height: 1.4em;
+  }
+  .pt-plano :global(strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .pt-menu {
+    display: grid;
+    gap: 2px;
+  }
+  .pt-menu a,
+  .pt-voltar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 42px;
+    padding: 0 10px;
+    border-radius: var(--radius-md);
+    color: var(--mute);
+    font: 500 0.9375rem/1.2 var(--font-body);
+    text-decoration: none;
+    transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+  }
+  .pt-menu a:hover,
+  .pt-voltar:hover {
+    background: color-mix(in srgb, var(--soft) 40%, transparent);
+    color: var(--ink);
+  }
+  .pt-menu a {
+    position: relative;
+    isolation: isolate;
+  }
+  .pt-menu a[aria-current='page'] {
+    color: var(--ink);
+  }
+  /* Marcador da página atual: na troca de página, desliza do item antigo para o novo (View Transitions). */
+  .pt-ind {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--soft) 70%, transparent);
+    box-shadow: inset 3px 0 0 var(--brand);
+    view-transition-name: pt-ind;
+  }
+  .pt-menu a[aria-current='page'] :global(.icon) {
+    color: var(--brand);
+  }
+  .pt-voltar {
+    margin-top: auto;
+    font-size: 0.875rem;
+  }
+  .pt-menu a:focus-visible,
+  .pt-voltar:focus-visible,
+  .pt-barra a:focus-visible,
+  .pt-barra button:focus-visible,
+  .pt-mais-folha a:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: -3px;
+  }
+  .pt-tag {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font: 600 0.6875rem/1.5 var(--font-body);
+  }
+  .pt-badge {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    background: var(--brand);
+    color: var(--on-brand);
+    font: 600 0.75rem/1.4 var(--font-body);
+    text-align: center;
+  }
+  .pt-badge[hidden] {
+    display: none;
+  }
+
+  /* Corpo */
+  .pt-corpo {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .pt-head {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 72px;
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    view-transition-name: portal-head;
+  }
+  .pt-head-logo,
+  .pt-busca-icone {
+    display: none;
+  }
+  .pt-titulo {
+    margin: 0;
+    flex: 1 0 auto;
+    max-width: 100%;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pt-busca {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 300px;
+    min-width: 170px;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    color: var(--mute);
+  }
+  .pt-busca:focus-within {
+    border-color: var(--brand);
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+  .pt-busca input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 0.9375rem/1 var(--font-body);
+    outline: none;
+  }
+  .pt-busca-lista {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    z-index: 30;
+  }
+  .pt-busca-lista a {
+    display: block;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    color: var(--ink);
+    font: var(--text-small);
+    text-decoration: none;
+  }
+  .pt-busca-lista a:hover,
+  .pt-busca-lista a:focus {
+    background: var(--soft);
+    outline: none;
+  }
+  .pt-busca-vazio {
+    padding: 8px 10px;
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .pt-busca-vazio a {
+    display: inline;
+    padding: 0;
+    color: var(--brand);
+    text-decoration: underline;
+  }
+  .pt-site {
+    color: var(--mute);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .pt-site:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .pt-user {
+    position: relative;
+  }
+  .pt-avatar {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--on-brand);
+    font: 600 0.875rem/1 var(--font-body);
+    cursor: pointer;
+  }
+  .pt-avatar:focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
+  .pt-menu-conta {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 240px;
+    display: grid;
+    padding: 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    z-index: 30;
+  }
+  .pt-menu-conta[hidden] {
+    display: none;
+  }
+  .pt-quem {
+    display: grid;
+    gap: 2px;
+    margin: 0 0 6px;
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--line);
+    font: var(--text-small);
+  }
+  .pt-quem span {
+    color: var(--mute);
+    overflow-wrap: anywhere;
+  }
+  .pt-menu-conta a,
+  .pt-menu-conta button {
+    display: block;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--ink);
+    font: 0.9375rem/1.2 var(--font-body);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .pt-menu-conta a:hover,
+  .pt-menu-conta a:focus,
+  .pt-menu-conta button:hover,
+  .pt-menu-conta button:focus {
+    background: var(--soft);
+    outline: none;
+  }
+
+  .pt-main {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 960px;
+    padding: var(--space-6);
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+  .pt-main > * {
+    min-width: 0;
+  }
+  .pt-conteudo {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .pt-conteudo[hidden],
+  .pt-vazio[hidden] {
+    display: none;
+  }
+  .pt-vazio {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+  }
+  .pt-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .pt-acoes .btn-main,
+  .pt-acoes .btn-alt {
+    width: auto;
+  }
+  .pt-acoes [hidden] {
+    display: none;
+  }
+  /* Esqueleto enquanto a assinatura carrega (sem salto: some quando o conteúdo entra). */
+  .pt-carregando {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .pt-carregando[hidden] {
+    display: none;
+  }
+  .pt-carregando span {
+    height: 72px;
+    border-radius: var(--radius-lg);
+    background: var(--soft);
+    opacity: 0.6;
+  }
+  .pt-carregando span:first-child {
+    height: 120px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pt-carregando span {
+      animation: pt-respira 1.4s var(--ease-in-out) infinite alternate;
+    }
+    .pt-carregando span:nth-child(2) {
+      animation-delay: 160ms;
+    }
+    .pt-carregando span:nth-child(3) {
+      animation-delay: 320ms;
+    }
+    /* Entrada da página: os blocos sobem em cascata quando os dados chegam. */
+    .pt-conteudo.is-entrando > :global(*) {
+      animation: pt-entra 520ms var(--ease-out) both;
+      animation-delay: calc(var(--i, 0) * 70ms);
+    }
+    .pt-vazio.is-entrando {
+      animation: pt-entra 520ms var(--ease-out) both;
+    }
+  }
+  @keyframes pt-respira {
+    from {
+      opacity: 0.35;
+    }
+    to {
+      opacity: 0.75;
+    }
+  }
+  @keyframes pt-entra {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+  .pt-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    border-top: 1px solid var(--line);
+    font: var(--text-small);
+    color: var(--mute);
+  }
+  .pt-foot p {
+    margin: 0;
+  }
+  .pt-foot nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .pt-foot a {
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .pt-foot a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  /* Barra inferior e folha "Mais": só no celular e tablet */
+  .pt-barra,
+  .pt-mais {
+    display: none;
+  }
+
+  /* Em telas médias, "Voltar ao site" fica só no menu lateral: o nome da página tem prioridade. */
+  @media (max-width: 1199px) {
+    .pt-site {
+      display: none;
+    }
+  }
+  @media (max-width: 959px) {
+    .pt {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pt-side,
+    .pt-busca,
+    .pt-site {
+      display: none;
+    }
+    .pt-head {
+      gap: var(--space-3);
+      min-height: 60px;
+      padding: 0 16px;
+    }
+    .pt-head-logo {
+      display: block;
+      flex: none;
+    }
+    /* No celular, o logo vira só o átomo: o nome da página ocupa o espaço. */
+    .pt-head-logo :global(.logo-word) {
+      display: none;
+    }
+    .pt-titulo {
+      flex: 1 1 auto;
+      font-size: 1.125rem;
+    }
+    .pt-busca-icone {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      color: var(--ink);
+    }
+    .pt-main {
+      padding: var(--space-5) 16px calc(var(--space-6) + 72px);
+    }
+    .pt-foot {
+      padding: var(--space-5) 16px calc(var(--space-5) + 72px);
+    }
+    .pt-barra {
+      position: fixed;
+      inset: auto 0 0 0;
+      z-index: 40;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding-bottom: env(safe-area-inset-bottom);
+      border-top: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .pt-barra a,
+    .pt-barra button {
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 2px;
+      min-height: 60px;
+      border: 0;
+      background: none;
+      color: var(--mute);
+      font: 500 0.6875rem/1.2 var(--font-body);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .pt-barra [aria-current='page'] {
+      color: var(--brand);
+    }
+    .pt-barra-ico {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 28px;
+      border-radius: var(--radius-pill);
+    }
+    .pt-ind-barra {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: var(--radius-pill);
+      background: var(--soft);
+      view-transition-name: pt-ind-barra;
+    }
+    .pt-barra-ico {
+      isolation: isolate;
+    }
+    .pt-ponto {
+      position: absolute;
+      top: 2px;
+      right: 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    .pt-ponto[hidden] {
+      display: none;
+    }
+    .pt-mais:not([hidden]) {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 39;
+    }
+    .pt-mais-fundo {
+      position: absolute;
+      inset: 0;
+      background: color-mix(in srgb, var(--ink) 40%, transparent);
+    }
+    .pt-mais-folha {
+      position: absolute;
+      inset: auto 0 calc(60px + env(safe-area-inset-bottom)) 0;
+      display: grid;
+      padding: 8px 8px 12px;
+      border-top: 1px solid var(--line);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      background: var(--surface);
+    }
+    .pt-mais-folha a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 52px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      color: var(--ink);
+      font: 500 1rem/1.2 var(--font-body);
+      text-decoration: none;
+    }
+    .pt-mais-folha a[aria-current='page'] {
+      background: var(--soft);
+      color: var(--brand);
+    }
+  }
+  @media (max-width: 340px) {
+    .pt-head-logo {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pt-mais:not([hidden]) .pt-mais-folha {
+      animation: pt-sobe 220ms var(--ease-out);
+    }
+    .pt-mais:not([hidden]) .pt-mais-fundo {
+      animation: pt-esmaece 220ms var(--ease-out);
+    }
+  }
+  @keyframes pt-sobe {
+    from {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+  }
+  @keyframes pt-esmaece {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .pt-side {
+    view-transition-name: pt-lateral;
+  }
+  .pt-barra {
+    view-transition-name: pt-barra;
+  }
+  :global(::view-transition-group(pt-lateral)),
+  :global(::view-transition-group(portal-head)),
+  :global(::view-transition-group(pt-barra)) {
+    animation: none;
+  }
+  :global(::view-transition-group(pt-ind)),
+  :global(::view-transition-group(pt-ind-barra)) {
+    animation-duration: 380ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 2;
+  }
+  :global(::view-transition-old(pt-ind)),
+  :global(::view-transition-old(pt-ind-barra)) {
+    display: none;
+  }
+  :global(::view-transition-new(pt-ind)),
+  :global(::view-transition-new(pt-ind-barra)) {
+    animation: none;
+  }
+
+  /* Estilos comuns às páginas do Portal (cada página usa o que precisa). */
+  .pt-conteudo :global([id]) {
+    scroll-margin-top: 88px;
+  }
+  .pt-conteudo :global(.pt-secao) {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .pt-conteudo :global(.pt-secao > h2) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+    line-height: 1.25;
+  }
+  .pt-conteudo :global(.pt-intro) {
+    margin: 0;
+    max-width: 62ch;
+  }
+  .pt-conteudo :global(.cartao) {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    align-content: start;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+  }
+  .pt-conteudo :global(.cartao.is-marca),
+  .pt-conteudo :global(.bloqueado.is-marca) {
+    border: 1px solid color-mix(in srgb, var(--brand) 45%, var(--line));
+    background: color-mix(in srgb, var(--soft) 28%, var(--surface));
+  }
+  .pt-conteudo :global(.cartao h3) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+  .pt-conteudo :global(.kv) {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .pt-conteudo :global(.kv > div) {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font: var(--text-small);
+    font-size: 0.9375rem;
+  }
+  .pt-conteudo :global(.kv span) {
+    color: var(--mute);
+  }
+  .pt-conteudo :global(.kv strong) {
+    font-weight: 600;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+  .pt-conteudo :global(.acoes) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .pt-conteudo :global(.acoes .btn-main),
+  .pt-conteudo :global(.acoes .btn-alt),
+  .pt-conteudo :global(.cartao .btn-main),
+  .pt-conteudo :global(.cartao .btn-alt) {
+    width: auto;
+  }
+  .pt-conteudo :global(.vazio) {
+    margin: 0;
+    padding: var(--space-4);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+    color: var(--mute);
+  }
+  .pt-conteudo :global(.bloqueado) {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    padding: var(--space-5);
+    border: 1px dashed var(--brand);
+    border-radius: var(--radius-xl);
+  }
+  .pt-conteudo :global(.bloqueado .btn-main),
+  .pt-conteudo :global(.bloqueado .btn-alt) {
+    width: auto;
+  }
+  .pt-conteudo :global([hidden]) {
+    display: none !important;
+  }
+  .pt-conteudo :global(.selo) {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--soft);
+    color: var(--ink);
+    font: 600 0.75rem/1.4 var(--font-body);
+  }
+  .pt-conteudo :global(.selo.is-brand) {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+  .pt-conteudo :global(a:not(.btn-main):not(.btn-alt)) {
+    color: var(--brand);
+  }
+  .pt-conteudo :global(.filtros) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pt-conteudo :global(.filtros button) {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink);
+    font: 500 0.875rem/1 var(--font-body);
+    cursor: pointer;
+  }
+  .pt-conteudo :global(.filtros button[aria-pressed='true']) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .pt-conteudo :global(.filtros button:focus-visible) {
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+</style>
+
+<script>
+  import { aoCarregar, plans, usuario, sair, novidadesVistas, $ } from '../scripts/portal';
+
+  const root = $('[data-portal]');
+  const aceita = (root.dataset.aceita ?? 'ativo').split(' ');
+
+  // Estado vazio para cada situação em que a página não abre.
+  const VAZIO: Record<string, { titulo: string; texto: string; cta?: { href: string; label: string } }> = {
+    sem: { titulo: 'Você ainda não tem um plano ativo', texto: 'Escolha o Bronze, o Prata ou o Ouro para começar.', cta: { href: '/#planos', label: 'Ver planos' } },
+    pendente: {
+      titulo: 'Seu pagamento ainda não foi confirmado',
+      texto: 'O acesso começa quando o Pix ou o boleto for confirmado. Veja o pagamento em Plano e pagamento.',
+      cta: { href: '/conta/plano', label: 'Ver o pagamento' },
+    },
+    encerrado: { titulo: 'Sua assinatura terminou', texto: 'Para voltar a usar a Órbita, escolha um plano.', cta: { href: '/#planos', label: 'Ver planos' } },
+    erro: { titulo: 'Não conseguimos carregar sua assinatura', texto: 'Pode ser a conexão ou o servidor. Atualize a página em instantes.', cta: { href: location.pathname, label: 'Tentar de novo' } },
+  };
+
+  const iniciais = (nome: string) =>
+    nome.trim().split(/[\s@.]+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
+
+  let primeira = true;
+  aoCarregar((ctx) => {
+    $('[data-portal-carregando]').hidden = true;
+    const abre = aceita.includes(ctx.estado);
+    $('[data-portal-conteudo]').hidden = !abre;
+    // O conteúdo só aparece depois de carregar: a âncora do endereço (ex.: #cancelar) é levada em conta agora.
+    if (abre && primeira && location.hash.length > 1) {
+      requestAnimationFrame(() => document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView());
+    }
+    if (primeira) {
+      const alvo = $(abre ? '[data-portal-conteudo]' : '[data-portal-vazio]');
+      if (abre) Array.from(alvo.children).forEach((el, i) => (el as HTMLElement).style.setProperty('--i', String(Math.min(i, 8))));
+      alvo.classList.add('is-entrando');
+      setTimeout(() => alvo.classList.remove('is-entrando'), 1400);
+    }
+    primeira = false;
+    const vazio = $('[data-portal-vazio]');
+    vazio.hidden = abre;
+    if (!abre) {
+      const v = VAZIO[ctx.estado] ?? VAZIO.sem;
+      $('[data-vazio-titulo]').textContent = v.titulo;
+      $('[data-vazio-texto]').textContent = v.texto;
+      const cta = $<HTMLAnchorElement>('[data-vazio-cta]');
+      cta.hidden = !v.cta;
+      if (v.cta) {
+        cta.href = v.cta.href;
+        cta.textContent = v.cta.label;
+      }
+      $('[data-vazio-conta]').hidden = root.dataset.pagina === 'configuracoes';
+    }
+
+    // Plano no menu lateral.
+    const plano = $('[data-portal-plano]');
+    const nome = ctx.plano ? plans[ctx.plano]?.name : '';
+    const situacao =
+      ctx.estado === 'pendente' ? 'pagamento pendente'
+      : ctx.estado === 'encerrado' ? 'encerrado'
+      : ctx.sub?.reembolso ? 'reembolsado'
+      : ctx.status === 'suspenso' ? 'suspenso'
+      : ctx.sub?.cancelada ? 'cancelamento agendado'
+      : ctx.estado === 'ativo' ? 'ativo' : '';
+    plano.replaceChildren();
+    if (nome) {
+      const s = document.createElement('strong');
+      s.textContent = `Plano ${nome}`;
+      plano.append(s, ` · ${situacao}`);
+    } else plano.textContent = ctx.estado === 'erro' ? '' : 'Sem plano';
+
+    // Avatar: nome do servidor (sessão) ou, na demonstração, o que o Checkout gravou.
+    const quem = usuario.nome || ctx.sub?.nome || '';
+    const email = usuario.email || ctx.sub?.email || '';
+    $('[data-pt-iniciais]').textContent = iniciais(quem || email);
+    $('[data-pt-nome]').textContent = quem || 'Sua conta';
+    $('[data-pt-email]').textContent = email;
+  });
+
+  // Novidades ainda não vistas: número no menu lateral e ponto na barra inferior.
+  {
+    const ids = (root.dataset.novidades ?? '').split(' ').filter(Boolean);
+    const vistas = novidadesVistas();
+    const n = root.dataset.pagina === 'novidades' ? 0 : ids.filter((i) => !vistas.includes(i)).length;
+    const badge = document.querySelector<HTMLElement>('[data-portal-novas]');
+    if (badge) {
+      badge.hidden = n === 0;
+      badge.textContent = String(n);
+      badge.setAttribute('aria-label', `${n} ${n === 1 ? 'novidade nova' : 'novidades novas'}`);
+    }
+    const ponto = document.querySelector<HTMLElement>('[data-portal-novas-ponto]');
+    if (ponto) ponto.hidden = n === 0;
+  }
+
+  // Menu do avatar: clique ou Enter abre, Esc e clique fora fecham, setas navegam.
+  const user = $('[data-pt-user]');
+  const avatar = $<HTMLButtonElement>('[data-pt-avatar]');
+  const menu = $('[data-pt-menu]');
+  const fechar = (foco = false) => {
+    menu.hidden = true;
+    avatar.setAttribute('aria-expanded', 'false');
+    if (foco) avatar.focus();
+  };
+  avatar.addEventListener('click', () => {
+    const abre = menu.hidden;
+    menu.hidden = !abre;
+    avatar.setAttribute('aria-expanded', String(abre));
+    if (abre) menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+  });
+  menu.addEventListener('keydown', (e) => {
+    const itens = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    const i = itens.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      itens[(i + (e.key === 'ArrowDown' ? 1 : -1) + itens.length) % itens.length].focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!user.contains(e.target as Node)) fechar();
+  });
+  $('[data-pt-sair]').addEventListener('click', () => sair('/'));
+
+  // Folha "Mais" no celular.
+  const maisBtn = $<HTMLButtonElement>('[data-pt-mais-btn]');
+  const mais = $('[data-pt-mais]');
+  const abrirMais = (abre: boolean) => {
+    mais.hidden = !abre;
+    maisBtn.setAttribute('aria-expanded', String(abre));
+    if (abre) mais.querySelector<HTMLElement>('a')?.focus();
+    else maisBtn.focus();
+  };
+  maisBtn.addEventListener('click', () => abrirMais(mais.hidden));
+  mais.querySelector('[data-pt-mais-fechar]')?.addEventListener('click', () => abrirMais(false));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!menu.hidden) fechar(true);
+    if (!mais.hidden) abrirMais(false);
+  });
+
+  // Busca na Ajuda: filtra os artigos enquanto digita; Enter abre o primeiro; setas percorrem a lista.
+  const busca = $<HTMLFormElement>('[data-busca]');
+  const campo = $<HTMLInputElement>('#pt-busca');
+  const lista = $('#pt-busca-lista');
+  const itens = Array.from(lista.querySelectorAll<HTMLLIElement>('li[data-termos]'));
+  const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const visiveis = () => itens.filter((li) => !li.hidden).map((li) => li.querySelector('a')!);
+  const filtrar = () => {
+    const q = semAcento(campo.value.trim());
+    const palavras = q.split(/\s+/).filter(Boolean);
+    itens.forEach((li) => (li.hidden = !palavras.every((p) => semAcento(li.dataset.termos!).includes(p))));
+    $('[data-busca-vazio]').hidden = visiveis().length > 0;
+    const abre = q.length > 0;
+    lista.hidden = !abre;
+    campo.setAttribute('aria-expanded', String(abre));
+  };
+  campo.addEventListener('input', filtrar);
+  campo.addEventListener('focus', () => campo.value && filtrar());
+  busca.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const primeiro = visiveis()[0];
+    location.href = primeiro ? primeiro.href : '/ajuda';
+  });
+  busca.addEventListener('keydown', (e) => {
+    const links = visiveis();
+    const i = links.indexOf(document.activeElement as HTMLAnchorElement);
+    if (e.key === 'ArrowDown' && links.length) {
+      e.preventDefault();
+      links[Math.min(i + 1, links.length - 1)].focus();
+    } else if (e.key === 'ArrowUp' && i >= 0) {
+      e.preventDefault();
+      if (i === 0) campo.focus();
+      else links[i - 1].focus();
+    } else if (e.key === 'Escape' && !lista.hidden) {
+      e.stopPropagation();
+      lista.hidden = true;
+      campo.setAttribute('aria-expanded', 'false');
+      campo.focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!busca.contains(e.target as Node)) {
+      lista.hidden = true;
+      campo.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>

@@ -41,7 +41,7 @@ Copie `.env.example` para `.env` quando houver servidor. Sem as variáveis, Entr
 | `/entrar` | `src/pages/entrar.astro` (`?plano=pro\|max`, `?modo=criar`, `?erro=link-expirado`) |
 | `/assinar/pro`, `/assinar/max` | `src/pages/assinar/[plano].astro` |
 | `/instalar` | `src/pages/instalar.astro` |
-| `/conta` | `src/pages/conta.astro` (`#plugin`, `#plano`, `#cancelar`, `#conta`) |
+| `/conta`, `/conta/plugin`, `/conta/plano`, `/conta/alertas`, `/conta/novidades`, `/conta/suporte`, `/conta/configuracoes` | `src/pages/conta/*.astro` com `src/layouts/Portal.astro` (os endereços antigos com `#` redirecionam) |
 | `/ajuda` | `src/pages/ajuda.astro` (`#instalar`, `#conectar`, `#nao-aparece`, `#cobranca`, `#reembolso`, `#privacidade`) |
 | `/privacidade`, `/termos`, `/reembolso` | `src/pages/*.astro` com `src/layouts/Legal.astro` |
 

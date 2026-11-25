@@ -1,0 +1,362 @@
+---
+/**
+ * Plano, pagamento e faturas (itens 5 e 8): plano atual, forma de pagamento, faturas e notas, upgrade,
+ * cancelar e reembolso (#cancelar). Também abre com pagamento pendente: mostra o Pix ou o boleto da
+ * cobrança em aberto, para a pessoa concluir sem voltar ao Checkout.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import { plans, brl, upgradeDe } from '../../data/plans';
+
+export const prerender = false;
+const upgrades = JSON.stringify(
+  Object.fromEntries(
+    Object.entries(upgradeDe).map(([de, para]) => [de, { slug: para, nome: plans[para!].name, preco: brl(plans[para!].cents) }]),
+  ),
+);
+---
+
+<Portal titulo="Plano e pagamento" descricao="Seu plano, a forma de pagamento, as faturas, o cancelamento e o reembolso." pagina="plano" aceita={['ativo', 'pendente']}>
+  <section class="cartao is-marca pendente" data-pendente hidden aria-labelledby="pend-t">
+    <h2 class="h2" id="pend-t">Falta confirmar o pagamento</h2>
+    <p class="small" data-pend-texto></p>
+    <div class="pix" data-pix hidden>
+      <img alt="QR Code do Pix" width="200" height="200" data-pix-img />
+      <div class="pix-codigo">
+        <label class="small mute" for="pix-cc">Pix copia e cola</label>
+        <textarea id="pix-cc" rows="3" readonly data-pix-cc></textarea>
+        <button type="button" class="btn-alt" data-copiar="pix-cc">Copiar o código</button>
+      </div>
+    </div>
+    <div class="boleto" data-boleto hidden>
+      <label class="small mute" for="boleto-ld">Linha digitável do boleto</label>
+      <textarea id="boleto-ld" rows="2" readonly data-boleto-ld></textarea>
+      <div class="acoes">
+        <button type="button" class="btn-alt" data-copiar="boleto-ld">Copiar a linha</button>
+        <a class="btn-alt" target="_blank" rel="noopener" data-boleto-pdf hidden>Abrir o boleto (PDF)</a>
+      </div>
+    </div>
+    <p class="small mute">Depois do pagamento, o acesso é liberado assim que o banco confirmar: na hora no Pix, em até 3 dias úteis no boleto.</p>
+    <a class="btn-alt" data-pend-checkout href="/#planos">Ir para o pagamento</a>
+  </section>
+
+  <section class="pt-secao" data-ativo aria-labelledby="atual-t">
+    <h2 id="atual-t">Seu plano</h2>
+    <div class="kv">
+      <div><span>Plano</span><strong data-plano></strong></div>
+      <div><span>Assinante desde</span><strong data-desde></strong></div>
+      <div><span>Próxima cobrança</span><strong data-proxima></strong></div>
+      <div><span>Forma de pagamento</span><strong data-forma></strong></div>
+    </div>
+    <p class="small mute">Para trocar a forma de pagamento, fale com o suporte por enquanto<Pending kind="definir" />.</p>
+  </section>
+
+  <section class="cartao is-marca" data-upgrade data-upgrades={upgrades} hidden aria-labelledby="up-t">
+    <h2 class="h2" id="up-t" data-up-titulo></h2>
+    <p class="small" data-up-texto></p>
+    <a class="btn-main" data-up-link href="/#planos"></a>
+    <p class="small mute">Como fica a cobrança ao trocar de plano no meio do mês<Pending kind="definir" />.</p>
+  </section>
+
+  <section class="pt-secao" data-ativo aria-labelledby="fat-t">
+    <h2 id="fat-t">Faturas</h2>
+    <div class="tabela-rolagem" data-faturas hidden>
+      <table class="faturas">
+        <thead>
+          <tr><th scope="col">Vencimento</th><th scope="col">Valor</th><th scope="col">Forma</th><th scope="col">Situação</th><th scope="col"><span class="sr-only">Fatura</span></th></tr>
+        </thead>
+        <tbody data-faturas-linhas></tbody>
+      </table>
+    </div>
+    <p class="vazio small" data-faturas-vazio>As cobranças aparecem aqui, com a data, o valor e a situação de cada uma.</p>
+    <h3 class="h3">Notas fiscais</h3>
+    <p class="vazio small">A nota de cada cobrança aparece aqui para baixar<Pending kind="definir" />.</p>
+  </section>
+
+  <section class="pt-secao" id="cancelar" data-ativo aria-labelledby="canc-t">
+    <h2 id="canc-t">Cancelar ou pedir reembolso</h2>
+    <article class="cartao">
+      <h3>Pedir reembolso</h3>
+      <p class="small" data-reemb-texto></p>
+      <div class="acoes" data-reemb-acoes></div>
+      <ol class="trilha small" data-reemb-trilha hidden>
+        <li class="is-on">Pedido recebido <span data-reemb-data></span></li>
+        <li>Em processamento no provedor de pagamento</li>
+        <li>Valor devolvido</li>
+      </ol>
+    </article>
+    <article class="cartao">
+      <h3>Cancelar a assinatura</h3>
+      <p class="small" data-canc-texto></p>
+      <div class="acoes" data-canc-acoes></div>
+    </article>
+    <p class="small mute">Regras completas na <a href="/reembolso">Política de reembolso</a> e nos <a href="/termos#cancelamento">Termos de uso</a>.</p>
+  </section>
+</Portal>
+
+<style>
+  .h2,
+  .h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+  .h2 {
+    font-size: 1.375rem;
+  }
+  .h3 {
+    font-size: 1.1875rem;
+  }
+  .cartao p {
+    margin: 0;
+  }
+  .pendente {
+    border-color: var(--brand);
+  }
+  .pix {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: start;
+    width: 100%;
+  }
+  .pix img {
+    width: 200px;
+    height: 200px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    background: #fff;
+  }
+  .pix-codigo,
+  .boleto {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+    flex: 1 1 260px;
+    width: 100%;
+  }
+  .pix textarea,
+  .boleto textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font: 0.8125rem/1.4 ui-monospace, monospace;
+    resize: none;
+    overflow-wrap: anywhere;
+  }
+  .tabela-rolagem {
+    overflow-x: auto;
+  }
+  .faturas {
+    width: 100%;
+    border-collapse: collapse;
+    font: var(--text-small);
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .faturas th,
+  .faturas td {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .faturas th {
+    color: var(--mute);
+    font-weight: 500;
+  }
+  .situacao.is-ok {
+    color: var(--brand);
+    font-weight: 600;
+  }
+  /* A marca não tem vermelho: o alerta é em tinta forte, como o aviso de erro (.notice.is-error). */
+  .situacao.is-alerta {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .trilha {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 6px;
+    color: var(--mute);
+  }
+  .trilha .is-on {
+    color: var(--ink);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  import { aoCarregar, agir, plans, fmt, dataIso, reais, forma, botao, $, type PortalCtx } from '../../scripts/portal';
+
+  const upgrades = JSON.parse($('[data-upgrade]').dataset.upgrades ?? '{}') as Record<string, { slug: string; nome: string; preco: string }>;
+  const SITUACAO: Record<string, [string, string?]> = {
+    PENDING: ['Aguardando pagamento'],
+    OVERDUE: ['Atrasada', 'is-alerta'],
+    CONFIRMED: ['Paga', 'is-ok'],
+    RECEIVED: ['Paga', 'is-ok'],
+    RECEIVED_IN_CASH: ['Paga', 'is-ok'],
+    REFUNDED: ['Estornada'],
+    REFUND_REQUESTED: ['Estorno pedido'],
+    DELETED: ['Cancelada'],
+  };
+  const FORMA: Record<string, string> = { cartao: 'Cartão', pix: 'Pix', boleto: 'Boleto' };
+
+  function pendente(ctx: PortalCtx) {
+    const nome = ctx.plano ? plans[ctx.plano]?.name : '';
+    const aberta = ctx.cobrancas.find((c) => c.status === 'PENDING' || c.status === 'OVERDUE');
+    $('[data-pend-texto]').textContent = aberta
+      ? `Plano ${nome}, ${reais(aberta.valor)}. Pague ${aberta.pix ? 'pelo Pix abaixo' : 'o boleto abaixo'} até ${dataIso(aberta.vencimento)}.`
+      : `Plano ${nome}. Gere o pagamento de novo no Checkout.`;
+    $('[data-pix]').hidden = !aberta?.pix;
+    if (aberta?.pix) {
+      $<HTMLImageElement>('[data-pix-img]').src = `data:image/png;base64,${aberta.pix.imagem_base64}`;
+      $<HTMLTextAreaElement>('[data-pix-cc]').value = aberta.pix.copia_e_cola;
+    }
+    $('[data-boleto]').hidden = !aberta?.boleto;
+    if (aberta?.boleto) {
+      $<HTMLTextAreaElement>('[data-boleto-ld]').value = aberta.boleto.linha_digitavel;
+      const pdf = $<HTMLAnchorElement>('[data-boleto-pdf]');
+      pdf.hidden = !aberta.boleto.pdf_url;
+      if (aberta.boleto.pdf_url) pdf.href = aberta.boleto.pdf_url;
+    }
+    const checkout = $<HTMLAnchorElement>('[data-pend-checkout]');
+    checkout.hidden = !!aberta;
+    checkout.href = ctx.plano ? `/assinar/${ctx.plano}` : '/#planos';
+  }
+
+  function faturas(ctx: PortalCtx) {
+    const linhas = $('[data-faturas-linhas]');
+    linhas.replaceChildren();
+    ctx.cobrancas.forEach((c) => {
+      const tr = document.createElement('tr');
+      const [rotulo, cls] = SITUACAO[c.status] ?? [c.status];
+      const td = (t: string, className = '') => {
+        const el = document.createElement('td');
+        el.textContent = t;
+        if (className) el.className = className;
+        return el;
+      };
+      const link = document.createElement('td');
+      if (c.fatura_url) {
+        const a = document.createElement('a');
+        a.href = c.fatura_url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = 'Ver fatura';
+        link.append(a);
+      }
+      tr.append(td(dataIso(c.vencimento)), td(reais(c.valor)), td(FORMA[c.forma] ?? c.forma), td(rotulo, `situacao ${cls ?? ''}`), link);
+      linhas.append(tr);
+    });
+    $('[data-faturas]').hidden = ctx.cobrancas.length === 0;
+    $('[data-faturas-vazio]').hidden = ctx.cobrancas.length > 0;
+  }
+
+  function render(ctx: PortalCtx) {
+    const ehPendente = ctx.estado === 'pendente';
+    $('[data-pendente]').hidden = !ehPendente;
+    document.querySelectorAll<HTMLElement>('[data-ativo]').forEach((el) => (el.hidden = ehPendente));
+    if (ehPendente) {
+      $('[data-upgrade]').hidden = true;
+      return pendente(ctx);
+    }
+    const sub = ctx.sub;
+    if (!sub) return;
+    const plan = plans[sub.plano];
+    const desde = new Date(sub.desde);
+    const proxima = ctx.proxima ? fmt(ctx.proxima) : '';
+    $('[data-plano]').textContent = `${plan.name}, ${plan.price} por mês`;
+    $('[data-desde]').textContent = fmt(desde);
+    $('[data-proxima]').textContent = sub.cancelada || sub.reembolso ? 'Nenhuma' : proxima;
+    $('[data-forma]').textContent = forma(sub);
+    faturas(ctx);
+
+    // Upgrade: Bronze → Prata → Ouro. No Ouro, não há o que subir.
+    const up = upgrades[sub.plano];
+    const caixa = $('[data-upgrade]');
+    caixa.hidden = !up || !!sub.reembolso || !!sub.cancelada;
+    if (up) {
+      $('[data-up-titulo]').textContent = `Do ${plan.name} para o ${up.nome}`;
+      $('[data-up-texto]').textContent =
+        up.slug === 'ouro'
+          ? `O Ouro soma alertas por tema, resumo semanal por área e acesso antecipado às novidades, por ${up.preco} por mês.`
+          : `O Prata é para quem pesquisa toda semana, por ${up.preco} por mês.`;
+      const a = $<HTMLAnchorElement>('[data-up-link]');
+      a.href = `/assinar/${up.slug}`;
+      a.textContent = `Fazer upgrade para o ${up.nome}`;
+    }
+
+    // Reembolso: integral até 7 dias da compra, sem precisar explicar.
+    const dias = Math.floor((Date.now() - desde.getTime()) / 86400000);
+    const ate = new Date(desde.getTime() + 7 * 86400000);
+    const rTexto = $('[data-reemb-texto]');
+    const rAcoes = $('[data-reemb-acoes]');
+    rAcoes.replaceChildren();
+    $('[data-reemb-trilha]').hidden = !sub.reembolso;
+    if (sub.reembolso) {
+      rTexto.textContent = 'Recebemos seu pedido. O valor integral volta pela mesma forma de pagamento.';
+      $('[data-reemb-data]').textContent = `em ${fmt(new Date(sub.reembolso))}`;
+    } else if (dias <= 7) {
+      const faltam = 7 - dias;
+      rTexto.textContent = `Você pode pedir o reembolso integral até ${fmt(ate)} (${faltam === 0 ? 'último dia' : `faltam ${faltam} ${faltam === 1 ? 'dia' : 'dias'}`}). Não precisa explicar o motivo.`;
+      rAcoes.append(
+        botao('Pedir reembolso', 'btn-main', () => {
+          rAcoes.replaceChildren(
+            botao('Confirmar pedido de reembolso', 'btn-main', () => agir('reembolso').then(focar('[data-canc-acoes]'))),
+            botao('Voltar', 'btn-alt', () => render(ctx)),
+          );
+          (rAcoes.firstElementChild as HTMLElement).focus();
+        }),
+      );
+    } else {
+      rTexto.textContent = `O prazo de 7 dias terminou em ${fmt(ate)}. Você ainda pode cancelar abaixo, sem multa.`;
+    }
+
+    // Cancelamento: para de renovar e o acesso segue até o fim do período pago.
+    const cTexto = $('[data-canc-texto]');
+    const cAcoes = $('[data-canc-acoes]');
+    cAcoes.replaceChildren();
+    if (sub.reembolso) {
+      cTexto.textContent = 'Com o reembolso, a assinatura é encerrada. Não há nada a cancelar.';
+    } else if (sub.cancelada) {
+      cTexto.textContent = `Cancelada em ${fmt(new Date(sub.cancelada))}. O acesso segue até ${proxima} e não haverá nova cobrança.`;
+      cAcoes.append(botao('Reativar a assinatura', 'btn-alt', () => agir('reativar').then(focar('[data-canc-acoes]'))));
+    } else {
+      cTexto.textContent = `A assinatura para de renovar e seu acesso continua até ${proxima}. Sem multa.`;
+      cAcoes.append(
+        botao('Cancelar assinatura', 'btn-alt', () => {
+          cAcoes.replaceChildren(
+            botao('Confirmar cancelamento', 'btn-main', () => agir('cancelar').then(focar('[data-canc-acoes]'))),
+            botao('Manter assinatura', 'btn-alt', () => render(ctx)),
+          );
+          (cAcoes.firstElementChild as HTMLElement).focus();
+        }),
+      );
+    }
+  }
+  aoCarregar(render);
+
+  // Depois de uma ação, o botão clicado some: o foco vai para a primeira ação que sobrou no mesmo cartão.
+  const focar = (sel: string) => () => document.querySelector<HTMLElement>(`${sel} button`)?.focus();
+
+  // Copiar o código do Pix ou a linha do boleto.
+  document.querySelectorAll<HTMLButtonElement>('[data-copiar]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      const campo = document.getElementById(b.dataset.copiar!) as HTMLTextAreaElement;
+      const original = b.textContent;
+      try {
+        await navigator.clipboard.writeText(campo.value);
+        b.textContent = 'Copiado';
+      } catch {
+        campo.select();
+        b.textContent = 'Selecionado: use Ctrl+C';
+      }
+      setTimeout(() => (b.textContent = original), 2000);
+    }),
+  );
+</script>

@@ -1,0 +1,126 @@
+---
+/**
+ * Suporte (itens 5 e 8): falar com a equipe, prazo de resposta, artigos da Ajuda mais usados e, no Ouro,
+ * a conversa de implantação. Abre em qualquer estado da assinatura: suporte não fica atrás do plano.
+ * Chamados abertos: ainda não existe sistema de chamados (a definir).
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+import { contact } from '../../data/site';
+import { artigos } from '../../data/ajuda';
+
+export const prerender = false;
+---
+
+<Portal titulo="Suporte" descricao="Fale com a equipe da Órbita e veja as respostas mais procuradas da Ajuda." pagina="suporte" aceita={['ativo', 'pendente', 'encerrado', 'sem', 'erro']}>
+  <section class="pt-secao" aria-labelledby="falar-t">
+    <h2 id="falar-t">Falar com a equipe</h2>
+    <div class="kv">
+      <div>
+        <span>E-mail do suporte</span>
+        <strong class="copiar">
+          <span data-email>{contact.email}</span><Pending kind="confirmar" />
+          <button type="button" class="link-btn" data-copiar>Copiar</button>
+        </strong>
+      </div>
+      <div><span>Prazo de resposta</span><strong data-prazo>Até 2 dias úteis (a confirmar)</strong></div>
+      <div><span>Atendimento</span><strong>Dias úteis<Pending kind="confirmar" /></strong></div>
+    </div>
+    <p class="small mute">Para agilizar, diga em qual IA você usa a Órbita e, se houver, a mensagem de erro que apareceu.</p>
+    <div class="acoes">
+      <a class="btn-main" href="/ajuda#contato">Escrever para a equipe</a>
+      <a class="btn-alt" href="/ajuda">Ver a Ajuda</a>
+    </div>
+  </section>
+
+  <section class="pt-secao" aria-labelledby="chamados-t">
+    <h2 id="chamados-t">Seus chamados</h2>
+    <p class="vazio small">Os pedidos que você mandar para a equipe aparecem aqui, com a situação de cada um<Pending kind="definir" />.</p>
+  </section>
+
+  <section class="pt-secao" aria-labelledby="artigos-t">
+    <h2 id="artigos-t">Mais procurados na Ajuda</h2>
+    <ul class="artigos">
+      {artigos.map((a) => (
+        <li><a href={`/ajuda#${a.id}`}>{a.titulo}</a></li>
+      ))}
+    </ul>
+  </section>
+
+  <article class="cartao" data-implantacao hidden>
+    <h3>Conversa de implantação</h3>
+    <p class="small">No Ouro, uma conversa curta com a equipe para configurar a Órbita no seu escritório, contabilidade ou empresa e mostrar as pesquisas que mais rendem no dia a dia.</p>
+    <a class="btn-alt" href="/ajuda#contato">Pedir a conversa</a>
+  </article>
+  <article class="bloqueado" data-implantacao-convite hidden>
+    <p class="small"><strong>No Ouro, o suporte é prioritário</strong> e inclui uma conversa de implantação com a equipe.</p>
+    <a class="btn-alt" href="/conta/alertas">Conhecer o Ouro</a>
+  </article>
+</Portal>
+
+<style>
+  .copiar {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 4px 8px;
+  }
+  .link-btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font: var(--text-small);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .artigos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .artigos li {
+    border-bottom: 1px solid var(--line);
+  }
+  .artigos a {
+    display: block;
+    padding: 12px 0;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .artigos a:hover {
+    text-decoration: underline;
+  }
+  .cartao p,
+  .bloqueado p {
+    margin: 0;
+  }
+</style>
+
+<script>
+  import { aoCarregar, $ } from '../../scripts/portal';
+
+  aoCarregar((ctx) => {
+    $('[data-prazo]').textContent = ctx.ouro ? 'Prioritário: no mesmo dia útil (a confirmar)' : 'Até 2 dias úteis (a confirmar)';
+    $('[data-implantacao]').hidden = !ctx.ouro;
+    $('[data-implantacao-convite]').hidden = ctx.ouro || ctx.estado !== 'ativo';
+  });
+
+  $('[data-copiar]').addEventListener('click', async (e) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    const email = $('[data-email]');
+    try {
+      await navigator.clipboard.writeText(email.textContent ?? '');
+      b.textContent = 'Copiado';
+      setTimeout(() => (b.textContent = 'Copiar'), 2000);
+    } catch {
+      const r = document.createRange();
+      r.selectNodeContents(email);
+      getSelection()?.removeAllRanges();
+      getSelection()?.addRange(r);
+    }
+  });
+</script>

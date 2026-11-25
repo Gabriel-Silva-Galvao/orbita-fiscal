@@ -607,7 +607,55 @@ compra liberou e por que confiar.
   a abertura usa uma animação simples de "acesso liberado".
 - **Depoimentos só quando houver reais**, com autorização: a estrutura fica pronta no código e nada aparece até lá.
 
-### 5 e 8. Portal com cara de produto: páginas próprias, cabeçalho e navegação — Fechado na teoria (25/11/2026)
+### 5 e 8. Portal com cara de produto: páginas próprias, cabeçalho e navegação — Executado e testado (25/11/2026)
+
+**Feito.** Layout `src/layouts/Portal.astro` (menu lateral com o plano e as 7 páginas; no celular, barra inferior com
+Início, Plugin, Novidades, Plano e a folha "Mais"; cabeçalho de produto com o nome da página, busca na Ajuda, avatar
+com menu e "Voltar ao site"; rodapé curto) e estado compartilhado em `src/scripts/portal.ts` (a assinatura é lida uma
+vez por página). O antigo `conta.astro` virou 7 páginas em `src/pages/conta/`: Início (`index`), `plugin`, `plano`,
+`alertas`, `novidades`, `suporte` e `configuracoes`. Cada página diz com que estados abre (com acesso, pendente,
+encerrado, sem plano); nos outros, o layout mostra o estado vazio certo. Novidades, Suporte e Conta abrem sem plano.
+Plano e pagamento abre com pagamento pendente e mostra o QR e o copia e cola do Pix (ou a linha do boleto) da
+cobrança em aberto, e lista as faturas vindas da API. Endereços antigos (`/conta#plano`, `#cancelar` etc.) vão para
+as páginas novas; Nav, Ajuda e Reembolso já apontam para elas. Artigos da Ajuda para a busca em `src/data/ajuda.ts`.
+**Testes.** Contas locais Prata (pendente e depois paga), Ouro e sem plano; as 7 páginas no computador e no celular
+(375 px, sem rolagem lateral); busca, menu do avatar e folha "Mais" com teclado (Esc devolve o foco); cancelar e
+reativar; salvar o nome; sem sessão vai para `/entrar?next=`; build limpo.
+**Não testado:** o modo de demonstração sem a API (o servidor de teste estava ligado à API).
+**Fica para depois.** "Rever a apresentação" no Início (depende da boas-vindas, item 3); chamados abertos no Suporte
+e a troca da forma de pagamento (a definir); aparelhos conectados e senha entram no item 9.
+
+**Visual mais vivo (pedido de 25/11/2026, só no Portal).** Dentro das regras de `docs/auditoria-ia.md` (nada com ação
+se mexe sob o cursor, sem ícone decorativo, sem laço sem motivo):
+- Início: saudação pelo nome e pela hora do aparelho ("Boa noite, Gabriel") com a data; cartão do plano com a cor da
+  marca, o átomo da Órbita girando num círculo e o selo de situação (Ativo, Suspenso, Cancelamento agendado,
+  Encerrado), cujo ponto pulsa duas vezes ao abrir e para; "Continue de onde parou" com anel de progresso que enche até
+  o número de passos feitos e os 4 passos com ✓ e o próximo tracejado; atalhos ganham cor no hover, sem se mexer.
+- Layout: os blocos da página entram em cascata quando os dados chegam; o esqueleto de carregamento respira; o destaque
+  da página atual desliza de um item para o outro no menu lateral e na barra do celular (View Transitions), com o menu,
+  o cabeçalho e a barra parados.
+- Cor da marca (`.cartao.is-marca`) no convite de upgrade, no pagamento pendente e no convite do Ouro.
+- Com movimento reduzido, nada se mexe.
+**Testes.** Conta Prata no computador e no celular (375 px, sem rolagem lateral); anel com 0 e com 2 de 4 passos;
+build limpo. **Não visto na tela:** o deslizar do menu entre páginas (o painel de teste não mostra a transição) e o
+movimento reduzido ligado.
+
+## Bloco G: ideias da revisão do Portal (25/11/2026) — Em aberto
+
+Revisão das 7 telas depois dos itens 5 e 8. Nada executado; cada ideia espera a decisão.
+
+1. **Tema claro/escuro no Portal.** O seletor só existe no rodapé do site. Proposta: no menu do avatar.
+2. **"Pergunte agora" no Início.** Três perguntas de exemplo, uma por público (advogado, contador, empresário), com
+   botão para copiar e abrir o Claude: o Início passa a ajudar a usar o produto, não só a ver o plano.
+3. **Plugin e conexões vazio.** Consultas em 0 e versão "a definir" até o servidor MCP. Proposta: uma frase só ("Seus
+   números aparecem depois da primeira pergunta") no lugar dos zeros, ou manter como está.
+4. **Prévia de alerta para quem não é Ouro.** Um alerta de exemplo, marcado como exemplo, ao lado do upgrade.
+5. **Suporte dentro do Portal.** Formulário com o e-mail e o plano já preenchidos, em vez de levar a `/ajuda#contato`.
+6. **Novidades por tribunal ou órgão.** Depende de as novidades terem esse dado (`src/data/novidades.ts`).
+7. **Selo "Ouro" no menu** some para quem já é Ouro.
+8. **Visual do Início nas outras páginas** (Plano, Plugin, Suporte), que ainda estão mais neutras.
+9. **Fora do Portal (já no item 33):** o Checkout ainda deixa quem assina o Prata comprar o Prata de novo.
+
 
 **Pedido.** Interface de quem está logado com cara de produto novo (mesmo design); cada aba vira uma página própria,
 mais completa; cabeçalho mais intuitivo; navegação boa no celular.
@@ -733,8 +781,9 @@ saem do painel da pesquisa?
 2. ~~Documento do item 17~~ feito, com os dois riscos críticos corrigidos.
 3. ~~Bloco B~~ feito: 13 e 20.
 4. ~~Bloco E~~ feito: 25, 27 e 26.
-5. Bloco C, teoria fechada em 25/11/2026 (ajustar Pro/Max para Bronze/Prata/Ouro). Ordem de execução: 5 e 8 (layout do Portal e as 7 páginas), 9 (conta e
+5. Bloco C, teoria fechada em 25/11/2026 (ajustar Pro/Max para Bronze/Prata/Ouro). Ordem de execução: ~~5 e 8 (layout do Portal e as 7 páginas)~~ feito, 9 (conta e
    segurança), 11 (checkout branco), 3 (boas-vindas).
 6. **Bloco F**: 30 → 31 → 32 → 33 → 29 (com a conta Sandbox do Asaas) → 28 (com a boas-vindas).
+   **Bloco G** (ideias da revisão do Portal): conforme o que for decidido.
 7. Riscos altos de segurança (S3 a S5) antes de publicar.
 8. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.

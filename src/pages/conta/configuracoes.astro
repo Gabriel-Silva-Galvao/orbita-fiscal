@@ -1,0 +1,159 @@
+---
+/**
+ * Conta e segurança (itens 5 e 8): nome, e-mail, sair e excluir a conta. Abre em qualquer estado da
+ * assinatura. O item 9 completa esta página: troca de senha, aparelhos conectados, preferências de e-mail
+ * e dados da nota fiscal.
+ */
+import Portal from '../../layouts/Portal.astro';
+import Pending from '../../components/Pending.astro';
+
+export const prerender = false;
+---
+
+<Portal titulo="Conta e segurança" descricao="Seus dados de acesso, sair da conta e excluir a conta." pagina="configuracoes" aceita={['ativo', 'pendente', 'encerrado', 'sem', 'erro']}>
+  <div data-conta>
+    <section class="pt-secao" aria-labelledby="perfil-t">
+      <h2 id="perfil-t">Perfil</h2>
+      <form class="form-nome" data-nome-form novalidate>
+        <div class="field">
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" autocomplete="name" maxlength="80" />
+        </div>
+        <button type="submit" class="btn-alt">Salvar nome</button>
+        <p class="small mute" data-nome-msg role="status"></p>
+      </form>
+      <div class="kv">
+        <div><span>E-mail</span><strong data-email></strong></div>
+        <div><span>Acesso</span><strong>E-mail e senha, com código por e-mail</strong></div>
+      </div>
+      <p class="small mute">Para trocar o e-mail, confirmamos o novo endereço com um código<Pending kind="definir" />.</p>
+    </section>
+
+    <section class="pt-secao" aria-labelledby="sessao-t">
+      <h2 id="sessao-t">Sessão</h2>
+      <p class="small mute">Sair encerra a sessão neste aparelho. A lista de aparelhos conectados e a troca de senha chegam na próxima etapa<Pending kind="definir" />.</p>
+      <div class="acoes">
+        <button type="button" class="btn-alt" data-sair>Sair</button>
+      </div>
+    </section>
+
+    <section class="cartao perigo" aria-labelledby="excluir-t">
+      <h2 class="h2" id="excluir-t">Excluir conta</h2>
+      <p class="small">Apaga sua conta e seus dados, menos o que a lei manda guardar (como dados fiscais). Não dá para desfazer. Se houver assinatura ativa, cancele antes em <a href="/conta/plano#cancelar">Plano e pagamento</a>, para não haver nova cobrança.</p>
+      <div class="field">
+        <label for="confirmar">Para confirmar, digite EXCLUIR</label>
+        <input id="confirmar" autocomplete="off" />
+      </div>
+      <button type="button" class="btn-alt" data-excluir disabled>Excluir minha conta</button>
+      <p class="small" data-excluir-msg role="alert"></p>
+    </section>
+  </div>
+
+  <section class="cartao" data-excluida hidden>
+    <h2 class="h2">Sua conta foi excluída</h2>
+    <p class="small">Seus dados de acesso foram apagados.</p>
+    <a class="btn-main" href="/">Ir para o site</a>
+  </section>
+</Portal>
+
+<style>
+  [data-conta] {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
+  }
+  .cartao p {
+    margin: 0;
+  }
+  .form-nome {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .form-nome .field,
+  .perigo .field {
+    width: min(100%, 420px);
+  }
+  .form-nome .btn-alt {
+    width: auto;
+  }
+  .form-nome p {
+    margin: 0;
+  }
+  .perigo {
+    border-color: var(--line-strong);
+  }
+</style>
+
+<script>
+  import { aoCarregar, billing, authEndpoint, call, usuario, sair, $ } from '../../scripts/portal';
+  import { getSub, saveSub } from '../../scripts/demo';
+
+  aoCarregar((ctx) => {
+    $('[data-email]').textContent = usuario.email || ctx.sub?.email || '—';
+    const campo = $<HTMLInputElement>('#nome');
+    if (!campo.value) campo.value = usuario.nome || ctx.sub?.nome || '';
+  });
+
+  $<HTMLFormElement>('[data-nome-form]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = $<HTMLInputElement>('#nome').value.trim();
+    const msg = $('[data-nome-msg]');
+    if (nome.length < 2) return void (msg.textContent = 'Escreva o nome com pelo menos 2 letras.');
+    if (billing) {
+      try {
+        const r = await call(authEndpoint, '/conta', 'PUT', { nome });
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          return void (msg.textContent = d.detail?.mensagem ?? d.descricao ?? 'Não conseguimos salvar agora. Tente de novo em instantes.');
+        }
+      } catch {
+        return void (msg.textContent = 'Não conseguimos falar com o servidor. Tente de novo em instantes.');
+      }
+      try {
+        sessionStorage.removeItem('orbita:sessao'); // o avatar do site busca o nome novo
+      } catch {}
+    } else {
+      const sub = getSub();
+      if (sub) saveSub({ ...sub, nome });
+    }
+    usuario.nome = nome;
+    msg.textContent = 'Nome salvo.';
+  });
+
+  $('[data-sair]').addEventListener('click', () => sair());
+
+  const confirmar = $<HTMLInputElement>('#confirmar');
+  const excluir = $<HTMLButtonElement>('[data-excluir]');
+  confirmar.addEventListener('input', () => (excluir.disabled = confirmar.value.trim().toUpperCase() !== 'EXCLUIR'));
+  excluir.addEventListener('click', async () => {
+    const msg = $('[data-excluir-msg]');
+    msg.textContent = '';
+    if (billing) {
+      try {
+        const r = await call(authEndpoint, '/conta', 'DELETE');
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          return void (msg.textContent = d.detail?.mensagem ?? d.descricao ?? 'Não conseguimos excluir agora. Tente de novo em instantes.');
+        }
+      } catch {
+        return void (msg.textContent = 'Não conseguimos falar com o servidor. Tente de novo em instantes.');
+      }
+    }
+    saveSub(null);
+    try {
+      sessionStorage.removeItem('of-demo-email');
+      sessionStorage.removeItem('orbita:sessao');
+      localStorage.removeItem('of-demo-instalacao');
+    } catch {}
+    $('[data-conta]').hidden = true;
+    const fim = $('[data-excluida]');
+    fim.hidden = false;
+    fim.querySelector<HTMLElement>('a')?.focus();
+  });
+</script>
