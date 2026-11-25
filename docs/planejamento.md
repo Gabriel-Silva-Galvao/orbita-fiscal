@@ -103,7 +103,9 @@ Objetivo: a landing passa a ser uma página de vendas. Toda decisão de design r
 | 10e | **Exemplos como respostas reais do Claude Opus 5.5,** tiradas do artefato de exemplos, com a **comparação com e sem o plugin**, igual ao artefato. |
 | 10f | **Reformular o visual** para vender o máximo: chamadas para ação, prova, preço e garantia em destaque, seguindo o plano da 10b. |
 
-A animação da explosão continua sendo a última etapa do projeto, depois da 10f.
+| 10g | **A IA em ação e o átomo de lítio de volta** (pedido de 25/11/2026): o texto das respostas é "gerado" ao vivo, com e sem a Órbita, para mostrar o quão futurista e bom é o produto. O átomo de lítio volta à landing. Antes do código, uma apresentação visual para aprovar: `docs/proposta-animacao-ia.html` (artefato "Órbita em ação"). |
+
+A animação da explosão continua sendo a última etapa do projeto, depois da 10g.
 
 ## 7. Animação da explosão do átomo
 

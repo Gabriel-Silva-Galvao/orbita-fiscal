@@ -187,7 +187,9 @@
     ["Tirar efeitos visuais desnecessários, inclusive no topo", false],
     ["Tirar o carrossel vertical e resumir numa linha", false],
     ["Exemplos como respostas do Claude Opus 5.5, com e sem o plugin", false],
-    ["Reformular o visual para vender o máximo", false]
+    ["Reformular o visual para vender o máximo", false],
+    ["Apresentação visual: IA gerando as respostas e átomo de lítio de volta", true],
+    ["Respostas geradas ao vivo com e sem a Órbita e átomo de volta na landing", false]
   ]},
   {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
     ["Definir quando toca: uma vez, na confirmação do pagamento", true],

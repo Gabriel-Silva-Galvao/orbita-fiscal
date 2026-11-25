@@ -1,4 +1,5 @@
 ---
+import Symbol from './Symbol.astro';
 import Button from './Button.astro';
 import { comparacoes } from '../data/comparacao';
 
@@ -8,6 +9,7 @@ const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa.';
 // Ao lado do título (etapa 10f-2): um trecho real da resposta do Claude Opus 5.5 com a Órbita, a da
 // pergunta de crime tributário do comparativo (src/data/comparacao.ts). O trecho é o primeiro parágrafo
 // da resposta, sem mudar nada; as fontes listadas aparecem todas, com esses nomes, no texto da resposta.
+// Etapa 10g (opção A, escolhida em 25/11/2026): o átomo de lítio gira atrás do cartão de resposta.
 const exemplo = comparacoes.find((c) => c.id === 'crime')!;
 const trecho = exemplo.com.texto.split('\n')[0];
 const fontes = [
@@ -19,7 +21,7 @@ const fontes = [
 ];
 ---
 
-<!-- Etapa 10c: o topo fica parado. Etapa 10f-2: no lugar do átomo, um trecho real de resposta com a fonte. -->
+<!-- Etapa 10f-2: trecho real de resposta com a fonte. Etapa 10g: o átomo de lítio gira atrás dele e a resposta é gerada ao vivo. -->
 <section class="hero" data-hero aria-labelledby="hero-title">
   <!-- Fundo: órbitas largas que atravessam a página, com um ponto viajando. -->
   <svg class="hero-bg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -56,23 +58,32 @@ const fontes = [
       <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude</p>
     </div>
 
-    <figure class="hero-art hero-answer" aria-label="Exemplo de resposta com a Órbita">
-      <p class="ha-q">
-        <span class="ha-label">Pergunta no Claude</span>
-        {exemplo.pergunta}
-      </p>
-      <div class="ha-a">
-        <p class="ha-who">Claude Opus 5.5 com a Órbita</p>
-        <p class="ha-text">{trecho}</p>
-        <p class="ha-label">Fontes citadas na resposta</p>
-        <ul class="ha-sources">
-          {fontes.map((f) => <li>{f}</li>)}
-        </ul>
+    <div class="hero-art">
+      <div class="hero-atom" data-orbit-host aria-hidden="true">
+        <div class="hero-ring hero-ring-1"></div>
+        <div class="hero-ring hero-ring-2"></div>
+        <div class="hero-disc">
+          <Symbol on="bg" pace={0.8} />
+        </div>
       </div>
-      <figcaption class="small">
-        Resposta real, com {exemplo.com.fontes} fontes citadas. <a href="#exemplo">Compare com a resposta sem a Órbita</a>
-      </figcaption>
-    </figure>
+      <figure class="hero-answer" aria-label="Exemplo de resposta com a Órbita" data-gerar>
+        <p class="ha-q" data-g-q>
+          <span class="ha-label">Pergunta no Claude</span>
+          {exemplo.pergunta}
+        </p>
+        <div class="ha-a">
+          <p class="ha-who">Claude Opus 5.5 com a Órbita<span class="ha-status" data-g-status aria-hidden="true"></span></p>
+          <p class="ha-text" data-g-text>{trecho}</p>
+          <p class="ha-label">Fontes citadas na resposta</p>
+          <ul class="ha-sources" data-g-chips>
+            {fontes.map((f) => <li>{f}</li>)}
+          </ul>
+        </div>
+        <figcaption class="small">
+          Resposta real, com {exemplo.com.fontes} fontes citadas. <a href="#exemplo">Compare com a resposta sem a Órbita</a>
+        </figcaption>
+      </figure>
+    </div>
   </div>
 
   <a class="hero-cue" href="#a-base">
@@ -131,9 +142,85 @@ const fontes = [
     margin-top: var(--space-2);
   }
 
+  /* Etapa 10g: o átomo de lítio de volta (opção A). */
+  .hero-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  .hero-atom {
+    position: relative;
+    width: min(400px, 90%);
+    aspect-ratio: 1;
+  }
+  .hero-disc {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .hero-disc :global(.symbol) {
+    width: 80%;
+  }
+  .hero-ring {
+    position: absolute;
+    pointer-events: none;
+  }
+  .hero-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-round);
+    border: 1.5px dashed var(--line-strong);
+  }
+  .hero-ring-1 {
+    inset: -9%;
+    opacity: 0.7;
+  }
+  .hero-ring-2 {
+    inset: -20%;
+    opacity: 0.4;
+  }
+  .hero-ring-2::before {
+    border-style: dotted;
+    border-color: var(--brand);
+  }
+  :global(.anim) .hero-ring-1::before {
+    animation: spin 60s linear infinite;
+  }
+  :global(.anim) .hero-ring-2::before {
+    animation: spin 90s linear infinite reverse;
+  }
+  /* O átomo gira atrás do cartão, à esquerda, e o cartão fica mais estreito à direita. */
+  .hero-atom {
+    position: absolute;
+    z-index: 0;
+    width: min(500px, 112%);
+    left: -22%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .hero-answer {
+    max-width: 360px;
+  }
+  /* Celular: o cartão fica um pouco mais estreito, à direita, e o átomo aparece à esquerda dele. */
+  @media (max-width: 899px) {
+    .hero-atom {
+      width: min(380px, 104vw);
+      left: -38%;
+    }
+    .hero-answer {
+      max-width: 86%;
+    }
+    .hero-ring-2 {
+      display: none;
+    }
+  }
+
   /* Cartão de resposta real (etapa 10f-2). */
   .hero-answer {
     margin: 0;
+    justify-self: end;
     display: grid;
     gap: var(--space-3);
     width: 100%;
@@ -198,7 +285,29 @@ const fontes = [
     border-radius: var(--radius-pill);
     border: 1px solid var(--line-strong);
   }
+  .ha-who {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ha-status {
+    font-weight: 400;
+    color: var(--mute);
+  }
+  .ha-status:not(:empty)::before {
+    content: ' · ';
+  }
+  .ha-a {
+    transition: box-shadow 0.5s;
+  }
+  .hero-answer.is-live .ha-a {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 20%, transparent);
+  }
   .hero-answer figcaption {
+    justify-self: start;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
     color: var(--mute);
   }
   .hero-answer figcaption a {
@@ -211,6 +320,7 @@ const fontes = [
     }
     .hero-answer {
       justify-self: end;
+      margin-block: var(--space-6);
     }
   }
 
@@ -261,3 +371,8 @@ const fontes = [
     }
   }
 </style>
+
+<script>
+  import { gerarNoTopo } from '../scripts/gerar';
+  gerarNoTopo();
+</script>

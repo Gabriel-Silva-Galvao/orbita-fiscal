@@ -1,37 +1,33 @@
 ---
 /**
- * Cena 2, “Direito brasileiro”: foto real do Congresso Nacional, em Brasília.
- * A foto se abre como uma órbita: um círculo que cresce com a rolagem até ocupar a moldura,
- * enquanto a imagem desce em parallax. Cartões de lei flutuam à frente, em revezamento: trocam como um carimbo e, no hover, viram (scripts/hero-chips.ts).
+ * Cena "Direito brasileiro": foto real do Congresso Nacional, em Brasília.
+ * Ao entrar na tela a foto acende devagar (sai do desfoque e assenta) e depois segue respirando,
+ * num zoom lento, enquanto desce em parallax. Sem movimento reduzido, aparece parada.
  */
 import Photo from './Photo.astro';
-import { citacoes } from '../data/citacoes';
-
-const inicio = (text: string) => citacoes.findIndex((c) => c.text === text);
-const tags = [
-  { i: inicio('Lei 13.709/2018'), pos: 't1', speed: 0.9 },
-  { i: inicio('CF, art. 150, I'), pos: 't2', speed: 0.6 },
-  { i: inicio('Súmula 547 · STF'), pos: 't3', speed: 1.1 },
-].map((t) => ({ ...t, ...citacoes[t.i] }));
 ---
 
-<div class="br" data-parallax data-orbit-reveal data-chips={JSON.stringify(citacoes)} data-chips-mode="carimbo">
+<div class="br" data-parallax data-br>
   <div class="br-photo" data-speed="-0.35">
     <Photo name="congresso" sizes="(min-width: 1180px) 1100px, 100vw" />
   </div>
-  {
-    tags.map((t, i) => (
-      <div class:list={['br-tag-pos', t.pos]} data-speed={t.speed} aria-hidden="true">
-        <div class="br-swap" data-chip data-chip-i={t.i}>
-          <div class="br-tag" style={`--d:${6 + i * 1.5}s; --r:${i % 2 ? 3 : -3}deg`}>
-            <span class="br-k" data-chip-kind>{t.kind}</span>
-            <span class="br-t" data-chip-text>{t.text}</span>
-          </div>
-        </div>
-      </div>
-    ))
-  }
 </div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-br]').forEach((el) => {
+    if (!document.documentElement.classList.contains('anim')) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          el.classList.add('is-in');
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+  });
+</script>
 
 <style>
   .br {
@@ -55,66 +51,32 @@ const tags = [
     height: 100%;
     object-fit: cover;
   }
-  /* A órbita que se abre: o motor anima --open de 0 a 1. */
-  :global(.anim) .br-photo {
-    --open: 0;
-    clip-path: circle(calc(18% + var(--open) * 62%) at 50% 55%);
-  }
-  .br-tag-pos {
-    position: absolute;
-    z-index: 2;
-  }
-  /* Camada só do motor de troca: o GSAP mexe aqui sem brigar com a flutuação do .br-tag. */
-  .br-swap {
-    perspective: 700px;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    :global(.anim) .br-swap {
-      cursor: pointer;
+  /* Entrada sutil: a foto sai do desfoque e assenta; depois respira num zoom lento. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.anim) .br-photo :global(.photo) {
+      opacity: 0;
+      filter: blur(14px) saturate(0.6);
+      transform: scale(1.12);
+    }
+    :global(.anim) .br.is-in .br-photo :global(.photo) {
+      animation:
+        br-in 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+        br-breathe 16s ease-in-out 1.8s infinite alternate;
     }
   }
-  .t1 {
-    left: 4%;
-    top: 10%;
-  }
-  .t2 {
-    right: 4%;
-    bottom: 16%;
-  }
-  .t3 {
-    left: 30%;
-    bottom: 6%;
-  }
-  .br-tag {
-    display: grid;
-    gap: 4px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--brand);
-    border-radius: var(--radius-lg);
-    transform: rotate(var(--r));
-  }
-  .br-k {
-    font: var(--text-label);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--brand);
-  }
-  .br-t {
-    font-family: var(--font-display);
-    font-size: 18px;
-    line-height: 22px;
-    color: var(--ink);
-  }
-  @media (max-width: 640px) {
-    .t3 {
-      display: none;
+  @keyframes br-in {
+    to {
+      opacity: 1;
+      filter: none;
+      transform: scale(1.03);
     }
-    .br-t {
-      font-size: 15px;
+  }
+  @keyframes br-breathe {
+    from {
+      transform: scale(1.03);
     }
-    .br-tag {
-      padding: 8px 12px;
+    to {
+      transform: scale(1.09) translateX(-1.5%);
     }
   }
 </style>

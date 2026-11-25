@@ -16,20 +16,6 @@ const u = (slug: string) => `https://unsplash.com/photos/${slug}`;
 const p = (handle: string) => `https://unsplash.com/@${handle}`;
 
 export const photos = {
-  lombadas: {
-    id: 'photo-1765969934461-2f945e5aacb8',
-    page: u('wPCfwvdTdJs'),
-    author: 'Antony Hyson Seltran',
-    profile: p('hyson'),
-    alt: 'Lombadas de livros antigos lado a lado em uma estante.',
-  },
-  estante: {
-    id: 'photo-1769093031054-a8d8846de39c',
-    page: u('uhfABvl9C74'),
-    author: 'Ilya Semenov',
-    profile: p('si1og'),
-    alt: 'Fileiras de livros antigos em prateleiras de madeira.',
-  },
   congresso: {
     id: 'photo-1720650154225-ab0dbdf78d2c',
     page: u('fYy4SWxcgOs'),

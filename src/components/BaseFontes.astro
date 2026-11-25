@@ -1,0 +1,109 @@
+---
+/**
+ * "O que a Órbita consulta" (etapa 10f-3): substitui a cena da biblioteca (foto com cartões virando).
+ * A lista vem dos conjuntos de pesquisa da Órbita (plugins orbita-fiscal e orbita-juridica da organização),
+ * agrupados por tipo de fonte. Sem números: quantidade de documentos, período e frequência de atualização
+ * continuam a definir e só entram quando confirmados (plano da landing, bloco 4).
+ */
+import Pending from './Pending.astro';
+
+const grupos = [
+  {
+    titulo: 'Legislação',
+    itens: ['Legislação federal (Planalto)', 'Normas da Receita Federal', 'Convênios do CONFAZ', 'Legislação tributária de estados do Nordeste e de Minas Gerais'],
+  },
+  {
+    titulo: 'Tribunais superiores',
+    itens: ['STF', 'STJ'],
+  },
+  {
+    titulo: 'Justiça Federal e estadual',
+    itens: ['TRF1 a TRF6 e turmas recursais', 'Tribunais de Justiça dos estados'],
+  },
+  {
+    titulo: 'Contencioso administrativo',
+    itens: ['CARF', 'TIT-SP, CCMG e conselhos e tribunais administrativos estaduais'],
+  },
+  {
+    titulo: 'Consultas e pareceres',
+    itens: ['Soluções de consulta da Receita Federal', 'Pareceres da PGFN', 'Consultas e pareceres das Secretarias de Fazenda'],
+  },
+  {
+    titulo: 'Controle externo',
+    itens: ['TCU', 'TCE-MG'],
+  },
+];
+---
+
+<section id="a-base" class="section base" aria-labelledby="base-title">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <h2 id="base-title" class="display-lg" data-split>O que a Órbita consulta.</h2>
+      <p class="lead">
+        Leis, súmulas e julgados de onde sai cada resposta, para você conferir antes de usar.
+      </p>
+    </div>
+    <ul class="base-grid" data-reveal>
+      {
+        grupos.map((g) => (
+          <li class="base-group">
+            <h3 class="title">{g.titulo}</h3>
+            <ul>
+              {g.itens.map((t) => (
+                <li>{t}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="small mute base-note">
+      A lista completa de fontes, o período coberto e a frequência de atualização serão publicados com data<Pending kind="definir" />.
+    </p>
+  </div>
+</section>
+
+<style>
+  .base {
+    border-top: 1px solid var(--line);
+  }
+  .base-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .base-group {
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    min-width: 0;
+  }
+  .base-group .title {
+    margin: 0 0 var(--space-3);
+    color: var(--brand);
+  }
+  .base-group ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: grid;
+    gap: var(--space-2);
+    font-size: 0.9375rem;
+  }
+  .base-note {
+    margin: var(--space-5) 0 0;
+  }
+  @media (max-width: 900px) {
+    .base-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    .base-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

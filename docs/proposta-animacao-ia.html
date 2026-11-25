@@ -1,0 +1,299 @@
+<title>Órbita em ação</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: proposta em três quadros empilhados (topo, comparativo, onde entra o átomo), cada um uma demonstração viva com botão de repetir. Cores e fontes do site da Órbita. */
+:root{
+  --bg:#f2f6ef; --surface:#fafcf8; --ink:#102f31; --mute:#53665e; --brand:#10634f; --on-brand:#f2f6ef;
+  --soft:#c5dfa4; --line:#cfd9cb; --line-strong:#6f877b; --nucleus:#213947; --glow:rgba(16,99,79,.18); --dim:#8a9a93;
+  --display:"Newsreader",Georgia,serif; --body:"Hanken Grotesk","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#102b28; --surface:#16352f; --ink:#f0f5e8; --mute:#b2c8bc; --brand:#83d3a9; --on-brand:#102b28;
+  --soft:#385744; --line:#2d4c45; --line-strong:#6a9487; --nucleus:#f0f5e8; --glow:rgba(131,211,169,.22); --dim:#6f857c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#102b28; --surface:#16352f; --ink:#f0f5e8; --mute:#b2c8bc; --brand:#83d3a9; --on-brand:#102b28;
+  --soft:#385744; --line:#2d4c45; --line-strong:#6a9487; --nucleus:#f0f5e8; --glow:rgba(131,211,169,.22); --dim:#6f857c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1120px;margin:0 auto;padding-block:40px 80px;display:grid;gap:72px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.12}
+h1{font-size:clamp(2rem,4vw,3rem)} h2{font-size:clamp(1.6rem,3vw,2.25rem)} h3{font-size:1.25rem}
+p{margin:0;max-width:66ch}
+.lead{color:var(--mute);font-size:1.0625rem}
+.eyebrow{font:600 .72rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+section{display:grid;gap:20px}
+.btn{font:600 .9375rem/1 var(--body);border-radius:999px;padding:12px 18px;cursor:pointer;border:1px solid var(--brand);background:var(--brand);color:var(--on-brand)}
+.btn.alt{background:transparent;color:var(--brand)}
+.btn:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stage{border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:clamp(18px,3vw,36px);position:relative;overflow:hidden}
+.tag{display:inline-block;font:600 .72rem/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--mute)}
+
+/* ---------- Átomo de lítio (Li-7) ---------- */
+.atom{overflow:visible;display:block}
+.atom .ring{fill:none;stroke:var(--brand);stroke-width:2.2}
+.atom .e{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.atom .n circle{stroke:var(--surface);stroke-width:.7}
+.atom .n{transform-origin:50px 50px;transform-box:view-box;transition:transform .4s}
+.atom.searching .n{animation:pulse .7s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.13)}}
+.atom .halo{fill:none;stroke:var(--brand);stroke-width:1;opacity:0}
+.atom.searching .halo{animation:halo 1.4s ease-out infinite}
+@keyframes halo{0%{r:6;opacity:.8}100%{r:46;opacity:0}}
+
+/* ---------- Quadro 1: topo ---------- */
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:32px;align-items:center}
+.hero-copy{display:grid;gap:14px}
+.hero-copy h1{font-size:clamp(1.9rem,3.6vw,2.7rem)}
+.hero-art{position:relative;min-height:470px;display:grid;place-items:center}
+.hero-art .atom{position:absolute;width:min(470px,100%);left:-6%;top:50%;transform:translateY(-50%);opacity:.95}
+.card{position:relative;z-index:1;width:min(340px,100%);display:grid;gap:10px;justify-self:end;margin-top:90px}
+.bubble{justify-self:end;background:var(--soft);color:var(--ink);padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:.9rem;line-height:1.45;max-width:94%}
+.answer{background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(6px);border:1px solid var(--brand);border-radius:14px;padding:14px 16px;display:grid;gap:8px;box-shadow:0 0 0 0 var(--glow);transition:box-shadow .6s}
+.answer.live{box-shadow:0 0 0 6px var(--glow)}
+.who{font-weight:600;font-size:.85rem;color:var(--brand);display:flex;align-items:center;gap:8px}
+.status{font-size:.8rem;color:var(--mute);min-height:1.2em}
+.stream{font-size:.92rem;line-height:1.55;min-height:4.6em}
+.caret{display:inline-block;width:.5em;height:1em;background:var(--brand);vertical-align:-.15em;margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.cite{color:var(--brand);font-weight:600;background:var(--glow);border-radius:4px;padding:0 2px;animation:lightup .9s ease-out}
+@keyframes lightup{0%{background:var(--brand);color:var(--on-brand)}100%{background:var(--glow)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.chip{font-size:.78rem;padding:4px 9px;border-radius:999px;border:1px solid var(--line-strong);animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes pop{0%{transform:scale(.6) translateY(6px);opacity:0}100%{transform:none;opacity:1}}
+
+/* ---------- Quadro 2: comparativo ---------- */
+.q{font-family:var(--display);font-size:1.3rem;line-height:1.3}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.col{border-radius:14px;padding:16px;display:grid;gap:10px;min-width:0;border:1px dashed var(--line-strong)}
+.col.com{border:1px solid var(--brand)}
+.col header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.col header b{font-size:.9rem}
+.col.com header b{color:var(--brand)}
+.meter{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums}
+.meter strong{font:500 1.6rem/1 var(--display)}
+.meter span{font-size:.75rem;color:var(--mute)}
+.col.sem .stream{color:var(--mute)}
+.scan{display:grid;gap:6px;font-size:.8rem}
+.scan .bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.scan .bar i{display:block;height:100%;width:0;background:var(--brand);transition:width .25s linear}
+.scan .bases{display:flex;flex-wrap:wrap;gap:5px}
+.scan .bases span{padding:2px 7px;border-radius:6px;border:1px solid var(--line);color:var(--dim);transition:all .2s}
+.scan .bases span.hit{border-color:var(--brand);color:var(--brand);background:var(--glow)}
+.mini{width:42px;height:auto}
+.verdict{justify-self:start;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid var(--brand);color:var(--brand);opacity:0;transform:translateY(8px);transition:all .5s}
+.verdict.on{opacity:1;transform:none}
+.miss{text-decoration:underline wavy;text-decoration-color:var(--dim)}
+
+/* ---------- Quadro 3: opções ---------- */
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.opt{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;align-content:start;background:var(--surface)}
+.opt.rec{border-color:var(--brand)}
+.thumb{height:130px;border-radius:10px;background:var(--bg);position:relative;overflow:hidden;display:grid;place-items:center}
+.thumb .atom{width:120px}
+.thumb .mock{position:absolute;background:var(--surface);border:1px solid var(--brand);border-radius:8px}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.note{border-top:2px solid var(--brand);padding-top:10px;display:grid;gap:4px}
+.note b{font-size:.95rem}
+.note p{font-size:.9rem;color:var(--mute)}
+
+@media (max-width:860px){
+  .hero,.cols{grid-template-columns:1fr}
+  .hero-art .atom{left:50%;transform:translate(-50%,-50%);width:min(420px,100%)}
+  .card{justify-self:center;margin-top:0}
+  .opts,.notes{grid-template-columns:1fr}
+  .hero-art{min-height:380px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<main>
+  <header style="display:grid;gap:12px">
+    <span class="eyebrow">Proposta · etapa 10g · para aprovar</span>
+    <h1>A Órbita trabalhando na frente de quem visita o site.</h1>
+    <p class="lead">Duas animações para mostrar a IA em ação e o átomo de lítio de volta. Os textos são as respostas reais do Claude Opus 5.5 do comparativo (pergunta de crime tributário). Clique em "Ver de novo" à vontade.</p>
+  </header>
+
+  <!-- Quadro 1 -->
+  <section aria-labelledby="t1">
+    <div class="row" style="justify-content:space-between">
+      <div style="display:grid;gap:6px"><span class="eyebrow">1 · Topo da landing</span><h2 id="t1">O átomo volta e a resposta nasce ao lado dele.</h2></div>
+      <button class="btn alt" type="button" data-replay="hero">Ver de novo</button>
+    </div>
+    <p class="lead">Ao abrir a página, a pergunta aparece no balão. O núcleo pulsa e solta ondas enquanto a Órbita consulta a base. Depois a resposta é escrita palavra por palavra, cada lei e julgado acende quando é citado e as fontes surgem embaixo, uma a uma.</p>
+    <div class="stage">
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Plugin para Claude</span>
+          <h1>A lei e o julgado certos, com a fonte, na IA que você já usa.</h1>
+          <p class="lead">Pergunte no Claude como sempre. A Órbita busca na base de legislação e jurisprudência brasileira e devolve a resposta com a fonte para você conferir.</p>
+          <div class="row"><span class="btn" aria-hidden="true">Assinar a partir de R$ 50/mês</span><span class="btn alt" aria-hidden="true">Ver com e sem a Órbita</span></div>
+        </div>
+        <div class="hero-art">
+          <svg class="atom" id="atom-hero" viewBox="6 14 88 72" aria-hidden="true"></svg>
+          <div class="card">
+            <p class="bubble" id="h-q"></p>
+            <div class="answer" id="h-ans">
+              <span class="who">Claude Opus 5.5 com a Órbita</span>
+              <span class="status" id="h-status">&nbsp;</span>
+              <p class="stream" id="h-text"></p>
+              <div class="chips" id="h-chips"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quadro 2 -->
+  <section aria-labelledby="t2">
+    <div class="row" style="justify-content:space-between">
+      <div style="display:grid;gap:6px"><span class="eyebrow">2 · Comparativo com e sem a Órbita</span><h2 id="t2">As duas respostas sendo geradas ao mesmo tempo.</h2></div>
+      <button class="btn" type="button" data-replay="cmp">Gerar as duas respostas</button>
+    </div>
+    <p class="lead">Do lado esquerdo, o Claude responde de memória: o texto sai direto e o contador de fontes fica parado. Do lado direito, o átomo trabalha, as bases acendem conforme a busca, o contador de fontes sobe e as citações brilham. No fim, aparece o veredito da análise.</p>
+    <div class="stage">
+      <div style="display:grid;gap:14px">
+        <p class="q">A partir de quando se pode falar em crime material contra a ordem tributária e quando começa a correr a prescrição?</p>
+        <div class="cols">
+          <article class="col sem">
+            <header><b>Claude Opus 5.5 sozinho</b><span class="meter"><strong id="m-sem">0</strong><span>fontes</span></span></header>
+            <span class="status" id="s-status">Aguardando</span>
+            <p class="stream" id="s-text"></p>
+          </article>
+          <article class="col com">
+            <header><b>Claude Opus 5.5 com a Órbita</b><span class="row" style="gap:8px"><svg class="atom mini" id="atom-mini" viewBox="6 14 88 72" aria-hidden="true"></svg><span class="meter"><strong id="m-com">0</strong><span>fontes</span></span></span></header>
+            <div class="scan" id="c-scan">
+              <span class="status" id="c-status">Aguardando</span>
+              <div class="bar"><i id="c-bar"></i></div>
+              <div class="bases" id="c-bases"></div>
+            </div>
+            <p class="stream" id="c-text"></p>
+          </article>
+        </div>
+        <p class="verdict" id="verdict">Divergem: sem a Órbita, faltou a LC 225/2026, que mudou a regra do parcelamento.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quadro 3 -->
+  <section aria-labelledby="t3">
+    <div style="display:grid;gap:6px"><span class="eyebrow">3 · Onde o átomo de lítio volta</span><h2 id="t3">Três jeitos de trazer o átomo de volta.</h2></div>
+    <div class="opts">
+      <article class="opt rec">
+        <div class="thumb"><svg class="atom" data-atom viewBox="6 14 88 72" aria-hidden="true"></svg><div class="mock" style="width:56%;height:46%;right:12%;bottom:14%"></div></div>
+        <span class="tag" style="border-color:var(--brand);color:var(--brand);justify-self:start">Recomendado</span>
+        <h3>A · Atrás do cartão, no topo</h3>
+        <p class="lead" style="font-size:.92rem">O átomo grande gira atrás da resposta, como no quadro 1. É a marca e a IA juntas no primeiro olhar.</p>
+      </article>
+      <article class="opt rec">
+        <div class="thumb"><div class="mock" style="width:40%;height:62%;left:8%"></div><div class="mock" style="width:40%;height:62%;right:8%"></div><svg class="atom" data-atom viewBox="6 14 88 72" aria-hidden="true" style="width:44px;position:absolute;right:12%;top:20%"></svg></div>
+        <span class="tag" style="border-color:var(--brand);color:var(--brand);justify-self:start">Recomendado</span>
+        <h3>B · Motor do comparativo</h3>
+        <p class="lead" style="font-size:.92rem">Um átomo pequeno no cabeçalho da coluna "com a Órbita" pulsa enquanto ela pesquisa, como no quadro 2.</p>
+      </article>
+      <article class="opt">
+        <div class="thumb"><svg class="atom" data-atom viewBox="6 14 88 72" aria-hidden="true"></svg></div>
+        <span class="tag" style="justify-self:start">Como era</span>
+        <h3>C · Só o átomo no topo</h3>
+        <p class="lead" style="font-size:.92rem">Volta exatamente como estava antes, com os cartões de lei em órbita, e o trecho de resposta sai.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="t4">
+    <div style="display:grid;gap:6px"><span class="eyebrow">Cuidados</span><h2 id="t4">Futurista sem atrapalhar a venda.</h2></div>
+    <div class="notes">
+      <div class="note"><b>Texto real</b><p>As animações só mostram, em ritmo de geração, as respostas reais do comparativo. Nada é inventado.</p></div>
+      <div class="note"><b>Toca quando aparece</b><p>Cada animação começa quando entra na tela, toca uma vez e tem "Ver de novo". O título do topo continua parado, para não atrasar o carregamento.</p></div>
+      <div class="note"><b>Movimento reduzido</b><p>Quem pediu menos movimento no sistema vê a resposta pronta, com as fontes, sem a geração.</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const D={
+  q:'A partir de quando se pode falar em crime material contra a ordem tributária e quando começa a correr a prescrição?',
+  com:'O crime material contra a ordem tributária só se configura com o lançamento definitivo do tributo, e a prescrição penal começa a correr nessa mesma data: a constituição definitiva do crédito tributário, e não a data da sonegação. […] Novidade de 2026: a LC 225/2026 (Código de Defesa do Contribuinte) incluiu o § 5º no art. 83.',
+  sem:'A regra central é a Súmula Vinculante 24 do STF: o crime material só se consuma com o lançamento definitivo, e a prescrição corre dessa data. […] Parcelamento suspende a pretensão punitiva e a prescrição (art. 83, §§ 2º e 3º, da Lei 9.430/1996) […]',
+  fontes:['Súmula Vinculante 24 do STF','Lei 8.137/1990, art. 1º','Lei 9.430/1996, art. 83','ARE 1.618.979 AgR (STF)','LC 225/2026','Código Penal, art. 111'],
+  bases:['Planalto','STF','STJ','TRFs','TJs','CARF','Receita Federal','PGFN']
+};
+const CITE=/(Súmula Vinculante 24 do STF|LC 225\/2026|Lei 9\.430\/1996|art\. 83|Lei 8\.137\/1990)/g;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+
+/* Átomo de lítio: dois anéis a -28°, três elétrons, núcleo de 7 esferas (3 prótons, 4 nêutrons). */
+const NS='http://www.w3.org/2000/svg';
+const atoms=[];
+function buildAtom(svg){
+  svg.innerHTML=`<circle class="halo" cx="50" cy="50" r="6"/><g transform="rotate(-28 50 50)"><ellipse class="ring" cx="50" cy="50" rx="43" ry="28"/><ellipse class="ring" cx="50" cy="50" rx="27" ry="17"/></g>`+
+   `<g transform="rotate(-28 50 50)" class="es"></g><g class="n">`+
+   [[57.2,50,'b'],[46.4,56.236,'b'],[46.4,43.764,'b'],[53.6,56.236,'n'],[42.8,50,'n'],[53.6,43.764,'n'],[50,50,'n']]
+     .map(([x,y,k])=>`<circle cx="${x}" cy="${y}" r="4.4" fill="var(--${k==='b'?'brand':'nucleus'})"/>`).join('')+`</g>`;
+  const es=svg.querySelector('.es');
+  const els=[{rx:27,ry:17,p:Math.PI},{rx:27,ry:17,p:0},{rx:43,ry:28,p:0}].map(o=>{const c=document.createElementNS(NS,'circle');c.setAttribute('r','3.4');c.setAttribute('class','e');es.appendChild(c);return {...o,c}});
+  const a={svg,els,speed:1};atoms.push(a);return a;
+}
+document.querySelectorAll('#atom-hero,#atom-mini,[data-atom]').forEach(buildAtom);
+let last=performance.now(),t=0;
+function frame(now){const dt=(now-last)/1000;last=now;
+  atoms.forEach(a=>{a.t=(a.t||0)+dt*a.speed*(a.svg.classList.contains('searching')?3.2:1);
+    a.els.forEach((e,i)=>{const w=i<2?0.9:0.55;const ang=a.t*w+e.p;e.c.setAttribute('cx',50+e.rx*Math.cos(ang));e.c.setAttribute('cy',50+e.ry*Math.sin(ang));});});
+  if(!reduce)requestAnimationFrame(frame);}
+reduce?atoms.forEach(a=>a.els.forEach(e=>{e.c.setAttribute('cx',50+e.rx*Math.cos(e.p));e.c.setAttribute('cy',50);})):requestAnimationFrame(frame);
+
+/* Escrever palavra por palavra, acendendo as citações. */
+async function stream(el,text,ms,highlight){
+  el.innerHTML='';const caret=document.createElement('span');caret.className='caret';
+  const parts=text.split(/(\s+)/);let html='';
+  if(reduce){el.innerHTML=highlight?text.replace(CITE,'<span class="cite">$1</span>'):text;return;}
+  for(let i=0;i<parts.length;i++){html+=parts[i];
+    let shown=highlight?safe(html).replace(CITE,'<span class="cite">$1</span>'):safe(html);
+    el.innerHTML=shown;el.appendChild(caret);if(parts[i].trim())await wait(ms);}
+  el.innerHTML=highlight?safe(text).replace(CITE,'<span class="cite">$1</span>'):safe(text);
+}
+const safe=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const count=async(el,to,ms)=>{for(let i=+el.textContent;i<=to;i++){el.textContent=i;await wait(ms);}};
+
+/* Quadro 1 */
+let heroRun=0;
+async function playHero(){const run=++heroRun;const atom=document.getElementById('atom-hero');
+  const q=document.getElementById('h-q'),st=document.getElementById('h-status'),tx=document.getElementById('h-text'),ch=document.getElementById('h-chips'),ans=document.getElementById('h-ans');
+  q.textContent='';tx.textContent='';ch.innerHTML='';st.textContent=' ';
+  await stream(q,D.q,28,false);if(run!==heroRun)return;
+  atom.classList.add('searching');ans.classList.add('live');
+  for(const b of D.bases){if(run!==heroRun)return;st.textContent='Consultando a base da Órbita: '+b+'…';await wait(260);}
+  atom.classList.remove('searching');st.textContent='6 fontes encontradas';
+  await stream(tx,D.com.split(' […]')[0],55,true);if(run!==heroRun)return;
+  for(const f of D.fontes.slice(0,5)){const s=document.createElement('span');s.className='chip';s.textContent=f;ch.appendChild(s);await wait(180);}
+  ans.classList.remove('live');
+}
+
+/* Quadro 2 */
+let cmpRun=0;
+async function playCmp(){const run=++cmpRun;
+  const sT=document.getElementById('s-text'),cT=document.getElementById('c-text'),sS=document.getElementById('s-status'),cS=document.getElementById('c-status');
+  const mS=document.getElementById('m-sem'),mC=document.getElementById('m-com'),bar=document.getElementById('c-bar'),bases=document.getElementById('c-bases'),v=document.getElementById('verdict');
+  const mini=document.getElementById('atom-mini');
+  sT.textContent='';cT.textContent='';mS.textContent='0';mC.textContent='0';bar.style.width='0';v.classList.remove('on');
+  bases.innerHTML=D.bases.map(b=>`<span>${b}</span>`).join('');
+  sS.textContent='Respondendo de memória, sem consultar fontes';cS.textContent='Consultando a base da Órbita…';mini.classList.add('searching');
+  const sem=(async()=>{await stream(sT,D.sem,60,false);if(run===cmpRun){sS.textContent='Pronto · fontes citadas de memória';await count(mS,3,120);}})();
+  const com=(async()=>{const spans=[...bases.children];
+    for(let i=0;i<spans.length;i++){if(run!==cmpRun)return;spans[i].classList.add('hit');bar.style.width=((i+1)/spans.length*100)+'%';await wait(220);}
+    mini.classList.remove('searching');cS.textContent='Base consultada · escrevendo com as fontes';
+    count(mC,6,180);await stream(cT,D.com,60,true);if(run===cmpRun)cS.textContent='Pronto · 6 fontes citadas';})();
+  await Promise.all([sem,com]);if(run===cmpRun)v.classList.add('on');
+}
+
+document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>b.dataset.replay==='hero'?playHero():playCmp()));
+/* Toca quando entra na tela, uma vez. */
+const seen=new WeakSet();
+new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting||seen.has(e.target))return;seen.add(e.target);
+  e.target.id==='h-ans'?playHero():playCmp();}),{threshold:.4}).observe(document.getElementById('h-ans'));
+new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!seen.has(e.target)){seen.add(e.target);playCmp();}}),{threshold:.4}).observe(document.getElementById('c-text').closest('.stage'));
+</script>

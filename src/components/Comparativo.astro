@@ -26,7 +26,6 @@ function blocos(texto: string): Bloco[] {
   return out;
 }
 
-const fontes = (n: number) => (n === 0 ? 'nenhuma fonte citada' : n === 1 ? '1 fonte citada' : `${n} fontes citadas`);
 const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), comBlocos: blocos(c.com.texto) }));
 ---
 
@@ -67,7 +66,8 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
             {
               lado: 'sem',
               quem: 'Claude Opus 5.5 sozinho',
-              meta: `${c.sem.origem === 'web' ? 'Buscou na web' : 'Respondeu de memória, sem consultar fontes'} · ${fontes(c.sem.fontes)}`,
+              meta: c.sem.origem === 'web' ? 'Buscou na web' : 'Respondeu de memória, sem consultar fontes',
+              fontes: c.sem.fontes,
               blocos: c.semBlocos,
               longa: c.sem.palavras > 180,
               rodape: c.sem.nota ? { rotulo: 'Na análise', texto: c.sem.nota } : null,
@@ -75,17 +75,39 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
             {
               lado: 'com',
               quem: 'Claude Opus 5.5 com a Órbita',
-              meta: `Consultou a base da Órbita · ${fontes(c.com.fontes)}`,
+              meta: 'Consultou a base da Órbita',
+              fontes: c.com.fontes,
               blocos: c.comBlocos,
               longa: c.com.palavras > 180,
               rodape: c.com.acrescentou ? { rotulo: 'O que a Órbita acrescentou', texto: c.com.acrescentou } : null,
             },
           ].map((col) => (
-            <article class:list={['cmp-col', col.lado]} aria-label={col.quem}>
+            <article class:list={['cmp-col', col.lado]} aria-label={col.quem} data-fontes={col.fontes}>
               <header class="cmp-head">
-                <strong>{col.quem}</strong>
-                <span class="small">{col.meta}</span>
+                <div class="cmp-who">
+                  <strong>{col.quem}</strong>
+                  <span class="small">{col.meta}</span>
+                </div>
+                <span class="cmp-count">
+                  <strong data-g-count>{col.fontes}</strong>
+                  <span class="small">{col.fontes === 1 ? 'fonte' : 'fontes'}</span>
+                </span>
               </header>
+              <p class="g-status small" data-g-status>
+                {col.lado === 'com'
+                  ? `Pronto: ${col.fontes === 1 ? '1 fonte citada' : `${col.fontes} fontes citadas`}.`
+                  : `Pronto: ${col.fontes === 0 ? 'nenhuma fonte citada' : col.fontes === 1 ? '1 fonte citada' : `${col.fontes} fontes citadas`} de memória.`}
+              </p>
+              {col.lado === 'com' && (
+                <div class="g-scan" aria-hidden="true">
+                  <div class="g-bar"><i style="width:100%" /></div>
+                  <div class="g-bases">
+                    {['Planalto', 'STF', 'STJ', 'TRFs', 'TJs', 'CARF', 'Receita Federal', 'PGFN'].map((b) => (
+                      <span class="is-hit">{b}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div class="cmp-text" data-clip data-long={col.longa ? '' : undefined}>
                 {col.blocos.map((b) =>
                   b.tipo === 'h' ? <h4>{b.texto}</h4> : b.tipo === 'ul' ? <ul>{b.itens.map((t) => <li>{t}</li>)}</ul> : <p>{b.texto}</p>,
@@ -194,10 +216,30 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
     background: var(--surface);
   }
   .cmp-head {
-    display: grid;
-    gap: 2px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     padding-bottom: var(--space-3);
     border-bottom: 1px solid var(--line);
+  }
+  .cmp-who {
+    display: grid;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+  .cmp-count {
+    display: grid;
+    justify-items: end;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cmp-count strong {
+    font: var(--text-display-md);
+    color: var(--ink);
+  }
+  .cmp-col.com .cmp-count strong {
+    color: var(--brand);
   }
   .cmp-col.com .cmp-head strong {
     color: var(--brand);
@@ -264,6 +306,7 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
 </style>
 
 <script>
+  import { gerarNoComparativo } from '../scripts/gerar';
   document.querySelectorAll<HTMLElement>('[data-cmp]').forEach((root) => {
     const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
     const panels = Array.from(root.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
@@ -276,6 +319,8 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
         panels[j].classList.toggle('is-on', on);
       });
       if (focus) tabs[i].focus();
+      // A geração ao vivo (scripts/gerar.ts) toca a pergunta na primeira vez que a aba abre.
+      root.dispatchEvent(new CustomEvent('cmp:aba', { detail: panels[i] }));
     };
     tabs.forEach((t, i) => {
       t.addEventListener('click', () => select(i));
@@ -304,4 +349,5 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
       });
     });
   });
+  gerarNoComparativo();
 </script>

@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 10f-2 · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · etapa 10g + foto de Brasília · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -162,7 +162,12 @@ td:first-child{font-weight:700;white-space:nowrap}
         <li><strong>Imagem de compartilhamento:</strong> refeita com o título novo.</li>
       </ul>
       <p>Etapa 10f-2 pronta: no lugar do átomo e dos cartões de lei, o topo mostra um trecho real da resposta do Claude Opus 5.5 com a Órbita (a pergunta de crime tributário) e cinco das fontes citadas, com o link "Compare com a resposta sem a Órbita". No celular, o botão de assinar subiu para o meio da primeira tela.</p>
-      <p>Faltam a 10f-3 (a cena da biblioteca vira uma lista do que a base consulta) e a 10f-4 (sai a cena de Brasília e o formulário vai para a Ajuda).</p>
+      <p>Etapa 10f-3 pronta: a cena da biblioteca (foto das lombadas com cartões de lei virando) virou o bloco "O que a Órbita consulta.". São seis grupos de fontes: legislação, tribunais superiores, Justiça Federal e estadual, contencioso administrativo, consultas e pareceres, e controle externo. Ainda sem números: a lista completa, o período e a atualização continuam a definir.</p>
+      <p>Etapa 10g (a IA em ação): as respostas aparecem sendo geradas ao vivo. No topo, a pergunta é digitada, o átomo acelera enquanto a Órbita consulta a base, a resposta é escrita com as citações acendendo e as fontes surgem uma a uma. No comparativo, as duas colunas são geradas juntas: sem a Órbita, direto da memória do modelo; com a Órbita, primeiro a busca (bases acendendo, barra e contador de fontes) e depois o texto. O selo da análise aparece no fim. O texto é sempre o original. Com movimento reduzido, tudo aparece pronto.</p>
+      <p>O átomo de lítio voltou na opção A, escolhida em 25/11/2026: ele gira atrás do cartão de resposta e acelera enquanto a Órbita consulta a base. No celular, aparece à esquerda do cartão. As opções B e C foram testadas e saíram. Proposta visual: artefato "Órbita em ação".</p>
+      <p>A página não pula enquanto o texto é gerado: o cartão e as colunas guardam a altura final antes de esvaziar (CLS 0,0048 medido).</p>
+      <p>Na seção "Feito para quem assina o que entrega", a foto do Congresso perdeu os cartões de norma e súmula: ela agora sai do desfoque devagar e depois respira num zoom lento.</p>
+      <p>Falta a 10f-4 (o formulário vai para a Ajuda e o código sem uso sai).</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>
       <h3>Plugin e servidor MCP</h3>
       <p>O cliente instala só o plugin, e o que se vende é a assinatura. O servidor MCP com a base jurídica já existe e será ligado depois; o site não depende dele. Até lá, "Baixar o plugin", "Gerar código de conexão" e os números do Status do plugin funcionam em demonstração, marcados "a definir". A lista de cada lugar está em <code>docs/planejamento.md</code>, seção "Servidor MCP".</p>
@@ -419,7 +424,7 @@ const testes=[
  ['SEO','Site compilado: LCP no título em ~190 ms (desktop) e ~130 ms (celular), sem rede'],
  ['SEO','Nada pula na tela ao carregar (CLS 0) no desktop e no celular'],
  ['Site','Topo parado: tudo visível desde o primeiro instante, sem órbita nem cartões girando'],
- ['Site','Animações do resto da página continuam: títulos letra a letra, entradas e cartões nos livros e em Brasília'],
+ ['Site','Animações do resto da página continuam: títulos letra a letra, entradas e a foto de Brasília acendendo do desfoque'],
  ['Site','"Do monte de papel à peça revisada" virou uma linha, também no celular, sem rolagem lateral'],
  ['Site','Cabeçalho fixo no topo em toda a rolagem, para baixo e para cima'],
  ['Site','Comparativo: cinco perguntas, com e sem a Órbita lado a lado e o texto original'],
@@ -430,6 +435,11 @@ const testes=[
  ['Site','Perguntas de compra primeiro e chamada final "Comece hoje." com os dois planos'],
  ['Site','Topo com um trecho real de resposta e as fontes, nos temas claro e escuro'],
  ['Site','No celular, o botão de assinar aparece na primeira tela (antes ficava no fim)'],
+ ['Site','Bloco "O que a Órbita consulta." com seis grupos de fontes, em 3, 2 ou 1 coluna conforme a tela'],
+ ['Site','Topo: pergunta digitada, átomo acelerando na busca, resposta escrita com as citações acendendo e fontes surgindo'],
+ ['Site','Comparativo: as duas respostas geradas juntas, com busca, contadores do zero e selo no fim'],
+ ['Site','Átomo de lítio girando atrás do cartão (opção A), também visível no celular'],
+ ['SEO','Geração ao vivo sem a página pular: CLS 0,0048'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
