@@ -10,6 +10,7 @@
  *   API fora do ar          -> 503, sem abrir a página
  * Toda regra de negócio fica na API; aqui só se decide se a porta abre.
  */
+import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
 
@@ -17,7 +18,23 @@ const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar'];
 
 const protegida = (path: string) => PROTEGIDAS.some((p) => path === p || path.startsWith(`${p}/`));
 
+// SEO (etapa 8a): conta, compra e login ficam fora do Google. O robots.txt não bloqueia essas rotas
+// (senão o Google nem leria o noindex); o aviso vai no cabeçalho de toda resposta delas, redirecionamentos inclusive.
+const foraDoGoogle = (path: string) => protegida(path) || path === '/entrar';
+
 export const onRequest = defineMiddleware(async (context, next) => {
+  const res = await porta(context, next);
+  if (foraDoGoogle(context.url.pathname)) {
+    try {
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    } catch {
+      // Respostas com cabeçalhos imutáveis (raras): o meta robots do layout continua valendo.
+    }
+  }
+  return res;
+});
+
+async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {
   const { pathname, search } = context.url;
   // Páginas estáticas são geradas no build, sem requisição real: não há o que proteger.
   if (context.isPrerendered || !protegida(pathname) || !API_URL) return next();
@@ -45,4 +62,4 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   context.locals.usuario = (await res.json()) as App.Locals['usuario'];
   return next();
-});
+}

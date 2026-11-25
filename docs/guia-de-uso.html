@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · IAs na landing · 24/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · SEO 8a · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -145,6 +145,8 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>No app do Claude, as configurações <code>api</code> e <code>site-com-api</code> de <code>.claude/launch.json</code> sobem os dois já ligados. No terminal, defina antes de <code>npm run dev</code>:</p>
       <div class="cmd"><pre>$env:API_URL="http://localhost:8000"; $env:PUBLIC_AUTH_ENDPOINT="http://localhost:8000/auth"; $env:PUBLIC_BILLING_ENDPOINT="http://localhost:8000/billing"; npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
       <p>Com isso, <code>/conta</code>, <code>/instalar</code> e <code>/assinar</code> só abrem com sessão; sem ela, levam ao Entrar.</p>
+      <h3>SEO no ar</h3>
+      <p>O site gera <code>/sitemap-index.xml</code> e serve <code>/robots.txt</code>. No dia da publicação: verificar o domínio no Google Search Console (registro TXT no DNS), enviar o sitemap e importar no Bing Webmaster Tools.</p>
       <h3>Testes</h3>
       <div class="cmd"><pre>.venv\Scripts\python.exe -m pytest -q</pre><button class="btn" data-copy>Copiar</button></div>
     </section>
@@ -383,6 +385,11 @@ const testes=[
  ['Site','Linha do Claude se desenha ao rolar; as outras aparecem tracejadas'],
  ['Site','Celular: cartões em coluna, sem linhas e sem rolagem lateral'],
  ['Site','Movimento reduzido: tudo visível e parado'],
+ ['SEO','Sitemap só com as páginas públicas (início, Ajuda, Termos, Privacidade, Reembolso)'],
+ ['SEO','robots.txt libera tudo, inclusive os robôs de busca das IAs, e aponta o sitemap'],
+ ['SEO','Entrar, Conta, Instalar e Checkout com noindex (meta e cabeçalho), inclusive nos redirecionamentos'],
+ ['SEO','Endereço inexistente responde 404 de verdade, com página própria'],
+ ['SEO','Canonical, og:url e og:site_name na página inicial'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
@@ -396,7 +403,7 @@ const testes=[
 let marcados=new Set(store.get('guia-testes',[]));let filtro='Todos';
 function renderTestes(){
   const f=$('[data-filters]');f.innerHTML='';
-  ['Todos','API','Site + API','Site','Navegador'].forEach(n=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.setAttribute('aria-pressed',n===filtro);if(n===filtro)b.classList.add('main');b.onclick=()=>{filtro=n;renderTestes()};f.append(b)});
+  ['Todos','API','Site + API','Site','SEO','Navegador'].forEach(n=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.setAttribute('aria-pressed',n===filtro);if(n===filtro)b.classList.add('main');b.onclick=()=>{filtro=n;renderTestes()};f.append(b)});
   const box=$('[data-tests]');box.innerHTML='';
   testes.forEach(([a,t],i)=>{if(filtro!=='Todos'&&a!==filtro)return;
     const l=document.createElement('label');l.className='test'+(marcados.has(i)?' checked':'');

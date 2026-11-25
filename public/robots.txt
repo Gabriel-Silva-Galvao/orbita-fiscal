@@ -1,0 +1,9 @@
+# Órbita: robots.txt (SEO, etapa 8a)
+# Tudo liberado, inclusive os robôs de busca das IAs (OAI-SearchBot, PerplexityBot, Claude-SearchBot,
+# Bingbot), que levam o site às respostas do ChatGPT, Perplexity, Claude e Copilot.
+# Conta, Checkout, Instalar e Entrar NÃO são bloqueados aqui de propósito: eles levam noindex
+# (meta robots e cabeçalho X-Robots-Tag), e o Google só lê o noindex se puder abrir a página.
+User-agent: *
+Allow: /
+
+Sitemap: https://orbitafiscal.com.br/sitemap-index.xml
