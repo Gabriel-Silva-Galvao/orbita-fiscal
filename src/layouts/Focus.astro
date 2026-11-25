@@ -1,10 +1,15 @@
 ---
 /**
  * Layout de foco para Entrar e Checkout (briefing, Páginas 2 e 3): nenhum menu além do logo,
- * que volta à landing; links legais discretos no fim. Sem rodapé completo, sem saídas extras.
+ * que volta à landing. Item 2 da rodada de testes: rodapé curto com os dados da empresa e os links legais,
+ * sempre colado embaixo da tela, mesmo em página curta (a página ocupa no mínimo a altura da janela).
  */
 import Base from './Base.astro';
 import Logo from '../components/Logo.astro';
+import Pending from '../components/Pending.astro';
+import { company } from '../data/site';
+
+const year = new Date().getFullYear();
 import '../styles/forms.css';
 
 interface Props {
@@ -15,6 +20,7 @@ const { title, description } = Astro.props;
 ---
 
 <Base title={title} description={description} noindex>
+  <div class="focus-shell">
   <header class="focus-top">
     <div class="wrap focus-top-in">
       <Logo />
@@ -25,13 +31,21 @@ const { title, description } = Astro.props;
     <slot />
   </main>
   <footer class="focus-foot">
-    <div class="wrap small">
-      <a href="/termos">Termos de uso</a>
-      <a href="/privacidade">Privacidade</a>
-      <a href="/reembolso">Reembolso</a>
-      <a href="/ajuda">Ajuda</a>
+    <div class="wrap small focus-foot-in">
+      <p class="focus-empresa">
+        © {year} {company.legalName || 'Órbita'}{!company.legalName && <Pending kind="definir" />}
+        <span aria-hidden="true">·</span> CNPJ {company.cnpj}{!company.cnpj && <Pending kind="definir" />}
+        <span aria-hidden="true">·</span> Pagamento processado pelo Asaas
+      </p>
+      <nav class="focus-links" aria-label="Links legais">
+        <a href="/termos">Termos de uso</a>
+        <a href="/privacidade">Privacidade</a>
+        <a href="/reembolso">Reembolso</a>
+        <a href="/ajuda">Ajuda</a>
+      </nav>
     </div>
   </footer>
+  </div>
 </Base>
 
 <style>
@@ -47,14 +61,33 @@ const { title, description } = Astro.props;
   .secure {
     color: var(--mute);
   }
+  /* A página ocupa no mínimo a altura da janela e o conteúdo cresce: o rodapé fica sempre embaixo. */
+  .focus-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
   .focus {
+    flex: 1 0 auto;
     padding-block: var(--space-7) var(--space-8);
   }
   .focus-foot {
     border-top: 1px solid var(--line);
     padding-block: var(--space-5);
   }
-  .focus-foot .wrap {
+  .focus-foot-in {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+  }
+  .focus-empresa {
+    margin: 0;
+    color: var(--mute);
+  }
+  .focus-links {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-5);

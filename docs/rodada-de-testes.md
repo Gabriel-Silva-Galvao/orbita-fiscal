@@ -53,7 +53,10 @@ logado. A pessoa vê "Entrar", clica e entra de novo.
 avatar; menu no computador e no celular; `/entrar` logado indo para `/conta`; Sair; sessão expirada pedindo login;
 testes da API.
 
-### 2. Rodapé flutuando e incompleto — Proposto
+### 2. Rodapé flutuando e incompleto — Executado e testado (25/11/2026)
+
+**Decisões.** Dados ainda inexistentes entram com o marcador "a definir"; nas páginas de foco, versão curta.
+**Feito.** Rodapé completo com a faixa Empresa (razão social, CNPJ, endereço), Atendimento (e-mail, horário, formulário) e Pagamento (cartão, Pix, boleto e "Pagamento processado pelo Asaas"), mais o link "O que a Órbita cobre". Nas páginas de foco (Entrar, Checkout, Portal, Instalar), rodapé curto com ©, razão social, CNPJ, Asaas e links legais, sempre colado embaixo (a página ocupa no mínimo a altura da janela). Os dados ficam em `src/data/site.ts` (`company`), e os marcadores somem quando forem preenchidos.
 
 **Pedido.** Nas páginas simples (pagamento, boas-vindas) o rodapé flutua no meio da tela; faltam informações.
 

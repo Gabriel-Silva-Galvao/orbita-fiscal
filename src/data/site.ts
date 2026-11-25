@@ -13,8 +13,13 @@ export const company = {
   name: 'Órbita',
   legalName: '', // razão social: a definir
   cnpj: '', // a definir
+  address: '', // endereço da sede: a definir
   city: 'Brasil',
+  supportHours: '', // horário de atendimento: a definir
 };
+
+/** Formas de pagamento aceitas no Checkout (Asaas). */
+export const paymentMethods = ['Cartão de crédito', 'Pix', 'Boleto'];
 
 export const legalLinks = [
   { href: '/privacidade', label: 'Política de privacidade' },

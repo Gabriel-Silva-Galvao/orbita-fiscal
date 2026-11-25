@@ -10,7 +10,7 @@
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import Pending from './Pending.astro';
-import { contact, legalLinks } from '../data/site';
+import { company, contact, legalLinks, paymentMethods } from '../data/site';
 import { photos } from '../data/photos';
 
 const year = new Date().getFullYear();
@@ -20,6 +20,7 @@ const columns = [
     title: 'Produto',
     links: [
       { href: '/#exemplo', label: 'Exemplo' },
+      { href: '/bases', label: 'O que a Órbita cobre' },
       { href: '/#como-funciona', label: 'Como funciona' },
       { href: '/#planos', label: 'Planos e preços' },
       { href: '/#duvidas', label: 'Dúvidas' },
@@ -110,6 +111,35 @@ const credits = Object.values(photos);
         Encarregado de dados: <a href={`mailto:${contact.privacyEmail}`}>{contact.privacyEmail}</a><Pending kind="confirmar" />
         <span class="f-sep" aria-hidden="true">·</span> Os textos completos prevalecem sobre este resumo.
       </p>
+    </section>
+
+    <!-- Item 2 da rodada de testes: dados da empresa, atendimento e pagamento, como num rodapé de loja. -->
+    <section class="f-empresa" aria-label="Empresa, atendimento e pagamento">
+      <div>
+        <p class="f-col-title">Empresa</p>
+        <p class="small">
+          {company.legalName || 'Razão social'}{!company.legalName && <Pending kind="definir" />}<br />
+          CNPJ {company.cnpj}{!company.cnpj && <Pending kind="definir" />}<br />
+          {company.address || 'Endereço da sede'}{!company.address && <Pending kind="definir" />}
+        </p>
+      </div>
+      <div>
+        <p class="f-col-title">Atendimento</p>
+        <p class="small">
+          <a href={`mailto:${contact.email}`}>{contact.email}</a><Pending kind="confirmar" /><br />
+          {company.supportHours || 'Dias úteis'}{!company.supportHours && <Pending kind="definir" />}<br />
+          <a href="/ajuda#contato">Formulário de contato</a>
+        </p>
+      </div>
+      <div>
+        <p class="f-col-title">Pagamento</p>
+        <ul class="f-pay" aria-label="Formas de pagamento aceitas">
+          {paymentMethods.map((m) => <li>{m}</li>)}
+        </ul>
+        <p class="small f-asaas">
+          <Icon name="solar:shield-check-linear" size={16} /> Pagamento processado pelo Asaas, com conexão segura
+        </p>
+      </div>
     </section>
 
     <div class="f-bottom">
@@ -662,6 +692,41 @@ const credits = Object.values(photos);
   }
   .footer-spacer {
     height: 0;
+  }
+  /* Item 2: empresa, atendimento e pagamento. */
+  .f-empresa {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-5);
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--line);
+  }
+  .f-empresa p {
+    margin: 0;
+    line-height: 1.7;
+  }
+  .f-empresa a {
+    color: var(--ink);
+  }
+  .f-pay {
+    list-style: none;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .f-pay li {
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong, var(--line));
+    border-radius: 6px;
+    font-size: 0.8125rem;
+  }
+  .f-asaas {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--mute);
   }
 </style>
 
