@@ -5,7 +5,8 @@ import Hero from '../components/Hero.astro';
 import SceneLibrary from '../components/SceneLibrary.astro';
 import SceneBrasilia from '../components/SceneBrasilia.astro';
 import Pending from '../components/Pending.astro';
-import ExampleTabs from '../components/ExampleTabs.astro';
+import Comparativo from '../components/Comparativo.astro';
+import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
 import Faq from '../components/Faq.astro';
 import Footer from '../components/Footer.astro';
@@ -74,11 +75,12 @@ const trust = [
     <section id="exemplo" class="section" aria-labelledby="exemplo-title">
       <div class="wrap">
         <div class="section-head" data-reveal>
-          <h2 id="exemplo-title" class="display-lg" data-split>Uma pergunta, com o fundamento ao lado.</h2>
-          <p class="lead">Cinco perguntas tributárias reais, respondidas dentro do Claude com o plugin.</p>
+          <h2 id="exemplo-title" class="display-lg" data-split>A mesma pergunta. Com e sem a Órbita.</h2>
+          <p class="lead">Cinco perguntas tributárias reais feitas ao Claude Opus 5.5, primeiro sozinho e depois com a Órbita. Compare as fontes.</p>
         </div>
         <div data-reveal>
-          <ExampleTabs />
+          <Comparativo />
+          <p class="cmp-cta"><Button href="#planos">Assinar a partir de R$ 50/mês</Button></p>
         </div>
       </div>
     </section>
@@ -252,6 +254,9 @@ const trust = [
 </Base>
 
 <style>
+  .cmp-cta {
+    margin: var(--space-6) 0 0;
+  }
   .linha {
     padding-block: var(--space-8);
   }

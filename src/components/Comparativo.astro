@@ -1,0 +1,307 @@
+---
+/**
+ * Comparativo com e sem a Órbita (etapa 10e da landing de vendas).
+ * Cada aba é uma pergunta tributária real; lado a lado, a resposta do Claude Opus 5.5 sozinho e com a
+ * Órbita, com o texto original (src/data/comparacao.ts). Cada resposta aparece inteira no HTML, numa
+ * caixa de altura limitada com "Ler a resposta inteira", e as abas funcionam pelo teclado (setas).
+ * Sem JavaScript, todas as perguntas aparecem uma embaixo da outra, com as respostas completas.
+ */
+import { comparacoes } from '../data/comparacao';
+
+type Bloco = { tipo: 'h' | 'p'; texto: string } | { tipo: 'ul'; itens: string[] };
+
+/** Transforma o texto da resposta (linhas, "## " para título e "• " para item) em blocos. */
+function blocos(texto: string): Bloco[] {
+  const out: Bloco[] = [];
+  for (const bruta of texto.split('\n')) {
+    const linha = bruta.trim();
+    if (!linha) continue;
+    if (linha.startsWith('## ')) out.push({ tipo: 'h', texto: linha.slice(3) });
+    else if (linha.startsWith('• ')) {
+      const ultimo = out[out.length - 1];
+      if (ultimo && ultimo.tipo === 'ul') ultimo.itens.push(linha.slice(2));
+      else out.push({ tipo: 'ul', itens: [linha.slice(2)] });
+    } else out.push({ tipo: 'p', texto: linha });
+  }
+  return out;
+}
+
+const fontes = (n: number) => (n === 0 ? 'nenhuma fonte citada' : n === 1 ? '1 fonte citada' : `${n} fontes citadas`);
+const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), comBlocos: blocos(c.com.texto) }));
+---
+
+<div class="cmp" data-cmp>
+  <div class="cmp-tabs" role="tablist" aria-label="Perguntas do comparativo">
+    {
+      lista.map((c, i) => (
+        <button
+          type="button"
+          role="tab"
+          class="cmp-tab"
+          id={`cmp-tab-${c.id}`}
+          aria-controls={`cmp-${c.id}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >
+          {c.aba}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    lista.map((c, i) => (
+      <div class="cmp-panel" role="tabpanel" id={`cmp-${c.id}`} aria-labelledby={`cmp-tab-${c.id}`} tabindex="0" data-first={i === 0 ? '' : undefined}>
+        <p class="cmp-q">
+          <span class="cmp-q-label">Pergunta</span>
+          {c.pergunta}
+        </p>
+        <p class:list={['cmp-result', c.resultado]}>
+          {c.resultado === 'divergem'
+            ? 'As respostas divergem em ponto relevante.'
+            : 'As duas chegam à mesma conclusão. A diferença está nas fontes.'}
+        </p>
+
+        <div class="cmp-cols">
+          {[
+            {
+              lado: 'sem',
+              quem: 'Claude Opus 5.5 sozinho',
+              meta: `${c.sem.origem === 'web' ? 'Buscou na web' : 'Respondeu de memória, sem consultar fontes'} · ${fontes(c.sem.fontes)}`,
+              blocos: c.semBlocos,
+              longa: c.sem.palavras > 180,
+              rodape: c.sem.nota ? { rotulo: 'Na análise', texto: c.sem.nota } : null,
+            },
+            {
+              lado: 'com',
+              quem: 'Claude Opus 5.5 com a Órbita',
+              meta: `Consultou a base da Órbita · ${fontes(c.com.fontes)}`,
+              blocos: c.comBlocos,
+              longa: c.com.palavras > 180,
+              rodape: c.com.acrescentou ? { rotulo: 'O que a Órbita acrescentou', texto: c.com.acrescentou } : null,
+            },
+          ].map((col) => (
+            <article class:list={['cmp-col', col.lado]} aria-label={col.quem}>
+              <header class="cmp-head">
+                <strong>{col.quem}</strong>
+                <span class="small">{col.meta}</span>
+              </header>
+              <div class="cmp-text" data-clip data-long={col.longa ? '' : undefined}>
+                {col.blocos.map((b) =>
+                  b.tipo === 'h' ? <h4>{b.texto}</h4> : b.tipo === 'ul' ? <ul>{b.itens.map((t) => <li>{t}</li>)}</ul> : <p>{b.texto}</p>,
+                )}
+              </div>
+              <button type="button" class="cmp-more" data-more hidden aria-expanded="false">
+                Ler a resposta inteira
+              </button>
+              {col.rodape && (
+                <p class="cmp-note small">
+                  <strong>{col.rodape.rotulo}:</strong> {col.rodape.texto}
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+
+  <p class="cmp-foot small mute">
+    Respostas reais do Claude Opus 5.5, sem cortes, comparadas pela equipe da Órbita em 16/11/2026. Confira cada fonte antes de usar.
+  </p>
+</div>
+
+<style>
+  .cmp {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .cmp-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .cmp-tab {
+    font: var(--text-button);
+    padding: 10px 16px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .cmp-tab[aria-selected='true'] {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+  }
+  .cmp-tab:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .cmp-panel {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .cmp-panel:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 4px;
+    border-radius: var(--radius-lg);
+  }
+  .cmp-q {
+    margin: 0;
+    font: var(--text-display-md);
+    font-size: 1.375rem;
+    text-wrap: balance;
+  }
+  .cmp-q-label {
+    display: block;
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin-bottom: var(--space-2);
+  }
+  .cmp-result {
+    margin: 0;
+    justify-self: start;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-strong);
+  }
+  .cmp-result.divergem {
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+  .cmp-cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+  .cmp-col {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--line-strong);
+    min-width: 0;
+  }
+  .cmp-col.com {
+    border: 1px solid var(--brand);
+    background: var(--surface);
+  }
+  .cmp-head {
+    display: grid;
+    gap: 2px;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .cmp-col.com .cmp-head strong {
+    color: var(--brand);
+  }
+  .cmp-head .small {
+    color: var(--mute);
+  }
+  .cmp-text {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .cmp-text :global(p),
+  .cmp-text :global(ul) {
+    margin: 0 0 var(--space-3);
+  }
+  .cmp-text :global(ul) {
+    padding-left: 1.2em;
+  }
+  .cmp-text :global(h4) {
+    font: var(--text-title);
+    font-size: 1.0625rem;
+    margin: var(--space-4) 0 var(--space-2);
+  }
+  /* Caixa de altura limitada: só com JavaScript (que mostra o botão para abrir). */
+  :global(.js) .cmp-text.is-clipped {
+    max-height: 22rem;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent);
+    mask-image: linear-gradient(to bottom, #000 75%, transparent);
+  }
+  .cmp-more {
+    justify-self: start;
+    font: var(--text-button);
+    color: var(--brand);
+    background: none;
+    border: 0;
+    padding: 4px 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .cmp-more:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .cmp-note {
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+  .cmp-foot {
+    margin: 0;
+  }
+  /* Com JavaScript, só a aba escolhida aparece. */
+  :global(.js) .cmp-panel:not(.is-on) {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .cmp-cols {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cmp]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+
+    const select = (i: number, focus = false) => {
+      tabs.forEach((t, j) => {
+        const on = i === j;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        panels[j].classList.toggle('is-on', on);
+      });
+      if (focus) tabs[i].focus();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(i));
+      t.addEventListener('keydown', (e) => {
+        const n = e.key === 'ArrowRight' ? (i + 1) % tabs.length : e.key === 'ArrowLeft' ? (i - 1 + tabs.length) % tabs.length : -1;
+        if (n < 0) return;
+        e.preventDefault();
+        select(n, true);
+      });
+    });
+    select(0);
+
+    // Respostas longas: caixa limitada e o botão para ler tudo.
+    root.querySelectorAll<HTMLElement>('.cmp-col').forEach((col) => {
+      const text = col.querySelector<HTMLElement>('[data-clip]')!;
+      const more = col.querySelector<HTMLButtonElement>('[data-more]')!;
+      // Resposta curta (até 180 palavras) fica inteira, sem botão.
+      if (!('long' in text.dataset)) return;
+      text.classList.add('is-clipped');
+      more.hidden = false;
+      more.addEventListener('click', () => {
+        const open = text.classList.toggle('is-clipped') === false;
+        more.setAttribute('aria-expanded', String(open));
+        more.textContent = open ? 'Mostrar menos' : 'Ler a resposta inteira';
+        if (!open) col.scrollIntoView({ block: 'nearest' });
+      });
+    });
+  });
+</script>
