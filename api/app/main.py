@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app import auth, billing
+from app import auth, billing, plugin
 from app.asaas.client import AsaasClient
 from app.asaas_sim.router import criar_router, erro
 from app.asaas_sim.store import SimError, Store
@@ -41,6 +41,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
     with app.state.banco.trava:
         app.state.banco.con.executescript(auth.ESQUEMA)
         auth.migrar(app.state.banco.con)
+        app.state.banco.con.executescript(plugin.ESQUEMA)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.site_url],
@@ -78,6 +79,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
 
     app.include_router(auth.criar_router())
     app.include_router(billing.criar_router())
+    app.include_router(plugin.criar_router())
     return app
 
 

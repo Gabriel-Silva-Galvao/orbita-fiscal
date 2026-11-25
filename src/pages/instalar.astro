@@ -316,26 +316,52 @@ const testQuestion =
   );
   paint();
 
-  // Download: estados “preparando”, “pronto” e “link expirado”.
+  // Download (item 6): com a API, pede um link que vale 15 minutos e baixa o zip de demonstração.
+  // Sem API (modo de demonstração do site), só simula os estados.
   const dl = $<HTMLButtonElement>('[data-download]');
   const dlMsg = $('[data-download-msg]');
-  let generatedAt = 0;
+  const apiBase = (document.querySelector<HTMLElement>('[data-install]')?.dataset.billing ?? '').replace(/\/billing\/?$/, '');
+  const avisar = (texto: string, ok = true) => {
+    dlMsg.className = ok ? 'notice is-ok' : 'notice is-error';
+    dlMsg.textContent = texto;
+    dlMsg.hidden = false;
+  };
   dl.addEventListener('click', async () => {
-    if (generatedAt && Date.now() - generatedAt > 15 * 60 * 1000) {
-      dlMsg.textContent = 'O link de download expirou. Geramos um novo.';
-    }
     dl.disabled = true;
     dl.setAttribute('aria-busy', 'true');
     dl.textContent = 'Preparando o arquivo…';
     dlMsg.hidden = true;
-    await new Promise((r) => setTimeout(r, 1200));
-    generatedAt = Date.now();
-    dl.disabled = false;
-    dl.removeAttribute('aria-busy');
-    dl.textContent = 'Baixar de novo';
-    dlMsg.className = 'notice is-ok';
-    dlMsg.textContent = 'Arquivo pronto. Na versão real, o download começa agora e o link vale por 15 minutos.';
-    dlMsg.hidden = false;
+    try {
+      if (!apiBase) {
+        await new Promise((r) => setTimeout(r, 1200));
+        avisar('Arquivo pronto. Na versão real, o download começa agora e o link vale por 15 minutos.');
+        return;
+      }
+      const r = await fetch(`${apiBase}/plugin/link`, { method: 'POST', credentials: 'include' });
+      if (r.status === 403) {
+        avisar('O download fica disponível quando a assinatura estiver ativa. Confira em Minha conta.', false);
+        return;
+      }
+      if (!r.ok) throw new Error(String(r.status));
+      const link = await r.json();
+      // O navegador baixa o arquivo sem sair desta página (o servidor manda como anexo).
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.download = link.arquivo;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      const hora = new Date(link.expira_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      avisar(
+        `Download iniciado: ${link.arquivo}. É um pacote de DEMONSTRAÇÃO: o plugin real chega quando o servidor da Órbita estiver no ar. O link vale até ${hora}.`,
+      );
+    } catch {
+      avisar('Não deu para preparar o arquivo agora. Tente de novo em instantes.', false);
+    } finally {
+      dl.disabled = false;
+      dl.removeAttribute('aria-busy');
+      dl.textContent = 'Baixar de novo';
+    }
   });
 
   // Conexão: código curto para digitar no Claude quando ele pedir.

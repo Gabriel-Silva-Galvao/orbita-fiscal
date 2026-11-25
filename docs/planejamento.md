@@ -40,7 +40,7 @@ O servidor MCP com a base jurídica já existe e vai ser ligado depois. **Nada a
 
 | Onde | O que espera | Hoje |
 | --- | --- | --- |
-| Instalar: "Baixar o plugin" (`src/pages/instalar.astro`) | O arquivo do plugin e a versão atual | Simula o download |
+| Instalar: "Baixar o plugin" (`src/pages/instalar.astro`, `api/app/plugin.py`) | O arquivo do plugin e a versão atual | Baixa um zip de demonstração por link que vale 15 min; trocar `montar_zip()` pelo arquivo real |
 | Instalar: "Gerar código de conexão" | Código para ligar a conta Órbita à IA (ou o login OAuth do próprio servidor) | Código de demonstração |
 | Portal, Status do plugin (`src/pages/conta.astro`) | Consultas do mês, limite do plano, última consulta, versão do plugin | "0", "Nenhuma ainda" e "a definir" |
 | Portal: conexões e Tutoriais (`src/data/tutoriais.ts`) | Se a IA está conectada; endereço do servidor para ChatGPT, Copilot e Gemini | Passos marcados no Instalar; outras IAs "em preparação" |

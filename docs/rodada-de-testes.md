@@ -79,13 +79,23 @@ testes da API.
 **Proposta.** Gerar o QR de verdade a partir do payload Pix na simulação (biblioteca Python `segno` ou
 `qrcode`). No Asaas real, a imagem já vem pronta (`encodedImage`), então o site não muda.
 
-### 6. Baixar o plugin — Proposto
+### 6. Baixar o plugin — Executado e testado (25/11/2026)
 
-**O que se sabe.** O botão simula o download porque ainda não há arquivo do plugin nem formato definido.
+**Por que o download real não funciona (documentado).** Ainda não existe o arquivo do plugin: ele depende do
+servidor MCP (que já existe e será ligado depois) e do formato aceito pela loja do Claude. Até lá, o site
+entrega um pacote de demonstração com o mesmo fluxo do real.
 
-**Proposta.** Um `orbita-plugin-demo.zip` simulado (README explicando que é demonstração, manifesto de exemplo
-e as instruções), servido pela API com link que expira, como será o real. Registrar no planejamento que o
-real depende do servidor MCP e do formato da loja do Claude.
+**Feito.**
+- API `app/plugin.py`: `POST /plugin/link` (exige sessão e assinatura com acesso; senão 403) gera um link que vale
+  15 minutos; `GET /plugin/baixar/{token}` entrega `orbita-plugin-0.0.0-demo.zip` como anexo (410 se expirou, 404
+  se o link não existe). Token só como SHA-256; links vencidos são apagados.
+- O zip traz `README.md` dizendo que é DEMONSTRAÇÃO, um exemplo de manifesto (`.claude-plugin/plugin.json`) e um
+  exemplo de skill. É montado na memória.
+- Instalar: "Baixar o plugin" pede o link e baixa sem sair da página; avisa que é demonstração e até que horas o link
+  vale; sem assinatura ativa, explica que o download depende dela.
+- 3 testes novos (66 no total).
+
+**Quando o plugin real existir.** Trocar `montar_zip()` pelo arquivo publicado; o fluxo continua igual.
 
 ### 14. Cards de geração mais vivos — Executado e testado (25/11/2026)
 
