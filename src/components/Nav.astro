@@ -22,6 +22,8 @@ const ehAtual = (href: string) => !href.includes('#') && href === atual;
 // Item 1 da rodada de testes: com a API ligada, o cabeçalho descobre se há sessão e troca "Entrar" e "Assinar"
 // pelo avatar com as iniciais e um menu. Sem API (demonstração), fica como sempre.
 const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
+// Item 24: o botão de quem está logado depende do plano (lido de GET {billing}/plano).
+const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 ---
 
 <header class="nav" data-nav>
@@ -36,9 +38,10 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
         ))
       }
     </nav>
-    <div class="nav-actions" data-nav-actions data-auth={authEndpoint}>
+    <div class="nav-actions" data-nav-actions data-auth={authEndpoint} data-billing={billingEndpoint}>
       {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
       {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}
+      <Button href="/#planos" class="nav-plano" data-nav-plano hidden>Assinar</Button>
       <div class="nav-user" data-nav-user hidden>
         <button
           type="button"
@@ -49,6 +52,7 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
           data-nav-avatar
         >
           <span data-nav-iniciais aria-hidden="true"></span>
+          <span class="nav-max" data-nav-max aria-hidden="true" hidden>Max</span>
           <span class="sr-only" data-nav-rotulo>Menu da conta</span>
         </button>
         <div class="nav-menu" id="nav-menu" role="menu" hidden data-nav-menu>
@@ -154,6 +158,31 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
     }
   };
 
+  // Item 24: o botão ao lado do avatar muda com o plano.
+  // - sem plano (ou cancelado/reembolsado sem acesso): "Assinar", para saber que existe um plano;
+  // - pagamento pendente: "Concluir assinatura", no Portal;
+  // - Pro: "Upgrade para o Max", no Portal (troca de plano);
+  // - Max: selo "Max" no avatar e atalho para o que é só do Max: "Criar alerta" (alertas por tema).
+  const ACOES: Record<string, { rotulo: string; href: string; destaque?: boolean }> = {
+    sem: { rotulo: 'Assinar', href: '/#planos', destaque: true },
+    pendente: { rotulo: 'Concluir assinatura', href: '/conta#plano', destaque: true },
+    pro: { rotulo: 'Upgrade para o Max', href: '/conta#plano', destaque: true },
+    max: { rotulo: 'Criar alerta', href: '/conta#alertas' },
+  };
+  const botaoPlano = box?.querySelector<HTMLAnchorElement>('[data-nav-plano]');
+  const bep = box?.dataset.billing ?? '';
+  function plano(p: { plano: string | null; status_acesso: string | null; tem_acesso: boolean } | null) {
+    if (!botaoPlano || !p) return;
+    const chave = p.status_acesso === 'pendente' ? 'pendente' : p.tem_acesso && p.plano ? p.plano : 'sem';
+    const a = ACOES[chave] ?? ACOES.sem;
+    botaoPlano.textContent = a.rotulo;
+    botaoPlano.href = a.href;
+    botaoPlano.classList.toggle('btn-primary', !!a.destaque);
+    botaoPlano.classList.toggle('btn-secondary', !a.destaque);
+    botaoPlano.hidden = false;
+    box!.querySelector<HTMLElement>('[data-nav-max]')!.hidden = chave !== 'max';
+  }
+
   if (ep && box) {
     mostrar(ler());
     // A fonte da verdade é a API: confirma a sessão a cada página (cookie HttpOnly, invisível ao script).
@@ -163,6 +192,12 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
         const dados = u ? { nome: u.nome, email: u.email } : null;
         gravar(dados);
         mostrar(dados);
+        if (dados && bep) {
+          fetch(`${bep}/plano`, { credentials: 'include', headers: { accept: 'application/json' } })
+            .then((r) => (r.ok ? r.json() : null))
+            .then(plano)
+            .catch(() => {});
+        } else if (botaoPlano) botaoPlano.hidden = true;
       })
       .catch(() => {
         /* API fora do ar: mantém o que estava na tela */
@@ -291,6 +326,37 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
   }
   .nav-user {
     position: relative;
+  }
+  .nav-plano[hidden] {
+    display: none;
+  }
+  .nav-plano {
+    white-space: nowrap;
+    animation: nav-menu 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* Selo do Max no canto do avatar. */
+  .nav-avatar {
+    position: relative;
+  }
+  .nav-max {
+    position: absolute;
+    right: -8px;
+    bottom: -6px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: var(--brand);
+    color: var(--on-brand, var(--bg));
+    font: 700 0.625rem/1.3 var(--font-body, inherit);
+    letter-spacing: 0.04em;
+  }
+  .nav-max[hidden] {
+    display: none;
+  }
+  @media (max-width: 480px) {
+    .nav-plano {
+      padding-inline: 12px;
+      font-size: 0.8125rem;
+    }
   }
   .nav-avatar {
     width: 44px;

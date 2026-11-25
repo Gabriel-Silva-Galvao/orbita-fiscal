@@ -198,6 +198,23 @@ páginas respondendo (200, e 404 na inexistente); 62 testes da API; build limpo.
 **Não deu para ver no painel de teste:** a animação da troca e o átomo de verdade, porque o painel estava oculto
 e o navegador pausa as animações nesse estado. Conferir abrindo o site no navegador.
 
+### 24. Botão do header conforme o plano — Executado e testado (25/11/2026)
+
+**Pedido.** Logado sem plano: "Assinar", para saber que pode ter um plano. Só com o Pro: "Upgrade". Com o Max:
+definir uma ideia.
+
+**Feito.** Rota leve `GET /billing/plano` (só o plano e se dá acesso, sem consultar o Asaas; teste novo, 63 no
+total). O header de quem está logado mostra, ao lado do avatar:
+- sem plano, cancelado ou reembolsado sem acesso: **Assinar** → planos da landing;
+- pagamento pendente (Pix ou boleto): **Concluir assinatura** → Portal, aba do plano;
+- Pro: **Upgrade para o Max** → Portal, aba do plano (onde fica a troca de plano);
+- Max: selo **Max** no avatar e o atalho **Criar alerta** → Portal, aba de alertas por tema, que é só do Max.
+  A ideia: quem já tem tudo ganha um atalho para o recurso exclusivo, em vez de um botão de venda.
+
+**Testes.** Quatro contas de teste locais: pendente, Pro, Max e sem plano, cada uma com o botão certo;
+celular sem rolagem lateral.
+**Pendência.** A troca de Pro para Max no Portal ainda não tem regra de cobrança no meio do mês (marcada "a definir").
+
 ## Bloco B: landing
 
 ### 13. Exemplos sorteados no topo e logo no "com a Órbita" — Em aberto

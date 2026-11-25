@@ -161,6 +161,14 @@ def _mudar_status(banco: Banco, subscription_id: str, novo: str, pago_em: str | 
 def criar_router() -> APIRouter:
     router = APIRouter(tags=["Cobrança"])
 
+    @router.get("/billing/plano")
+    def plano_atual(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco)):
+        """Leve, para o header (item 24): só o plano e se dá acesso, sem consultar o Asaas."""
+        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
+        if not a:
+            return {"plano": None, "status_acesso": None, "tem_acesso": False}
+        return {"plano": a["plano"], "status_acesso": a["status_acesso"], "tem_acesso": tem_acesso(a)}
+
     @router.post("/billing/assinatura", status_code=201)
     def criar_assinatura(dados: NovaAssinatura, request: Request, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
         usuario_id, email = u["id"], u["email"]

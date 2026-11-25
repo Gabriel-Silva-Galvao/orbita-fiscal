@@ -264,3 +264,18 @@ def test_pix_tem_codigo_oficial_e_qr_de_verdade(api):
     assert codigo[-4:] == _crc16(codigo[:-4])
     png = base64.b64decode(cob["pix"]["imagem_base64"])
     assert png[:8] == b"\x89PNG\r\n\x1a\n" and len(png) > 300
+
+
+def test_plano_leve_para_o_header(api):
+    """Item 24: o header pergunta só o plano, sem consultar o Asaas."""
+    http, *_ = api
+    assert http.get("/billing/plano").status_code == 401
+    entrar(http, api[2])
+    assert http.get("/billing/plano").json() == {"plano": None, "status_acesso": None, "tem_acesso": False}
+    r = assinar(http, "pix")
+    assert r.status_code == 201
+    p = http.get("/billing/plano").json()
+    assert p["plano"] == "pro" and p["status_acesso"] == "pendente" and p["tem_acesso"] is False
+    confirmar(http, r.json()["cobrancas"][0]["id"])
+    p = http.get("/billing/plano").json()
+    assert p["status_acesso"] == "ativo" and p["tem_acesso"] is True
