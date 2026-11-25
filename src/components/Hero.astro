@@ -1,6 +1,8 @@
 ---
 import Button from './Button.astro';
+import MiniAtomo from './MiniAtomo.astro';
 import { comparacoes } from '../data/comparacao';
+import topo from '../data/topo.json';
 
 // Título de venda (etapa 10f-1, plano da landing): nomeia o resultado que o advogado quer.
 const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa';
@@ -18,6 +20,13 @@ const fontes = [
   'ARE 1.618.979 AgR (STF, 13/10/2026)',
   'LC 225/2026',
 ];
+
+// Item 13 da rodada de testes: a cada visita o topo sorteia uma das 11 perguntas do painel da pesquisa
+// (src/data/topo.json, gerado por scripts/exemplos/gerar_topo.py). O HTML já vem com a de crime tributário;
+// um script curto, logo depois do cartão, troca o conteúdo antes da primeira pintura, então nada pula.
+// As 5 tributárias também estão no comparativo; nelas o link leva direto à aba da mesma pergunta.
+const NO_COMPARATIVO: Record<number, string> = { 1: 'frete', 2: 'tema69', 3: 'prescricao', 10: 'issqn', 11: 'crime' };
+const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
 ---
 
 <!-- Etapa 10f-2: trecho real de resposta com a fonte, gerado ao vivo (10g). Item 19: sem o átomo e com o fundo parado. -->
@@ -61,17 +70,54 @@ const fontes = [
           {exemplo.pergunta}
         </p>
         <div class="ha-a">
-          <p class="ha-who">Claude Opus 5.5 com a Órbita<span class="ha-status" data-g-status aria-hidden="true"></span></p>
+          <p class="ha-who"><MiniAtomo size={20} /> Claude Opus 5.5 com a Órbita<span class="ha-status" data-g-status aria-hidden="true"></span></p>
           <p class="ha-text" data-g-text>{trecho}</p>
           <p class="ha-label">Fontes citadas na resposta</p>
           <ul class="ha-sources" data-g-chips>
             {fontes.map((f) => <li>{f}</li>)}
           </ul>
         </div>
-        <figcaption class="small">
-          Resposta real, com {exemplo.com.fontes} fontes citadas. <a href="#exemplo">Compare com a resposta sem a Órbita</a>
+        <figcaption class="small" data-topo-legenda>
+          Resposta real, com <span data-topo-total>{exemplo.com.fontes}</span> fontes citadas.
+          <a href="#exemplo" data-topo-link>Compare com a resposta sem a Órbita</a>
         </figcaption>
       </figure>
+      <script type="application/json" id="topo-exemplos" set:html={JSON.stringify(exemplos).replace(/</g, '\\u003c')}></script>
+      <script is:inline>
+        (function () {
+          // Sorteia o exemplo antes de pintar. Sem JavaScript, fica o de crime tributário que já veio no HTML.
+          try {
+            var lista = JSON.parse(document.getElementById('topo-exemplos').textContent);
+            var e = lista[Math.floor(Math.random() * lista.length)];
+            var fig = document.querySelector('[data-gerar]');
+            if (!e || !fig) return;
+            var q = fig.querySelector('[data-g-q]');
+            var rotulo = q.querySelector('.ha-label');
+            q.textContent = '';
+            q.append(rotulo, document.createTextNode(e.pergunta));
+            fig.querySelector('[data-g-text]').textContent = e.trecho;
+            var ul = fig.querySelector('[data-g-chips]');
+            ul.textContent = '';
+            e.fontes.forEach(function (f) {
+              var li = document.createElement('li');
+              li.textContent = f;
+              ul.append(li);
+            });
+            fig.querySelector('[data-topo-total]').textContent = e.fontes_total;
+            var link = fig.querySelector('[data-topo-link]');
+            if (e.aba) {
+              link.href = '#exemplo';
+              link.dataset.aba = e.aba;
+              link.textContent = 'Compare com a resposta sem a Órbita';
+            } else {
+              link.href = '#exemplo';
+              link.removeAttribute('data-aba');
+              link.textContent = 'Veja a diferença com e sem a Órbita';
+            }
+            fig.dataset.exemplo = String(e.n);
+          } catch (err) {}
+        })();
+      </script>
     </div>
   </div>
 

@@ -1,0 +1,150 @@
+[
+ {
+  "n": 1,
+  "tribunal": "CARF/CSRF e RFB",
+  "pergunta": "Uma indústria no lucro real quer tomar crédito de PIS/Cofins sobre o frete na transferência de produtos acabados entre seus estabelecimentos. Qual é a posição atual da Câmara Superior do CARF e da Receita Federal?",
+  "trecho": "Resposta curta: as duas são contrárias ao crédito. Na esfera administrativa a questão está fechada, inclusive por súmula do CARF que vincula os conselheiros.",
+  "fontes": [
+   "Súmula CARF nº 217",
+   "IN RFB nº 2.121/2022",
+   "Lei 10.833/2003",
+   "LC 214/2025"
+  ],
+  "fontes_total": 11
+ },
+ {
+  "n": 2,
+  "tribunal": "STF",
+  "pergunta": "O que o STF decidiu no Tema 69 da repercussão geral e como ficou a modulação de efeitos?",
+  "trecho": "No RE 574.706 (Tema 69, Rel. Min. Cármen Lúcia), o STF decidiu que o ICMS não integra a base de cálculo do PIS e da Cofins. A modulação veio depois, nos embargos de declaração de 2021, e fixou 15/03/2017 como marco.",
+  "fontes": [
+   "RE 574.706",
+   "Tema 69",
+   "LC 214/2025"
+  ],
+  "fontes_total": 2
+ },
+ {
+  "n": 3,
+  "tribunal": "STJ",
+  "pergunta": "Qual é a tese do STJ sobre a contagem da prescrição intercorrente do art. 40 da Lei de Execuções Fiscais?",
+  "trecho": "A Primeira Seção do STJ fixou a contagem no REsp 1.340.553/RS, julgado como repetitivo (Rel. Min. Mauro Campbell Marques, 12/09/2018, publicado em 16/10/2018). Esse julgamento gerou os Temas 566 a 571, todos com trânsito em julgado. Em síntese, a contagem é automática: corre por força da lei, e não depende de pedido da Fazenda nem de despacho do juiz.",
+  "fontes": [
+   "REsp 1.340.553",
+   "Tema 566",
+   "LC 118/2005",
+   "Súmula 314/STJ",
+   "Tema 568"
+  ],
+  "fontes_total": 1
+ },
+ {
+  "n": 4,
+  "tribunal": "TJMG",
+  "pergunta": "Como o TJMG tem aplicado a exigência de dolo da Lei 14.230/2021 a ações de improbidade ajuizadas antes da mudança?",
+  "trecho": "Em resumo: o TJMG aplica o Tema 1199 do STF como regra de julgamento a todas as ações de improbidade sem condenação transitada em julgado. Na prática, o resultado mais comum é a improcedência quando não há prova de dolo específico. A base tem 822 acórdãos de 2022 a novembro de 2026 que citam o tema.",
+  "fontes": [
+   "Tema 1199 do STF",
+   "ARE 843.989",
+   "ADI 7236"
+  ],
+  "fontes_total": 8
+ },
+ {
+  "n": 5,
+  "tribunal": "TJMG",
+  "pergunta": "Como o TJMG trata a responsabilidade do sócio que saiu de sociedade limitada por dívidas anteriores à averbação da saída?",
+  "trecho": "O TJMG aplica os arts. 1.003, parágrafo único, e 1.032 do Código Civil: o sócio que sai continua respondendo pelas obrigações sociais constituídas enquanto era sócio, por até dois anos contados da averbação da alteração contratual na Junta Comercial. Por dívidas surgidas depois da averbação ele não responde. Esse núcleo é estável nas Câmaras; as divergências estão em dois pontos: o contrato de trato sucessivo e o caminho processual para atingir o ex-sócio.",
+  "fontes": [
+   "arts. 1.003, parágrafo único, e 1.032 do Código Civil",
+   "AI 1.0000.23.273289-1/001",
+   "AI 1.0000.26.401187-5/001",
+   "art. 50 do CC",
+   "AI 1.0000.25.202552-3/001"
+  ],
+  "fontes_total": 10
+ },
+ {
+  "n": 6,
+  "tribunal": "TJMG",
+  "pergunta": "Como o TJMG decide o dano moral por negativação indevida quando o consumidor já tinha outras inscrições no cadastro?",
+  "trecho": "O TJMG aplica a Súmula 385 do STJ com regularidade. Se, na data da negativação indevida, o consumidor já tinha inscrição legítima e ativa feita por outro credor, não há dano moral. O consumidor fica só com a declaração de inexistência do débito e o cancelamento da anotação irregular. A discussão nas Câmaras gira em torno de quatro pontos: a data que serve de referência, quem tem de provar, quando a súmula é afastada e se inscrições posteriores contam.",
+  "fontes": [
+   "Súmula 385 do STJ",
+   "Tema 922/STJ",
+   "REsp 1.386.424",
+   "REsp 1.704.002"
+  ],
+  "fontes_total": 12
+ },
+ {
+  "n": 7,
+  "tribunal": "TJMG",
+  "pergunta": "Como o TJMG decide pedidos de exoneração de alimentos de filho que atingiu a maioridade, mas ainda estuda?",
+  "trecho": "Em resumo: no TJMG, a maioridade não extingue automaticamente a pensão, mas acaba com a presunção de necessidade. Se o filho maior prova que está matriculado e frequentando curso superior e que não tem renda suficiente, a pensão costuma ser mantida, em geral com prazo final na conclusão da graduação ou aos 24 anos, o que vier primeiro. Formado, trabalhando ou sem prova de que estuda, o pai é exonerado.",
+  "fontes": [
+   "Súmula 358/STJ",
+   "AI 1.0000.26.076182-0/001",
+   "AI 1.0000.24.381795-4/001",
+   "AI 1.0000.23.343601-3/001",
+   "arts. 1.694 e 1.696 do CC"
+  ],
+  "fontes_total": 16
+ },
+ {
+  "n": 8,
+  "tribunal": "TJMG",
+  "pergunta": "Como o TJMG decide a negativa de cobertura, por plano de saúde, de tratamento fora do rol da ANS depois da Lei 14.454/2022?",
+  "trecho": "Em resumo: o TJMG está em transição. Até 2025 predominava a leitura de que o rol da ANS era exemplificativo, com base na Lei 14.454/2022. Desde a ADI 7265 (STF, 18/09/2025), os acórdãos mais rigorosos exigem os requisitos cumulativos fixados pelo Supremo e subsídio técnico do NATJUS. Algumas Câmaras, porém, continuam mantendo coberturas com base na prescrição médica e na gravidade do caso.",
+  "fontes": [
+   "Lei 14.454/2022",
+   "ADI 7265",
+   "Lei 9.656/1998",
+   "AI 1.0000.26.140637-5/001",
+   "AI 1.0000.26.132638-3/001"
+  ],
+  "fontes_total": 10
+ },
+ {
+  "n": 9,
+  "tribunal": "TRF6",
+  "pergunta": "Como o TRF6 decide o reconhecimento de tempo especial por ruído quando o PPP não informa a metodologia de medição?",
+  "trecho": "Em resumo: o TRF6 separa os períodos pela data de 19/11/2003 (Decreto 4.882/2003). Para trabalho anterior a essa data, a metodologia é pouco discutida: basta o PPP mostrar nível acima do limite da época. Para trabalho posterior, PPP sem metodologia é o ponto sensível, e as Turmas divergem. A 1ª Turma tende a não reconhecer o período e a extinguir o pedido sem julgamento de mérito. A 2ª Turma é mais flexível e chega a aceitar o pico de ruído sem perícia judicial.",
+  "fontes": [
+   "Decreto 4.882/2003",
+   "Tema 1083 do STJ",
+   "REsp 1.886.795",
+   "Tema 174",
+   "Tema 317"
+  ],
+  "fontes_total": 9
+ },
+ {
+  "n": 10,
+  "tribunal": "TCE-MG",
+  "pergunta": "Qual é o entendimento do TCE-MG sobre município que concede benefício fiscal de ISSQN sem estimativa de impacto orçamentário?",
+  "trecho": "Em resumo: o TCE-MG não tem tese específica para o ISSQN. Aplica a todo benefício fiscal municipal os requisitos do art. 14 da LRF, entre eles a estimativa de impacto orçamentário-financeiro no exercício de início da vigência e nos dois seguintes. Benefício concedido sem essa estimativa está em desacordo com a orientação do Tribunal. No caso do ISSQN, há ainda uma trava própria da LC 116/2003.",
+  "fontes": [
+   "LC 116/2003",
+   "LC 157/2016",
+   "Lei 8.429/1992",
+   "Lei 14.230/2021",
+   "Tema 1199 do STF"
+  ],
+  "fontes_total": 5
+ },
+ {
+  "n": 11,
+  "tribunal": "STF",
+  "pergunta": "A partir de quando se pode falar em crime material contra a ordem tributária e quando começa a correr a prescrição?",
+  "trecho": "O crime material contra a ordem tributária só se configura com o lançamento definitivo do tributo, e a prescrição penal começa a correr nessa mesma data: a constituição definitiva do crédito tributário, e não a data da sonegação.",
+  "fontes": [
+   "Súmula Vinculante 24",
+   "Lei nº 8.137/90",
+   "Lei 9.430/1996",
+   "ARE 1.388.712 AgR",
+   "RE 1.192.924 AgR"
+  ],
+  "fontes_total": 6
+ }
+]

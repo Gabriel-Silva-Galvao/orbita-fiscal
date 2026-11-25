@@ -1,0 +1,49 @@
+---
+/**
+ * Logo da Órbita em miniatura e animada (item 13 da rodada de testes): marca, ao lado de "com a Órbita",
+ * que aquela resposta saiu com o plugin. As órbitas giram devagar e o elétron corre; com movimento reduzido,
+ * fica parada.
+ */
+interface Props {
+  size?: number;
+}
+const { size = 22 } = Astro.props;
+---
+
+<svg class="mini-atomo" viewBox="6 14 88 72" width={size} height={size} aria-hidden="true" focusable="false">
+  <g class="mini-orbitas" fill="none" stroke="currentColor" stroke-width="5">
+    <ellipse cx="50" cy="50" rx="43" ry="28" transform="rotate(-28 50 50)"></ellipse>
+    <ellipse cx="50" cy="50" rx="27" ry="17" transform="rotate(-28 50 50)" opacity="0.7"></ellipse>
+  </g>
+  <circle class="mini-eletron" r="6" fill="currentColor">
+    <animateMotion dur="2.6s" repeatCount="indefinite" path="M 88 30 A 43 28 -28 1 1 12 70 A 43 28 -28 1 1 88 30"></animateMotion>
+  </circle>
+  <circle cx="50" cy="50" r="9" fill="currentColor"></circle>
+</svg>
+
+<style>
+  .mini-atomo {
+    display: inline-block;
+    flex: none;
+    vertical-align: -0.3em;
+    color: var(--brand);
+    overflow: visible;
+  }
+  .mini-orbitas {
+    transform-origin: 50px 50px;
+    animation: mini-gira 9s linear infinite;
+  }
+  @keyframes mini-gira {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-orbitas {
+      animation: none;
+    }
+    .mini-eletron {
+      display: none;
+    }
+  }
+</style>

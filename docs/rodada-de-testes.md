@@ -234,18 +234,27 @@ celular sem rolagem lateral.
 
 ## Bloco B: landing
 
-### 13. Exemplos sorteados no topo e logo no "com a Órbita" — Em aberto
+### 13. Exemplos sorteados no topo e logo no "com a Órbita" — Executado e testado (25/11/2026)
 
-**Pedido.** A cada recarga, um exemplo diferente na resposta do topo; o comparativo continua com as 5
-perguntas fixas; a coluna com a Órbita ganha a logo animada. Exemplos tirados do artefato da pesquisa.
+**Fonte.** O painel "Comparação por pergunta" (artefato da pesquisa) tem 11 perguntas, com o texto integral das
+respostas: as 5 tributárias do comparativo e 6 do jurídico geral (TJMG em improbidade, sócio retirante,
+negativação, alimentos e plano de saúde; TRF6 em tempo especial). Os dados vieram de uma cópia local do painel,
+salva numa sessão anterior.
 
-**O que se sabe.** O painel "Comparação por pergunta" tem 11 perguntas; o comparativo usa as 5 tributárias.
+**Feito.**
+- `scripts/exemplos/gerar_topo.py` gera `src/data/topo.json`: para cada pergunta, o primeiro parágrafo da resposta
+  com a Órbita (sem mudar nada) e até 5 fontes citadas, sem repetir a mesma fonte escrita de jeitos diferentes.
+- O topo sorteia uma das **11** a cada visita. A troca é feita por um script curto logo depois do cartão, antes da
+  primeira pintura: nada pula. Sem JavaScript, fica a de crime tributário.
+- Nas 5 tributárias, "Compare com a resposta sem a Órbita" abre a aba da mesma pergunta no comparativo; nas outras,
+  o link diz "Veja a diferença com e sem a Órbita".
+- O comparativo continua com as mesmas 5 perguntas.
+- Logo animada (`MiniAtomo.astro`): órbitas girando e um elétron correndo ao lado de "Claude Opus 5.5 com a Órbita",
+  no cartão do topo e no cabeçalho da coluna com a Órbita. Parada com movimento reduzido.
 
-**Proposta.** O topo sorteia entre as perguntas do painel (com trecho e fontes reais), no servidor ou no
-navegador sem causar salto de layout. Coluna "com a Órbita" com o símbolo girando ao lado do nome.
-
-**Dúvidas.** Sortear entre as 11 ou só entre as 6 que não estão no comparativo? Há mais perguntas além
-dessas 11?
+**Testes.** As 11 aparecem no sorteio; recarregar troca a pergunta; o sorteio não move a página; o link abre a aba
+certa; logo presente no topo e nas 5 colunas.
+**Pendência.** As 6 perguntas do jurídico geral também precisam da revisão jurídica antes de ir ao ar, como as 5.
 
 ### 20. Página "O que a Órbita cobre" — Executado e testado (25/11/2026)
 

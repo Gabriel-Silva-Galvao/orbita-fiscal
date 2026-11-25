@@ -6,6 +6,7 @@
  * caixa de altura limitada com "Ler a resposta inteira", e as abas funcionam pelo teclado (setas).
  * Sem JavaScript, todas as perguntas aparecem uma embaixo da outra, com as respostas completas.
  */
+import MiniAtomo from './MiniAtomo.astro';
 import { comparacoes } from '../data/comparacao';
 
 type Bloco = { tipo: 'h' | 'p'; texto: string } | { tipo: 'ul'; itens: string[] };
@@ -85,7 +86,7 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
             <article class:list={['cmp-col', col.lado]} aria-label={col.quem} data-fontes={col.fontes}>
               <header class="cmp-head">
                 <div class="cmp-who">
-                  <strong>{col.quem}</strong>
+                  <strong>{col.lado === 'com' && <MiniAtomo size={20} />} {col.quem}</strong>
                   <span class="small">{col.meta}</span>
                 </div>
                 <span class="cmp-count">
@@ -354,6 +355,13 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
       });
     });
     select(0);
+    // Item 13: o link do cartão do topo abre a aba da mesma pergunta, quando ela está no comparativo.
+    document.querySelectorAll<HTMLAnchorElement>('[data-topo-link]').forEach((link) =>
+      link.addEventListener('click', () => {
+        const i = tabs.findIndex((t) => t.id === `cmp-tab-${link.dataset.aba}`);
+        if (i >= 0) select(i);
+      }),
+    );
 
     // Respostas longas: caixa limitada e o botão para ler tudo.
     root.querySelectorAll<HTMLElement>('.cmp-col').forEach((col) => {
