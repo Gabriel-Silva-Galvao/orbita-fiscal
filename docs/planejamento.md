@@ -28,6 +28,30 @@ O que já se sabe da loja do Claude: a submissão é pelo portal de diretório d
 
 _Detalhes de requisitos e materiais: ver a seção "Pesquisa: loja do Claude e outras IAs" no fim._
 
+### Servidor MCP: fora do escopo do site (decisão de 25/11/2026)
+
+O servidor MCP com a base jurídica já existe e vai ser ligado depois. **Nada a construir agora.** O site não depende dele: conta, login, Checkout, cobrança e Portal funcionam sem ele. Ele só entra em ação quando o cliente pergunta dentro da IA.
+
+- **Plugin:** o pacote que o cliente instala (skills e o endereço do servidor MCP). Pode ser público.
+- **Servidor MCP:** recebe as perguntas, confere o login e a assinatura e pesquisa na base. Fica no nosso servidor.
+- **O que se vende:** a assinatura (o acesso), não o arquivo do plugin.
+
+**Lugares do site que esperam o servidor** (todos marcados "a definir" na tela e funcionando em demonstração):
+
+| Onde | O que espera | Hoje |
+| --- | --- | --- |
+| Instalar: "Baixar o plugin" (`src/pages/instalar.astro`) | O arquivo do plugin e a versão atual | Simula o download |
+| Instalar: "Gerar código de conexão" | Código para ligar a conta Órbita à IA (ou o login OAuth do próprio servidor) | Código de demonstração |
+| Portal, Status do plugin (`src/pages/conta.astro`) | Consultas do mês, limite do plano, última consulta, versão do plugin | "0", "Nenhuma ainda" e "a definir" |
+| Portal: conexões e Tutoriais (`src/data/tutoriais.ts`) | Se a IA está conectada; endereço do servidor para ChatGPT, Copilot e Gemini | Passos marcados no Instalar; outras IAs "em preparação" |
+
+**Na hora de ligar:**
+
+1. O login do servidor usa a conta da Órbita: a sessão e as rotas de `/auth`.
+2. A cada consulta, o servidor confere a assinatura: `tem_acesso` em `GET /billing/assinatura`, ou uma rota interna equivalente.
+3. A contagem de consultas alimenta o Portal.
+4. O pacote do plugin aponta para o endereço do servidor e vai para o repositório público.
+
 ## 2. Área do assinante
 
 Nova parte inteira no perfil logado, pensada para o serviço como empresa, não só para o plugin:
