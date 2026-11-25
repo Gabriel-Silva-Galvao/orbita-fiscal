@@ -1,0 +1,169 @@
+---
+/**
+ * "Na IA que você já usa" (planejamento de 24/11/2026: as quatro IAs na landing, com animação).
+ * O átomo da Órbita no centro, com uma linha até cada IA. Claude: linha cheia que se desenha ao
+ * entrar na tela, selo "Disponível". As outras: linha tracejada que só aparece, selo "Em preparação",
+ * até a Órbita ser publicada nelas (fonte: src/data/tutoriais.ts e a pesquisa em docs/planejamento.md).
+ * Sem movimento (movimento reduzido ou sem o motor), tudo aparece parado e completo.
+ * No celular, as linhas saem e os cartões ficam em coluna.
+ */
+import Symbol from './Symbol.astro';
+import { tutoriais } from '../data/tutoriais';
+
+// Uma frase por IA: como a Órbita entra nela. Curta, para a landing; o detalhe está nos Tutoriais do Portal.
+const como: Record<string, string> = {
+  claude: 'Você mesmo instala o plugin, em poucos minutos. Funciona na web, no computador e no celular.',
+  chatgpt: 'Entra como servidor MCP, adicionado no ChatGPT pela web.',
+  copilot: 'O TI do escritório configura uma vez, no Copilot Studio, para todos.',
+  gemini: 'O administrador configura no Gemini Enterprise para a empresa.',
+};
+const ias = tutoriais.map((t) => ({ id: t.id, nome: t.nome, disponivel: t.disponivel, texto: como[t.id] }));
+// Pontos de chegada das linhas, no centro de cada uma das quatro colunas (viewBox 0 0 1000 120).
+const xs = [125, 375, 625, 875];
+---
+
+<div class="ai-map">
+  <div class="ai-hub" aria-hidden="true">
+    <Symbol on="surface" pace={0.7} />
+  </div>
+  <svg class="ai-lines" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true" data-draw>
+    {
+      ias.map((ia, i) => (
+        <path
+          class:list={['ai-line', ia.disponivel ? 'is-on' : 'is-soon']}
+          d={`M500 0 C 500 60, ${xs[i]} 50, ${xs[i]} 120`}
+          pathLength={ia.disponivel ? 1 : undefined}
+          vector-effect="non-scaling-stroke"
+        />
+      ))
+    }
+  </svg>
+  <ul class="ai-grid">
+    {
+      ias.map((ia) => (
+        <li class:list={['ai-card', { 'is-on': ia.disponivel }]} data-reveal>
+          <h3 class="title">{ia.nome}</h3>
+          <p class:list={['ai-status', ia.disponivel ? 'on' : 'soon']}>{ia.disponivel ? 'Disponível' : 'Em preparação'}</p>
+          <p class="small mute">{ia.texto}</p>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .ai-map {
+    display: grid;
+    justify-items: center;
+  }
+  .ai-hub {
+    width: 88px;
+    padding: var(--space-3);
+    border-radius: var(--radius-round);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    position: relative;
+    z-index: 1;
+  }
+  .ai-hub :global(.symbol) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .ai-lines {
+    display: block;
+    width: 100%;
+    height: 96px;
+    margin-top: -2px;
+    overflow: visible;
+  }
+  .ai-line {
+    fill: none;
+    stroke-width: 2;
+  }
+  .ai-line.is-on {
+    stroke: var(--brand);
+  }
+  .ai-line.is-soon {
+    stroke: var(--line-strong);
+    stroke-dasharray: 4 6;
+  }
+  .ai-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .ai-card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--line-strong);
+    min-width: 0;
+  }
+  .ai-card.is-on {
+    border: 1px solid var(--brand);
+    background: var(--surface);
+  }
+  .ai-card .title {
+    margin: 0;
+  }
+  .ai-card p {
+    margin: 0;
+  }
+  .ai-status {
+    justify-self: start;
+    font: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+  }
+  .ai-status.on {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+  .ai-status.soon {
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+  }
+
+  /* Movimento: a linha do Claude se desenha; as outras, tracejadas, só aparecem depois. */
+  :global(.anim) .ai-line.is-on {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  :global(.anim) .ai-line.is-soon {
+    opacity: 0;
+    transition: opacity 0.8s ease 0.9s;
+  }
+  :global(.anim) .ai-lines:global(.is-drawn) .ai-line.is-on {
+    stroke-dashoffset: 0;
+  }
+  :global(.anim) .ai-lines:global(.is-drawn) .ai-line.is-soon {
+    opacity: 1;
+  }
+
+  @media (max-width: 860px) {
+    .ai-lines {
+      display: none;
+    }
+    .ai-hub {
+      margin-bottom: var(--space-5);
+    }
+    .ai-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 520px) {
+    .ai-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

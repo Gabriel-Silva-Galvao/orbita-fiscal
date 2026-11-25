@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 7d · 24/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · IAs na landing · 24/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -229,7 +229,7 @@ document.querySelectorAll('main section[id]').forEach(s=>io.observe(s));
 
 /* Jornada */
 const passos=[
- {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
+ {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Na seção "Na IA que você já usa", veja onde a Órbita funciona: Claude disponível; ChatGPT, Microsoft Copilot e Gemini em preparação.','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
  {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres, com letras e números).','A conta só é criada depois que o código do e-mail for confirmado.','Com a API ligada, um e-mail que já tem conta é recusado com aviso.','"Continuar com Google" ainda não existe: volta ao Entrar com o aviso para usar e-mail e senha.']},
  {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, a sessão fica num cookie por 30 dias e o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código. Sem plano, o Entrar leva ao Portal.']},
  {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Informe nome e CPF ou CNPJ da nota e escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado ou recusado na hora. Na simulação, o cartão 4444 4444 4444 4448 é aprovado e o 5184 0197 4037 3151 é recusado, com a mensagem do banco.','Pix: aparecem o QR Code e o copia e cola da cobrança. "Simular Pix confirmado" faz o papel do banco.','Boleto: aparecem a linha digitável e o vencimento em 3 dias. "Simular boleto pago" faz o papel do banco; na vida real, até 3 dias úteis.','Enquanto espera o Pix ou o boleto, a página confere sozinha a cada 5 s se o acesso foi liberado.','Voltar e escolher outra forma substitui a cobrança que estava esperando.','Quem já tem assinatura ativa recebe o aviso e o link para Minha conta, sem nova cobrança.']},
@@ -379,6 +379,10 @@ const testes=[
  ['Site + API','Excluir conta com assinatura ativa é recusado; depois do reembolso, exclui'],
  ['Site + API','Recarregar a página mantém tudo (vem do servidor)'],
  ['Site + API','Instalar mostra o plano real; nada de demonstração no navegador'],
+ ['Site','Landing: seção das quatro IAs, Claude disponível e as outras em preparação'],
+ ['Site','Linha do Claude se desenha ao rolar; as outras aparecem tracejadas'],
+ ['Site','Celular: cartões em coluna, sem linhas e sem rolagem lateral'],
+ ['Site','Movimento reduzido: tudo visível e parado'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
