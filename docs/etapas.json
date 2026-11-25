@@ -24,7 +24,8 @@
     ["Revisão jurídica das 8 citações dos exemplos", false],
     ["Revisão jurídica das 125 citações em revezamento", false],
     ["Trocar contatos provisórios pelos reais", false],
-    ["Imagem de compartilhamento (Open Graph)", false]
+    ["Imagem de compartilhamento (Open Graph)", true],
+    ["Header fixo e nav com botão Assinar", true]
   ]},
   {"id": "e03", "titulo": "Movimento", "itens": [
     ["GSAP e ScrollTrigger", true],
@@ -42,7 +43,7 @@
     ["8 fotos do Unsplash escolhidas pela folha de contato", true],
     ["Créditos no código e no rodapé", true],
     ["Foto da base em duotone, sem lente que segue o mouse", true],
-    ["Foto de Brasília que se abre em órbita", true],
+    ["Foto de Brasília que acende do desfoque e respira (sem cartões)", true],
     ["Baixar as fotos para o próprio site", false]
   ]},
   {"id": "e05", "titulo": "Auditoria de traços de IA", "itens": [
@@ -72,7 +73,7 @@
     ["Faixa do plano escolhido, com troca", true],
     ["Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro", true],
     ["Volta para a página pedida depois de entrar", true],
-    ["Servidor de autenticação na API FastAPI", false],
+    ["Servidor de autenticação na API FastAPI", true],
     ["Login com Google de verdade (OAuth)", false],
     ["Envio dos e-mails com o código e com o link de senha nova", false]
   ]},
@@ -108,7 +109,7 @@
     ["Reembolso com prazo de 7 dias à vista e acompanhamento", true],
     ["Cancelar e reativar a assinatura", true],
     ["Nome, sair e excluir conta", true],
-    ["Dados reais da assinatura vindos do servidor", false],
+    ["Dados reais da assinatura vindos do servidor", true],
     ["Notas fiscais para baixar", false],
     ["Novidades da base com data", false],
     ["Regra de troca de plano no meio do mês", false],
@@ -127,9 +128,10 @@
     ["Rotas do assinante e Checkout renderizadas no servidor", true],
     ["Middleware que protege as rotas pela sessão da API", true],
     ["Contrato da API de login documentado", true],
-    ["Criar a API em FastAPI", false],
-    ["GET /auth/sessao e rotas de cadastro, login e código", false],
-    ["Escolher onde hospedar o servidor Node e a API", false]
+    ["Criar a API em FastAPI", true],
+    ["GET /auth/sessao e rotas de cadastro, login e código", true],
+    ["Escolher onde hospedar o servidor Node e a API", false],
+    ["Servidor MCP: só o \"buraco\" documentado, liga depois", true]
   ]},
   {"id": "e13", "titulo": "Artefatos e entregas", "itens": [
     ["Design system publicado e atualizado", true],
@@ -154,42 +156,47 @@
     ["Definir as abas e as diferenças entre Pro e Max", true],
     ["Status do plugin: conexão por IA, uso do mês, versão", false],
     ["Novidades (painel de admin na API: integração ainda em aberto)", false],
-    ["Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini", false],
+    ["Tutoriais de instalação: Claude, ChatGPT, Copilot e Gemini", true],
     ["Alertas por tema (Max)", false],
     ["Resumo semanal por área (Max)", false],
     ["Acesso antecipado e suporte prioritário (Max)", false],
-    ["As quatro IAs na landing, com animação", false]
+    ["As quatro IAs na landing, com animação", true],
+    ["Status do plugin na tela, em demonstração (espera o servidor MCP)", true]
   ]},
   {"id": "e18", "titulo": "Pagamentos (Asaas)", "itens": [
     ["Mapear a API do Asaas", true],
     ["Integração real suspensa até haver CNPJ", true],
-    ["Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)", false],
-    ["Cartão, Pix e boleto no Checkout", false],
-    ["Formas de pagamento e faturas no Portal", false],
-    ["Liberar acesso só com pagamento confirmado (simulado)", false],
-    ["Ajustar Termos, Reembolso, Ajuda e landing para as três formas", false],
+    ["Simulação da API do Asaas no backend (clientes, assinaturas, cobranças, webhooks)", true],
+    ["Cartão, Pix e boleto no Checkout", true],
+    ["Formas de pagamento e faturas no Portal", true],
+    ["Liberar acesso só com pagamento confirmado (simulado)", true],
+    ["Ajustar Termos, Reembolso, Ajuda e landing para as três formas", true],
     ["Trocar a simulação pela API real (quando houver CNPJ)", false]
   ]},
   {"id": "e19", "titulo": "Ranqueamento no Google", "itens": [
     ["Pesquisa aprofundada de SEO", true],
-    ["Sitemap, robots.txt e noindex na área logada", false],
-    ["Canonical, títulos, descrições e Open Graph por página", false],
-    ["Dados estruturados: Organization, WebSite, SoftwareApplication", false],
-    ["Página 404 real e domínio único com redirecionamentos", false],
-    ["Core Web Vitals: topo sem atraso no LCP, imagens e fontes", false],
+    ["Sitemap, robots.txt e noindex na área logada", true],
+    ["Canonical, títulos, descrições e Open Graph por página", true],
+    ["Dados estruturados: Organization, WebSite, SoftwareApplication", true],
+    ["Página 404 real e domínio único com redirecionamentos", true],
+    ["Core Web Vitals: topo sem atraso no LCP, imagens e fontes", true],
     ["Banner de cookies LGPD e GA4 com Consent Mode v2", false],
     ["Search Console, Bing Webmaster e IndexNow na publicação", false],
     ["Página Sobre com autores e conteúdo revisado", false]
   ]},
   {"id": "e21", "titulo": "Landing de vendas (reformulação)", "itens": [
-    ["Pesquisa aprofundada: o que uma landing de vendas precisa ter", false],
-    ["Plano da nova landing (ordem e papel das seções), aprovado", false],
-    ["Tirar efeitos visuais desnecessários, inclusive no topo", false],
-    ["Tirar o carrossel vertical e resumir numa linha", false],
-    ["Exemplos como respostas do Claude Opus 5.5, com e sem o plugin", false],
-    ["Reformular o visual para vender o máximo", false],
+    ["Pesquisa aprofundada: o que uma landing de vendas precisa ter", true],
+    ["Plano da nova landing (ordem e papel das seções), aprovado", true],
+    ["Tirar efeitos visuais desnecessários, inclusive no topo", true],
+    ["Tirar o carrossel vertical e resumir numa linha", true],
+    ["Exemplos como respostas do Claude Opus 5.5, com e sem o plugin", true],
+    ["Reformular o visual para vender o máximo", true],
     ["Apresentação visual: IA gerando as respostas e átomo de lítio de volta", true],
-    ["Respostas geradas ao vivo com e sem a Órbita e átomo de volta na landing", false]
+    ["Respostas geradas ao vivo com e sem a Órbita e átomo de volta na landing", true],
+    ["Bloco \"O que a Órbita consulta\" no lugar da cena da biblioteca", true],
+    ["Foto de Brasília sem cartões, entrada suave", true],
+    ["Formulário de contato na Ajuda e prévia na inicial", true],
+    ["Átomo mais lento no topo e na logo", true]
   ]},
   {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
     ["Definir quando toca: uma vez, na confirmação do pagamento", true],
@@ -199,7 +206,7 @@
   {"id": "e14", "titulo": "Publicação", "itens": [
     ["Escolher hospedagem e domínio", false],
     ["Formulário de contato enviando de verdade", false],
-    ["sitemap.xml e robots.txt", false],
+    ["sitemap.xml e robots.txt", true],
     ["Teste com leitor de tela", false],
     ["Tirar o modo de demonstração", false],
     ["Publicar o site", false]

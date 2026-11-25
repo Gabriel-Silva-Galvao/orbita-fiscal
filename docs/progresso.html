@@ -125,6 +125,13 @@ details.more ul b { color: var(--ink); font-weight: 600 }
 
 /* Próximos e links */
 .two { display: grid; gap: 40px }
+.faltam { display: grid; gap: 14px; margin-top: 18px }
+@media (min-width: 760px) { .faltam { grid-template-columns: 1fr 1fr } }
+.faltam article { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px }
+.faltam h3 { margin: 0 0 8px; font-size: 1.05rem }
+.faltam h3 span { font-weight: 400; color: var(--brand); margin-right: 6px }
+.faltam ul { margin: 0; padding-left: 18px; display: grid; gap: 4px }
+.faltam .tag { display: inline-block; font-size: .75rem; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--brand); color: var(--brand); margin-left: 6px; vertical-align: 2px }
 @media (min-width: 760px) { .two { grid-template-columns: 1fr 1fr } }
 .steps { padding-left: 20px; display: grid; gap: 8px }
 .steps li::marker { color: var(--brand); font-family: var(--font-display) }
@@ -184,7 +191,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     <svg viewBox="6 14 88 72" role="img" aria-label="Símbolo da Órbita"><g transform="rotate(-28 50 50)"><ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="2.6"/><circle cx="23" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="77" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="93" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/></g><circle cx="57.2" cy="50" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)"/><circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)"/><circle cx="50" cy="50" r="4.4" fill="var(--nucleus)"/></svg>
     <div>
       <p class="name">Progresso do site</p>
-      <p class="meta">Órbita · <span id="updated">atualizado em 24/11/2026</span></p>
+      <p class="meta">Órbita · <span id="updated">atualizado em 25/11/2026</span></p>
     </div>
     <span class="spacer"></span>
     <span class="live" id="live"><i></i><span>Conectando</span></span>
@@ -193,7 +200,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="summary" aria-labelledby="sum-t">
     <div>
       <h1 id="sum-t" class="big"><span id="done">–</span> <small>de <span id="total">7</span> páginas do MVP prontas</small></h1>
-      <p class="lead">O site roda localmente em modo de demonstração e ainda não está publicado. Falta a API em FastAPI e as decisões da lista de bloqueios.</p>
+      <p class="lead">Site e API (FastAPI) prontos e rodando localmente, com cobrança Asaas simulada. A landing de vendas foi reformulada. No código falta só a explosão do átomo; o resto depende de CNPJ, contas externas e decisões suas.</p>
     </div>
     <div>
       <div class="bar" id="bar" aria-hidden="true"></div>
@@ -202,6 +209,43 @@ details.more ul b { color: var(--ink); font-weight: 600 }
         <div><p class="n" id="blk-open">–</p><p class="k">bloqueios em aberto</p></div>
         <div><p class="n" id="blk-done">–</p><p class="k">bloqueios resolvidos</p></div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="ft-t">
+    <div class="sec-head">
+      <h2 id="ft-t">O que falta</h2>
+      <p class="note">Atualizado em 25/11/2026, depois do commit 41066ad.</p>
+    </div>
+    <div class="faltam">
+      <article><h3><span>1</span>Código <em class="tag">só isto</em></h3><ul>
+        <li>Animação de explosão do átomo, que toca uma vez na confirmação do pagamento, com versão para movimento reduzido e botão Pular.</li></ul></article>
+      <article><h3><span>2</span>Depende do CNPJ e de contas externas</h3><ul>
+        <li>Asaas real: chave no <code>api/.env</code>, webhook, sandbox e produção.</li>
+        <li>Envio real dos e-mails (código e senha nova) e do formulário de contato.</li>
+        <li>Login com Google (app OAuth).</li>
+        <li>Hospedagem do site e da API, e o domínio definitivo.</li>
+        <li>Nota fiscal.</li></ul></article>
+      <article><h3><span>3</span>Ligar o servidor MCP (já existe)</h3><ul>
+        <li>Instalar: arquivo do plugin e código de conexão reais.</li>
+        <li>Portal: status do plugin (consultas, limite, versão) e conexões por IA.</li>
+        <li>Roteiro em <code>docs/planejamento.md</code>.</li></ul></article>
+      <article><h3><span>4</span>Decisões de texto (66 marcas na tela)</h3><ul>
+        <li>45 "a definir" e 21 "a confirmar".</li>
+        <li>E-mail, Instagram, CNPJ, razão social e encarregado de dados.</li>
+        <li>Prazo de resposta do suporte e renovação automática.</li>
+        <li>Se as consultas são guardadas e se treinam modelos.</li>
+        <li>Revisão por advogado dos textos legais e das citações.</li></ul></article>
+      <article><h3><span>5</span>Depois de publicar</h3><ul>
+        <li>Validar os dados estruturados no validator.schema.org.</li>
+        <li>Search Console, Bing Webmaster e IndexNow.</li>
+        <li>Banner de cookies com GA4 e Consent Mode v2.</li>
+        <li>Teste com leitor de tela e tirar o modo de demonstração.</li></ul></article>
+      <article><h3><span>6</span>Só com sua ordem direta</h3><ul>
+        <li>Conta de revisão das lojas (sem 2FA).</li>
+        <li>Submeter na loja do Claude e nos outros diretórios.</li>
+        <li>Destaque maior da garantia de 7 dias.</li>
+        <li>Plano para equipes (depois do MVP).</li></ul></article>
     </div>
   </section>
 
@@ -243,16 +287,19 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     <section class="sec" aria-labelledby="nx-t">
       <h2 id="nx-t" style="font-size:1.75rem">Próximos passos</h2>
       <ol class="steps">
-        <li>Criar a API em Python com FastAPI: cadastro, login com código por e-mail, sessão (<code>/auth/sessao</code>) e assinatura.</li>
-        <li>Enviar Privacidade, Termos, Reembolso e as citações da landing para revisão de um advogado.</li>
-        <li>Escolher o provedor de pagamento e onde hospedar o servidor Node e a API.</li>
-        <li>Baixar as fotos para o próprio site e publicar.</li>
+        <li>Animação de explosão do átomo (última etapa do código).</li>
+        <li>Abrir o CNPJ e trocar a simulação pelo Asaas real.</li>
+        <li>Escolher hospedagem, domínio e o provedor de e-mail; publicar.</li>
+        <li>Ligar o servidor MCP nos espaços reservados do Instalar e do Portal.</li>
+        <li>Fechar as 66 marcas "a definir" e "a confirmar" e a revisão jurídica.</li>
       </ol>
     </section>
     <section class="sec" aria-labelledby="ln-t">
       <h2 id="ln-t" style="font-size:1.75rem">Onde está cada coisa</h2>
       <ul class="links">
         <li><a href="https://claude.ai/artifact/TEyZc3F21X1WFSjo5JwYRn" target="_blank" rel="noopener">Pesquisa: Astro ou React</a></li>
+        <li><a href="https://claude.ai/artifact/7dMuyNgvf4dLt8BdcprgXp" target="_blank" rel="noopener">Guia da Órbita (uso e testes)</a></li>
+        <li><a href="https://claude.ai/artifact/6AD7jmJdBf7sGfSPry2YrF" target="_blank" rel="noopener">Órbita em ação (proposta da IA gerando)</a></li>
         <li><a href="https://github.com/Gabriel-Silva-Galvao/orbita-fiscal" target="_blank" rel="noopener">Repositório no GitHub</a></li>
         <li><span class="f">Briefings das páginas <code>docs/briefings.md</code></span></li>
         <li><span class="f">Pendências e decisões <code>artefatos/02-pendencias-e-decisoes/</code></span></li>
@@ -269,6 +316,11 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="sec" aria-labelledby="hs-t">
     <h2 id="hs-t" style="font-size:1.75rem">Histórico</h2>
     <ol class="timeline">
+      <li><span class="d">25/11/2026</span><span class="t">Ajuda e átomo mais lento</span><span class="x">Formulário de contato vai para a Ajuda, com prévia "Ficou alguma dúvida?" na inicial. Átomo gira mais devagar e acelera de leve. Commit 41066ad.</span></li>
+      <li><span class="d">25/11/2026</span><span class="t">IA gerando ao vivo</span><span class="x">Topo e comparativo mostram as respostas sendo geradas, com citações acendendo. Volta o átomo de lítio atrás do cartão. Bloco "O que a Órbita consulta". Foto de Brasília sem cartões, acendendo do desfoque. Commit 412db2d.</span></li>
+      <li><span class="d">25/11/2026</span><span class="t">Landing de vendas</span><span class="x">Pesquisa e plano; comparativo com e sem a Órbita (respostas reais do Claude Opus 5.5); textos e botões de venda; header fixo; "dia a dia" numa linha.</span></li>
+      <li><span class="d">25/11/2026</span><span class="t">SEO</span><span class="x">Sitemap, robots.txt, noindex na área logada, Open Graph com imagem, JSON-LD, 404 real. LCP abaixo de 200 ms e CLS perto de zero.</span></li>
+      <li><span class="d">25/11/2026</span><span class="t">API e cobrança simulada</span><span class="x">API FastAPI com cadastro, login, código de 6 dígitos, sessão, conta e assinatura. Asaas simulado com cartão, Pix e boleto, reembolso, cancelamento e reativação. 53 testes passando. IAs na landing. Servidor MCP só documentado.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Planejamento das 6 frentes</span><span class="x">Entrega do plugin pela loja do Claude (MCP + skills) e em ChatGPT, Copilot e Gemini; área do assinante com Pro e Max; Asaas simulado até haver CNPJ; cartão, Pix e boleto; SEO; animação da explosão do átomo. Pesquisas em docs/planejamento.md.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Duas etapas e conta antes da compra</span><span class="x">Entrar com Google ou e-mail e senha, sempre com código de 6 dígitos no e-mail, no cadastro e no login. O Checkout só abre para quem já criou a conta; quem chega sem login vai para Criar conta com o plano escolhido.</span></li>
       <li><span class="d">24/11/2026</span><span class="t">Cartões de lei em revezamento</span><span class="x">125 citações reais se revezam no topo, na cena dos livros e em Brasília, sem repetir na tela. Trocas a cada 6 s: em órbita pelo núcleo, como página de livro e como carimbo. No hover, o cartão vira como placa.</span></li>
