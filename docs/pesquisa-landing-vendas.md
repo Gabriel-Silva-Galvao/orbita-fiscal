@@ -103,7 +103,7 @@ Os guias de SaaS concordam na ordem. Os números de aumento que eles citam não 
   - a base real;
   - a garantia de 7 dias;
   - a transparência sobre a LGPD.
-- **A garantia e uma decisão anterior.** Antes, você pediu para deixar o reembolso **em letras miúdas**. A pesquisa recomenda o contrário: a **garantia** junto do preço reduz o risco percebido. A proposta é falar dela como **"7 dias de garantia: não gostou, devolvemos tudo"**, uma frase curta e positiva junto do preço, e manter o detalhe do reembolso em letra pequena. **Isso depende da sua decisão na etapa 10b.**
+- **A garantia e uma decisão anterior.** Antes, você pediu para deixar o reembolso **em letras miúdas**. A pesquisa recomenda o contrário: a **garantia** junto do preço reduz o risco percebido. A proposta é falar dela como **"7 dias de garantia: não gostou, devolvemos tudo"**, uma frase curta e positiva junto do preço, e manter o detalhe do reembolso em letra pequena. **Decisão de 25/11/2026 (10b):** a garantia continua só em letras miúdas. A ideia de destacá-la fica documentada em `plano-landing.md` para um teste depois do lançamento.
 
 ---
 
