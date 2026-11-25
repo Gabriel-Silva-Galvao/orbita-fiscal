@@ -28,7 +28,7 @@ import uuid
 from collections import defaultdict, deque
 from typing import Callable
 
-from fastapi import APIRouter, Cookie, Request, Response
+from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
@@ -93,6 +93,18 @@ def confere_senha(senha: str, guardado: str) -> bool:
 
 def enviar_codigo_log(email: str, codigo: str) -> None:
     log.warning("Código de verificação para %s: %s (sem provedor de e-mail ainda)", email, codigo)
+
+
+def usuario_logado(req: Request, orbita_sessao: str | None = Cookie(None)) -> dict:
+    """Dependência das rotas do assinante: devolve {id, email, nome} da sessão ou responde 401."""
+    s = req.app.state.banco.um(
+        "SELECT u.id, u.email, u.nome, s.expira FROM sessoes s JOIN usuarios u ON u.id=s.usuario_id WHERE s.token_hash=?",
+        _sha(orbita_sessao) if orbita_sessao else "",
+    )
+    if not s or s["expira"] < time.time():
+        raise HTTPException(401, detail={"codigo": "sem_sessao", "mensagem": "Entre na sua conta."})
+    s.pop("expira")
+    return s
 
 
 class Cadastro(BaseModel):

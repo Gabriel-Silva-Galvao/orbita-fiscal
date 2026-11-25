@@ -13,7 +13,7 @@
       "name": "site-com-api",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "env": { "API_URL": "http://localhost:8000", "PUBLIC_AUTH_ENDPOINT": "http://localhost:8000/auth" },
+      "env": { "API_URL": "http://localhost:8000", "PUBLIC_AUTH_ENDPOINT": "http://localhost:8000/auth", "PUBLIC_BILLING_ENDPOINT": "http://localhost:8000/billing" },
       "port": 4321
     }
   ]

@@ -5,7 +5,10 @@ Regra de acesso (planejamento de 24/11/2026):
 - nunca libera com PAYMENT_CREATED;
 - suspende com PAYMENT_OVERDUE, PAYMENT_CHARGEBACK_REQUESTED ou PAYMENT_REPROVED_BY_RISK_ANALYSIS;
 - encerra com PAYMENT_REFUNDED (reembolsado) ou SUBSCRIPTION_DELETED (cancelado).
-TODO (login): hoje o usuário vem no corpo da requisição; depois virá da sessão.
+Etapa 7c: todas as rotas do assinante identificam a pessoa pela sessão (cookie orbita_sessao), nunca
+por um id no endereço ou no corpo. Rotas: /billing/assinatura (POST cria, GET consulta, DELETE cancela),
+/billing/assinatura/forma (PUT), /billing/assinatura/reembolso (POST) e, só com a simulação ligada,
+/billing/assinatura/simular-pagamento (POST), que faz o papel do banco confirmando Pix ou boleto.
 """
 from __future__ import annotations
 
@@ -16,6 +19,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.asaas.client import AsaasClient, AsaasError
+from app.auth import usuario_logado
 from app.config import get_settings
 from app.db import Banco
 
@@ -41,14 +45,12 @@ class Cartao(BaseModel):
 
 
 class NovaAssinatura(BaseModel):
-    usuario_id: str
+    # Nome ou razão social e CPF/CNPJ da nota fiscal; o e-mail vem da conta.
     nome: str
-    email: str
     cpf_cnpj: str
     plano: Literal["pro", "max"]
     forma: Literal["cartao", "pix", "boleto"]
     cartao: Cartao | None = None
-    ip: str | None = None
 
 
 class TrocaForma(BaseModel):
@@ -126,9 +128,10 @@ def _mudar_status(banco: Banco, subscription_id: str, novo: str, pago_em: str | 
 def criar_router() -> APIRouter:
     router = APIRouter(tags=["Cobrança"])
 
-    @router.post("/billing/assinaturas", status_code=201)
-    def criar_assinatura(dados: NovaAssinatura, banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
-        atual = banco.um("SELECT status_acesso FROM assinaturas WHERE usuario_id = ?", dados.usuario_id)
+    @router.post("/billing/assinatura", status_code=201)
+    def criar_assinatura(dados: NovaAssinatura, request: Request, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        usuario_id, email = u["id"], u["email"]
+        atual = banco.um("SELECT status_acesso FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if atual and atual["status_acesso"] not in STATUS_FINAIS:
             raise HTTPException(409, detail={"codigo": "ja_assinante", "mensagem": "Esta conta já tem uma assinatura. Troque o plano ou a forma de pagamento no Portal."})
         if dados.forma == "cartao" and not dados.cartao:
@@ -138,12 +141,12 @@ def criar_router() -> APIRouter:
         hoje = date.today()
         vencimento = hoje + timedelta(days=3) if dados.forma == "boleto" else hoje
         try:
-            cliente = banco.um("SELECT customer_id FROM assinantes WHERE usuario_id = ?", dados.usuario_id)
+            cliente = banco.um("SELECT customer_id FROM assinantes WHERE usuario_id = ?", usuario_id)
             if not cliente:
-                novo = asaas.criar_cliente(name=dados.nome, email=dados.email, cpfCnpj=dados.cpf_cnpj, externalReference=dados.usuario_id)
+                novo = asaas.criar_cliente(name=dados.nome, email=email, cpfCnpj=dados.cpf_cnpj, externalReference=usuario_id)
                 banco.executar(
                     "INSERT INTO assinantes (usuario_id, email, nome, cpf_cnpj, customer_id) VALUES (?, ?, ?, ?, ?)",
-                    dados.usuario_id, dados.email, dados.nome, novo["cpfCnpj"], novo["id"],
+                    usuario_id, email, dados.nome, novo["cpfCnpj"], novo["id"],
                 )
                 cliente = {"customer_id": novo["id"]}
             corpo = {
@@ -153,34 +156,35 @@ def criar_router() -> APIRouter:
                 "nextDueDate": vencimento.isoformat(),
                 "cycle": "MONTHLY",
                 "description": f"Assinatura Órbita {plano['nome']}",
-                "externalReference": dados.usuario_id,
+                "externalReference": usuario_id,
             }
             if dados.cartao:
                 c = dados.cartao
                 corpo["creditCard"] = {"holderName": c.titular, "number": c.numero, "expiryMonth": c.mes, "expiryYear": c.ano, "ccv": c.cvv}
-                corpo["creditCardHolderInfo"] = {"name": dados.nome, "email": dados.email, "cpfCnpj": dados.cpf_cnpj, "postalCode": c.cep, "addressNumber": c.numero_endereco, "phone": c.telefone}
-                corpo["remoteIp"] = dados.ip or "127.0.0.1"
+                corpo["creditCardHolderInfo"] = {"name": dados.nome, "email": email, "cpfCnpj": dados.cpf_cnpj, "postalCode": c.cep, "addressNumber": c.numero_endereco, "phone": c.telefone}
+                corpo["remoteIp"] = request.client.host if request.client else "127.0.0.1"
             sub = asaas.criar_assinatura(**corpo)
         except AsaasError as e:
             raise _erro_asaas(e)
 
         banco.executar(
             "INSERT OR REPLACE INTO assinaturas (usuario_id, subscription_id, plano, forma, status_acesso) VALUES (?, ?, ?, ?, 'pendente')",
-            dados.usuario_id, sub["id"], dados.plano, dados.forma,
+            usuario_id, sub["id"], dados.plano, dados.forma,
         )
         # O webhook é quem libera. Se o pagamento já veio confirmado na resposta (cartão), aplica a mesma regra
         # na hora, de forma idempotente: o evento que chegar depois não muda nada.
         for cob in asaas.cobrancas_da_assinatura(sub["id"]):
             if cob["status"] in ("CONFIRMED", "RECEIVED"):
                 _mudar_status(banco, sub["id"], "ativo", cob.get("paymentDate"))
-        return _resumo(banco, asaas, dados.usuario_id)
-
-    @router.get("/billing/assinaturas/{usuario_id}")
-    def obter(usuario_id: str, banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
         return _resumo(banco, asaas, usuario_id)
 
-    @router.put("/billing/assinaturas/{usuario_id}/forma")
-    def trocar_forma(usuario_id: str, dados: TrocaForma, banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+    @router.get("/billing/assinatura")
+    def obter(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        return _resumo(banco, asaas, u["id"])
+
+    @router.put("/billing/assinatura/forma")
+    def trocar_forma(dados: TrocaForma, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        usuario_id = u["id"]
         # Para o cartão, a decisão entre a página segura do Asaas e o formulário próprio ainda está em aberto.
         a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if not a or a["status_acesso"] in STATUS_FINAIS:
@@ -192,8 +196,9 @@ def criar_router() -> APIRouter:
         banco.executar("UPDATE assinaturas SET forma = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.forma, usuario_id)
         return _resumo(banco, asaas, usuario_id)
 
-    @router.delete("/billing/assinaturas/{usuario_id}")
-    def cancelar(usuario_id: str, banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+    @router.delete("/billing/assinatura")
+    def cancelar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        usuario_id = u["id"]
         a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if not a or a["status_acesso"] in STATUS_FINAIS:
             raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Não há assinatura para cancelar."})
@@ -204,8 +209,9 @@ def criar_router() -> APIRouter:
         banco.executar("UPDATE assinaturas SET status_acesso = 'cancelado', atualizado_em = datetime('now') WHERE usuario_id = ?", usuario_id)
         return {"usuario_id": usuario_id, "status_acesso": "cancelado"}
 
-    @router.post("/billing/assinaturas/{usuario_id}/reembolso")
-    def reembolsar(usuario_id: str, banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+    @router.post("/billing/assinatura/reembolso")
+    def reembolsar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        usuario_id = u["id"]
         a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if not a or not a["primeira_paga_em"]:
             raise HTTPException(400, detail={"codigo": "nada_pago", "mensagem": "Ainda não há pagamento confirmado para reembolsar."})
@@ -224,6 +230,23 @@ def criar_router() -> APIRouter:
             raise _erro_asaas(e)
         banco.executar("UPDATE assinaturas SET status_acesso = 'reembolsado', atualizado_em = datetime('now') WHERE usuario_id = ?", usuario_id)
         return {"usuario_id": usuario_id, "status_acesso": "reembolsado", "cobrancas_estornadas": [c["id"] for c in pagas]}
+
+    @router.post("/billing/assinatura/simular-pagamento")
+    def simular_pagamento(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        """Só na simulação: confirma as cobranças pendentes, como o banco faria com o Pix ou o boleto.
+        A liberação segue pelo caminho real: a simulação dispara o webhook e o webhook libera."""
+        if not get_settings().asaas_sim_enabled:
+            raise HTTPException(404, detail={"codigo": "indisponivel", "mensagem": "Disponível só na simulação."})
+        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
+        if not a:
+            raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Esta conta ainda não tem assinatura."})
+        try:
+            for cob in asaas.cobrancas_da_assinatura(a["subscription_id"]):
+                if cob["status"] == "PENDING":
+                    asaas.confirmar_no_sandbox(cob["id"])
+        except AsaasError as e:
+            raise _erro_asaas(e)
+        return _resumo(banco, asaas, u["id"])
 
     @router.post("/webhooks/asaas", tags=["Webhooks"])
     async def webhook(request: Request, asaas_access_token: str | None = Header(default=None, alias="asaas-access-token"), banco: Banco = Depends(get_banco)):

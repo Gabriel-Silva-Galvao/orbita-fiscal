@@ -30,3 +30,17 @@ def api(tmp_path):
     holder["http"] = http
     app.state.asaas = AsaasClient("http://testserver/asaas-sim/v3", settings.asaas_api_key, http=http)
     return http, store, banco
+
+
+def entrar(http, banco, uid: str = "u1", email: str = "teste@exemplo.com") -> None:
+    """Cria a conta e a sessão direto no banco e põe o cookie no cliente (o login em si é testado em test_auth)."""
+    import secrets
+    import time
+
+    from app import auth
+
+    if not banco.um("SELECT 1 FROM usuarios WHERE id = ?", uid):
+        banco.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?, ?, 'Teste Silva', 'x')", uid, email)
+    token = secrets.token_urlsafe(16)
+    banco.executar("INSERT INTO sessoes VALUES (?, ?, ?)", auth._sha(token), uid, time.time() + 3600)
+    http.cookies.set(auth.COOKIE_SESSAO, token)

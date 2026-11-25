@@ -8,15 +8,16 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from app.config import get_settings
+from tests.conftest import entrar
 
 CHAVE = get_settings().asaas_api_key
 TOKEN = get_settings().asaas_webhook_token
 CARTAO = {"titular": "TESTE SILVA", "numero": "4444444444444444", "mes": "12", "ano": "2030", "cvv": "123"}
 
 
-def assinar(http, forma: str, usuario: str = "u1", plano: str = "pro", **extra):
-    corpo = {"usuario_id": usuario, "nome": "Teste Silva", "email": "teste@exemplo.com", "cpf_cnpj": "529.982.247-25", "plano": plano, "forma": forma, **extra}
-    return http.post("/billing/assinaturas", json=corpo)
+def assinar(http, forma: str, plano: str = "pro", **extra):
+    corpo = {"nome": "Teste Silva", "cpf_cnpj": "529.982.247-25", "plano": plano, "forma": forma, **extra}
+    return http.post("/billing/assinatura", json=corpo)
 
 
 def confirmar(http, cobranca_id: str):
@@ -24,12 +25,13 @@ def confirmar(http, cobranca_id: str):
     assert r.status_code == 200, r.text
 
 
-def status(http, usuario: str = "u1") -> str:
-    return http.get(f"/billing/assinaturas/{usuario}").json()["status_acesso"]
+def status(http) -> str:
+    return http.get("/billing/assinatura").json()["status_acesso"]
 
 
 def test_pix_fica_pendente_e_libera_com_o_webhook(api):
     http, *_ = api
+    entrar(http, api[2])
     r = assinar(http, "pix")
     assert r.status_code == 201, r.text
     dados = r.json()
@@ -42,6 +44,7 @@ def test_pix_fica_pendente_e_libera_com_o_webhook(api):
 
 def test_boleto_vence_em_3_dias_e_libera_na_compensacao(api):
     http, *_ = api
+    entrar(http, api[2])
     dados = assinar(http, "boleto", plano="max").json()
     [cob] = dados["cobrancas"]
     assert dados["valor"] == 75.9 and cob["vencimento"] == (date.today() + timedelta(days=3)).isoformat()
@@ -53,20 +56,23 @@ def test_boleto_vence_em_3_dias_e_libera_na_compensacao(api):
 
 def test_cartao_aprovado_libera_na_hora(api):
     http, *_ = api
-    dados = assinar(http, "cartao", cartao=CARTAO, ip="200.1.2.3").json()
+    entrar(http, api[2])
+    dados = assinar(http, "cartao", cartao=CARTAO).json()
     assert dados["status_acesso"] == "ativo" and dados["cobrancas"][0]["status"] == "CONFIRMED"
 
 
 def test_cartao_recusado_devolve_mensagem_e_nao_cria_assinatura(api):
     http, *_ = api
+    entrar(http, api[2])
     r = assinar(http, "cartao", cartao={**CARTAO, "numero": "5184019740373151"})
     assert r.status_code == 400
     assert r.json()["detail"]["codigo"] == "invalid_creditCard"
-    assert http.get("/billing/assinaturas/u1").status_code == 404
+    assert http.get("/billing/assinatura").status_code == 404
 
 
 def test_nao_deixa_assinar_duas_vezes(api):
     http, *_ = api
+    entrar(http, api[2])
     assert assinar(http, "pix").status_code == 201
     r = assinar(http, "boleto")
     assert r.status_code == 409 and r.json()["detail"]["codigo"] == "ja_assinante"
@@ -74,12 +80,14 @@ def test_nao_deixa_assinar_duas_vezes(api):
 
 def test_webhook_exige_token(api):
     http, *_ = api
+    entrar(http, api[2])
     r = http.post("/webhooks/asaas", json={"id": "evt_x", "event": "PAYMENT_RECEIVED"}, headers={"asaas-access-token": "errado"})
     assert r.status_code == 401
 
 
 def test_webhook_repetido_nao_reprocessa(api):
     http, store, banco = api
+    entrar(http, api[2])
     [cob] = assinar(http, "pix").json()["cobrancas"]
     confirmar(http, cob["id"])
     evento = next(e for e in store.eventos if e["event"] == "PAYMENT_RECEIVED")
@@ -92,6 +100,7 @@ def test_webhook_repetido_nao_reprocessa(api):
 
 def test_vencimento_suspende(api):
     http, *_ = api
+    entrar(http, api[2])
     [cob] = assinar(http, "boleto").json()["cobrancas"]
     http.post(f"/asaas-sim/v3/sandbox/payment/{cob['id']}/overdue", headers={"access_token": CHAVE})
     assert status(http) == "suspenso"
@@ -99,24 +108,27 @@ def test_vencimento_suspende(api):
 
 def test_trocar_forma_de_pagamento(api):
     http, *_ = api
+    entrar(http, api[2])
     assinar(http, "pix")
-    r = http.put("/billing/assinaturas/u1/forma", json={"forma": "boleto"})
+    r = http.put("/billing/assinatura/forma", json={"forma": "boleto"})
     assert r.status_code == 200 and r.json()["forma"] == "boleto"
     assert r.json()["cobrancas"][0]["forma"] == "boleto" and "boleto" in r.json()["cobrancas"][0]
 
 
 def test_cancelar(api):
     http, *_ = api
+    entrar(http, api[2])
     assinar(http, "pix")
-    assert http.delete("/billing/assinaturas/u1").json()["status_acesso"] == "cancelado"
+    assert http.delete("/billing/assinatura").json()["status_acesso"] == "cancelado"
     assert status(http) == "cancelado"
     assert assinar(http, "boleto").status_code == 201  # depois de cancelar, pode assinar de novo
 
 
 def test_reembolso_dentro_de_7_dias(api):
     http, *_ = api
-    dados = assinar(http, "cartao", cartao=CARTAO, ip="200.1.2.3").json()
-    r = http.post("/billing/assinaturas/u1/reembolso")
+    entrar(http, api[2])
+    dados = assinar(http, "cartao", cartao=CARTAO).json()
+    r = http.post("/billing/assinatura/reembolso")
     assert r.status_code == 200 and r.json()["status_acesso"] == "reembolsado"
     assert r.json()["cobrancas_estornadas"] == [dados["cobrancas"][0]["id"]]
     assert status(http) == "reembolsado"
@@ -124,15 +136,17 @@ def test_reembolso_dentro_de_7_dias(api):
 
 def test_reembolso_fora_do_prazo(api):
     http, _, banco = api
-    assinar(http, "cartao", cartao=CARTAO, ip="200.1.2.3")
+    entrar(http, api[2])
+    assinar(http, "cartao", cartao=CARTAO)
     antiga = (date.today() - timedelta(days=8)).isoformat()
     banco.executar("UPDATE assinaturas SET primeira_paga_em = ? WHERE usuario_id = 'u1'", antiga)
-    r = http.post("/billing/assinaturas/u1/reembolso")
+    r = http.post("/billing/assinatura/reembolso")
     assert r.status_code == 400 and r.json()["detail"]["codigo"] == "fora_do_prazo"
 
 
 def test_asaas_fora_do_ar_vira_502_com_mensagem(api, tmp_path):
     http, *_ = api
+    entrar(http, api[2])
     from app.asaas.client import AsaasClient
 
     http.app.state.asaas = AsaasClient("http://127.0.0.1:1/v3", CHAVE)  # porta sem ninguém ouvindo
@@ -142,6 +156,41 @@ def test_asaas_fora_do_ar_vira_502_com_mensagem(api, tmp_path):
 
 def test_reembolso_sem_pagamento(api):
     http, *_ = api
+    entrar(http, api[2])
     assinar(http, "pix")
-    r = http.post("/billing/assinaturas/u1/reembolso")
+    r = http.post("/billing/assinatura/reembolso")
     assert r.status_code == 400 and r.json()["detail"]["codigo"] == "nada_pago"
+
+
+def test_rotas_do_assinante_exigem_sessao(api):
+    http, *_ = api
+    assert http.get("/billing/assinatura").status_code == 401
+    assert assinar(http, "pix").status_code == 401
+    assert http.delete("/billing/assinatura").status_code == 401
+    assert http.post("/billing/assinatura/reembolso").status_code == 401
+
+
+def test_cada_um_ve_so_a_propria_assinatura(api):
+    http, _, banco = api
+    entrar(http, banco, "u1", "um@exemplo.com")
+    assert assinar(http, "pix").status_code == 201
+    entrar(http, banco, "u2", "dois@exemplo.com")  # outra pessoa no mesmo navegador
+    assert http.get("/billing/assinatura").status_code == 404
+    assert http.delete("/billing/assinatura").status_code == 404
+    assert banco.um("SELECT status_acesso FROM assinaturas WHERE usuario_id = 'u1'")["status_acesso"] == "pendente"
+
+
+def test_assinatura_usa_o_email_da_conta(api):
+    http, _, banco = api
+    entrar(http, banco, "u1", "conta@exemplo.com")
+    assinar(http, "pix", email="outro@exemplo.com")  # campo extra é ignorado
+    assert banco.um("SELECT email FROM assinantes WHERE usuario_id = 'u1'")["email"] == "conta@exemplo.com"
+
+
+def test_simular_pagamento_libera_pelo_webhook(api):
+    http, store, banco = api
+    entrar(http, banco)
+    assinar(http, "boleto")
+    r = http.post("/billing/assinatura/simular-pagamento")
+    assert r.status_code == 200 and r.json()["status_acesso"] == "ativo"
+    assert any(e["event"] == "PAYMENT_RECEIVED" for e in store.eventos)

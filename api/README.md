@@ -40,11 +40,14 @@ Hoje o usuário vem no corpo da requisição; quando houver login, virá da sess
 
 | Rota | O que faz |
 | --- | --- |
-| `POST /billing/assinaturas` | Cria o cliente no Asaas (se ainda não existir) e a assinatura mensal. Corpo: `usuario_id`, `nome`, `email`, `cpf_cnpj`, `plano` (`pro` ou `max`), `forma` (`cartao`, `pix` ou `boleto`), `cartao` (só no cartão: `titular`, `numero`, `mes`, `ano`, `cvv`) e `ip`. Responde 201 com o resumo, 409 se já houver assinatura, 400 com a mensagem do Asaas se o cartão for recusado. |
-| `GET /billing/assinaturas/{usuario_id}` | Resumo: plano, valor, forma, `status_acesso` e cobranças. No Pix vem o copia e cola e a imagem do QR; no boleto, a linha digitável, o código de barras e o PDF. |
-| `PUT /billing/assinaturas/{usuario_id}/forma` | Troca para `pix` ou `boleto` (as cobranças pendentes também mudam). O cartão espera a decisão entre a página segura do Asaas e o formulário próprio. |
-| `DELETE /billing/assinaturas/{usuario_id}` | Cancela a assinatura. Depois disso, a pessoa pode assinar de novo. |
-| `POST /billing/assinaturas/{usuario_id}/reembolso` | Estorna tudo o que foi pago e encerra, só até 7 dias do primeiro pagamento (CDC, art. 49). Fora do prazo: 400 `fora_do_prazo`. |
+| `POST /billing/assinatura` | Cria o cliente no Asaas (se ainda não existir) e a assinatura mensal da conta logada. Corpo: `nome` e `cpf_cnpj` da nota, `plano` (`pro` ou `max`), `forma` (`cartao`, `pix` ou `boleto`) e `cartao` (só no cartão: `titular`, `numero`, `mes`, `ano`, `cvv`). E-mail e IP vêm da sessão e da conexão. Responde 201 com o resumo, 409 se já houver assinatura, 400 com a mensagem do Asaas se o cartão for recusado. |
+| `GET /billing/assinatura` | Resumo: plano, valor, forma, `status_acesso` e cobranças. No Pix vem o copia e cola e a imagem do QR; no boleto, a linha digitável, o código de barras e o PDF. |
+| `PUT /billing/assinatura/forma` | Troca para `pix` ou `boleto` (as cobranças pendentes também mudam). O cartão espera a decisão entre a página segura do Asaas e o formulário próprio. |
+| `DELETE /billing/assinatura` | Cancela a assinatura. Depois disso, a pessoa pode assinar de novo. |
+| `POST /billing/assinatura/reembolso` | Estorna tudo o que foi pago e encerra, só até 7 dias do primeiro pagamento (CDC, art. 49). Fora do prazo: 400 `fora_do_prazo`. |
+| `POST /billing/assinatura/simular-pagamento` | Só com a simulação ligada: confirma as cobranças pendentes de Pix ou boleto, como o banco faria. A liberação segue pelo webhook. |
+
+Desde a etapa 7c, todas essas rotas usam a sessão (cookie `orbita_sessao`): sem sessão, 401; cada pessoa só vê e altera a própria assinatura.
 | `POST /webhooks/asaas` | Recebe os eventos do Asaas. Exige o cabeçalho `asaas-access-token`; cada evento é processado uma vez só (o repetido responde 200 com `duplicado: true`). |
 
 **Status do acesso** (`status_acesso`):

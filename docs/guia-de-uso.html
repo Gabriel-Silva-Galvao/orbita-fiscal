@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 7b · 24/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · etapa 7c · 24/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -127,8 +127,8 @@ td:first-child{font-weight:700;white-space:nowrap}
   <main>
     <section id="inicio">
       <h1>Como usar a Órbita, do site à API</h1>
-      <p class="lede">Clique, simule e confira cada recurso. Este guia cobre o que existe até a etapa 7b: o site com a página Entrar e o middleware ligados à API de verdade, cobrança simulada e o Portal ainda em demonstração.</p>
-      <p class="note"><b>Dois modos.</b> Sem variáveis de ambiente, o site roda em demonstração: tudo no navegador, código na tela. Com <code>API_URL</code> e <code>PUBLIC_AUTH_ENDPOINT</code>, criar conta, entrar, a sessão e sair passam pela API (etapa 7b). Checkout e Portal ainda usam a demonstração até as etapas 7c e 7d. Nenhum e-mail é enviado ainda: em desenvolvimento, o código aparece na tela.</p>
+      <p class="lede">Clique, simule e confira cada recurso. Este guia cobre o que existe até a etapa 7c: Entrar, sessão e Checkout ligados à API de verdade, cobrança pela simulação do Asaas e o Portal ainda em demonstração.</p>
+      <p class="note"><b>Dois modos.</b> Sem variáveis de ambiente, o site roda em demonstração: tudo no navegador, código na tela. Com <code>API_URL</code>, <code>PUBLIC_AUTH_ENDPOINT</code> e <code>PUBLIC_BILLING_ENDPOINT</code>, criar conta, entrar, a sessão, sair e assinar passam pela API (etapas 7b e 7c). O Portal ainda usa a demonstração até a etapa 7d. No cartão, o número ainda passa pela API da Órbita: serve à simulação, e a decisão para o Asaas real segue em aberto. Nenhum e-mail é enviado ainda: em desenvolvimento, o código aparece na tela.</p>
     </section>
 
     <section id="rodar">
@@ -143,7 +143,7 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Abre em <code>http://localhost:8000</code>, com a documentação automática em <code>/docs</code>. Copie <code>.env.example</code> para <code>.env</code>; em desenvolvimento, <code>AUTH_CODIGO_NA_RESPOSTA=true</code> devolve o código de 6 dígitos na resposta, já que ainda não há envio de e-mail.</p>
       <h3>Site ligado à API</h3>
       <p>No app do Claude, as configurações <code>api</code> e <code>site-com-api</code> de <code>.claude/launch.json</code> sobem os dois já ligados. No terminal, defina antes de <code>npm run dev</code>:</p>
-      <div class="cmd"><pre>$env:API_URL="http://localhost:8000"; $env:PUBLIC_AUTH_ENDPOINT="http://localhost:8000/auth"; npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
+      <div class="cmd"><pre>$env:API_URL="http://localhost:8000"; $env:PUBLIC_AUTH_ENDPOINT="http://localhost:8000/auth"; $env:PUBLIC_BILLING_ENDPOINT="http://localhost:8000/billing"; npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
       <p>Com isso, <code>/conta</code>, <code>/instalar</code> e <code>/assinar</code> só abrem com sessão; sem ela, levam ao Entrar.</p>
       <h3>Testes</h3>
       <div class="cmd"><pre>.venv\Scripts\python.exe -m pytest -q</pre><button class="btn" data-copy>Copiar</button></div>
@@ -197,12 +197,12 @@ td:first-child{font-weight:700;white-space:nowrap}
     <section id="testes">
       <h2>Testes</h2>
       <div class="score">
-        <div class="num">41<small> de 41 testes da API passam</small></div>
+        <div class="num">45<small> de 45 testes da API passam</small></div>
         <div class="num">11<small> páginas respondem</small></div>
         <div class="num" data-mine>0<small> de 0 conferidos por você</small></div>
       </div>
       <div class="progress" aria-hidden="true"><i data-bar style="width:0"></i></div>
-      <p>Rodado em 24/11/2026 (etapa 7b): <code>pytest</code> (41 testes), <code>npm run build</code> e um percurso completo no navegador. Marque cada item quando conferir você mesmo; as marcas ficam só neste navegador.</p>
+      <p>Rodado em 24/11/2026 (etapa 7c): <code>pytest</code> (45 testes), <code>npm run build</code> e um percurso completo no navegador. Marque cada item quando conferir você mesmo; as marcas ficam só neste navegador.</p>
       <div class="filters" role="group" aria-label="Filtrar testes" data-filters></div>
       <div class="tests" data-tests></div>
       <button class="btn" type="button" data-reset style="justify-self:start">Desmarcar tudo</button>
@@ -232,7 +232,7 @@ const passos=[
  {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
  {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres, com letras e números).','A conta só é criada depois que o código do e-mail for confirmado.','Com a API ligada, um e-mail que já tem conta é recusado com aviso.','"Continuar com Google" ainda não existe: volta ao Entrar com o aviso para usar e-mail e senha.']},
  {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, a sessão fica num cookie por 30 dias e o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código. Sem plano, o Entrar leva ao Portal.']},
- {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado na hora.','Pix: copie o código; na demonstração, use "Simular Pix confirmado".','Boleto: vence em 3 dias; na demonstração, use "Simular boleto pago". Na vida real, a confirmação leva até 3 dias úteis.','Ao confirmar aparece "Seu plugin está pronto".']},
+ {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Informe nome e CPF ou CNPJ da nota e escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado ou recusado na hora. Na simulação, o cartão 4444 4444 4444 4448 é aprovado e o 5184 0197 4037 3151 é recusado, com a mensagem do banco.','Pix: aparecem o QR Code e o copia e cola da cobrança. "Simular Pix confirmado" faz o papel do banco.','Boleto: aparecem a linha digitável e o vencimento em 3 dias. "Simular boleto pago" faz o papel do banco; na vida real, até 3 dias úteis.','Enquanto espera o Pix ou o boleto, a página confere sozinha a cada 5 s se o acesso foi liberado.','Voltar e escolher outra forma substitui a cobrança que estava esperando.','Quem já tem assinatura ativa recebe o aviso e o link para Minha conta, sem nova cobrança.']},
  {t:'Instalar',onde:'/instalar',txt:'Quatro passos para ligar a Órbita ao Claude.',itens:['Baixe o plugin.','Envie o arquivo no menu de plugins do Claude.','Clique em "Gerar código de conexão" e digite o código quando o Claude pedir.','Copie a pergunta de teste e confira as fontes na resposta.']},
  {t:'Portal',onde:'/conta',txt:'A área do assinante, com 9 abas. Veja a seção "Portal: Pro e Max" abaixo para o detalhe de cada uma.',itens:['No celular, as abas rolam na horizontal; no teclado, use as setas.','Status do plugin mostra acesso, consultas, conexões e a novidade mais recente.','Cancelar ou reembolso: reembolso integral em até 7 dias, sem justificar.','Logado sem plano, o Portal mostra o e-mail da conta, "Ver planos" e "Sair". Sair encerra a sessão também no servidor.']}
 ];
@@ -308,12 +308,13 @@ const rotas=[
  {g:'Conta e login (7a)',v:'GET',p:'/auth/google',d:'Login pelo Google ainda não existe. Por ora, devolve ao site com o aviso para usar e-mail e senha.',body:'',r:[['303','Volta para /entrar?erro=google-indisponivel']]},
  {g:'Conta e login (7a)',v:'GET',p:'/auth/sessao',d:'Diz quem está logado. É a rota que o middleware do site consulta antes de abrir /conta, /instalar e /assinar.',body:'',r:[['200','{id, email, nome}'],['401','Sem sessão',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/sair',d:'Encerra a sessão, também no servidor.',body:'',r:[['204','Sessão apagada']]},
- {g:'Cobrança (4)',v:'POST',p:'/billing/assinaturas',d:'Cria a assinatura: pro R$ 50,00 ou max R$ 75,90; cartão, Pix ou boleto (vence em 3 dias).',body:'{"plano":"pro","forma":"pix", ...}',r:[['201','Assinatura criada'],['409','ja_assinante',1]]},
- {g:'Cobrança (4)',v:'GET',p:'/billing/assinaturas/{id}',d:'Consulta a assinatura e o status do acesso.',body:'',r:[['200','Assinatura com status_acesso']]},
- {g:'Cobrança (4)',v:'PUT',p:'/billing/assinaturas/{id}/forma',d:'Troca a forma de pagamento para Pix ou boleto.',body:'{"forma":"boleto"}',r:[['200','Forma trocada']]},
- {g:'Cobrança (4)',v:'DELETE',p:'/billing/assinaturas/{id}',d:'Cancela a assinatura.',body:'',r:[['200','Cancelada']]},
- {g:'Cobrança (4)',v:'POST',p:'/billing/assinaturas/{id}/reembolso',d:'Reembolso integral em até 7 dias do primeiro pagamento.',body:'',r:[['200','Reembolso pedido'],['409','fora_do_prazo ou nada_pago',1]]},
- {g:'Cobrança (4)',v:'POST',p:'/webhooks/asaas',d:'Recebe os eventos do Asaas, confere o token e ignora eventos repetidos. Confirmado ou recebido libera; atraso ou estorno suspende; reembolso e cancelamento encerram de vez.',body:'{"id":"evt_...","event":"PAYMENT_CONFIRMED", ...}',r:[['200','Evento aplicado ou já visto'],['401','Token inválido',1]]},
+ {g:'Cobrança (7c, pela sessão)',v:'POST',p:'/billing/assinatura',d:'Cria a assinatura da conta logada: pro R$ 50,00 ou max R$ 75,90; cartão, Pix ou boleto (vence em 3 dias). O e-mail vem da conta.',body:'{"plano":"pro","forma":"pix","nome":"Ana Souza","cpf_cnpj":"52998224725"}',r:[['201','Assinatura criada, com Pix ou boleto da cobrança'],['400','Cartão recusado, com a mensagem do banco',1],['401','Sem sessão',1],['409','ja_assinante',1]]},
+ {g:'Cobrança (7c, pela sessão)',v:'GET',p:'/billing/assinatura',d:'Consulta a assinatura e o status do acesso da conta logada.',body:'',r:[['200','Assinatura com status_acesso'],['404','Esta conta ainda não tem assinatura',1]]},
+ {g:'Cobrança (7c, pela sessão)',v:'PUT',p:'/billing/assinatura/forma',d:'Troca a forma de pagamento para Pix ou boleto.',body:'{"forma":"boleto"}',r:[['200','Forma trocada']]},
+ {g:'Cobrança (7c, pela sessão)',v:'DELETE',p:'/billing/assinatura',d:'Cancela a assinatura.',body:'',r:[['200','Cancelada']]},
+ {g:'Cobrança (7c, pela sessão)',v:'POST',p:'/billing/assinatura/reembolso',d:'Reembolso integral em até 7 dias do primeiro pagamento.',body:'',r:[['200','Reembolso pedido'],['400','fora_do_prazo ou nada_pago',1]]},
+ {g:'Cobrança (7c, pela sessão)',v:'POST',p:'/billing/assinatura/simular-pagamento',d:'Só na simulação: confirma o Pix ou boleto pendente, como o banco faria. Quem libera o acesso continua sendo o webhook.',body:'',r:[['200','Assinatura já ativa'],['404','Sem simulação ou sem assinatura',1]]},
+ {g:'Cobrança (7c, pela sessão)',v:'POST',p:'/webhooks/asaas',d:'Recebe os eventos do Asaas, confere o token e ignora eventos repetidos. Confirmado ou recebido libera; atraso ou estorno suspende; reembolso e cancelamento encerram de vez.',body:'{"id":"evt_...","event":"PAYMENT_CONFIRMED", ...}',r:[['200','Evento aplicado ou já visto'],['401','Token inválido',1]]},
  {g:'Simulação do Asaas (3)',v:'*',p:'/asaas-sim/v3/...',d:'Simulação fiel da API do Asaas, enquanto não há CNPJ. Para trocar pela real, muda só a URL e a chave no .env.',body:'',r:[['—','Mesmos campos, status e webhooks do Asaas']]}
 ];
 let rota=0;
@@ -355,6 +356,16 @@ const testes=[
  ['Site + API','Portal sem plano mostra a conta e Sair; Sair encerra a sessão'],
  ['Site + API','E-mail repetido e senha errada mostram o aviso certo'],
  ['Site + API','Entrar de novo leva ao Portal'],
+ ['API','Cobrança sem sessão responde 401'],
+ ['API','Cada pessoa só vê e altera a própria assinatura'],
+ ['API','A assinatura usa o e-mail da conta, não o enviado no corpo'],
+ ['API','Simular pagamento libera pelo webhook'],
+ ['Site + API','Cartão recusado mostra a mensagem do banco e o atalho para o Pix'],
+ ['Site + API','Pix com QR Code e copia e cola reais da cobrança'],
+ ['Site + API','Voltar e trocar Pix por boleto substitui a cobrança pendente'],
+ ['Site + API','Simular Pix: Max liberado em cerca de 0,1 s pelo webhook'],
+ ['Site + API','Assinante ativo recebe aviso e link para Minha conta'],
+ ['Site + API','Cartão aprovado libera na hora'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],
