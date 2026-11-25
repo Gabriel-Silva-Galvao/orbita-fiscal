@@ -1,0 +1,371 @@
+<title>Guia da Órbita</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: coluna de leitura com índice fixo à esquerda no desktop; abas no topo no celular. */
+:root{
+  --bg:#f6f8f7; --surface:#ffffff; --ink:#14201c; --mute:#5b6a64; --line:#dbe3e0;
+  --accent:#0f7a5c; --accent-soft:#e2f1eb; --warn:#9a5b00; --warn-soft:#fbefdc; --bad:#b3261e;
+  --display:"Newsreader",Georgia,serif; --body:"Hanken Grotesk",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#162019; --ink:#e4ece8; --mute:#93a39c; --line:#26332e;
+  --accent:#4fc79f; --accent-soft:#173a2e; --warn:#f0b35a; --warn-soft:#3a2c14; --bad:#ff8a80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#162019; --ink:#e4ece8; --mute:#93a39c; --line:#26332e;
+  --accent:#4fc79f; --accent-soft:#173a2e; --warn:#f0b35a; --warn-soft:#3a2c14; --bad:#ff8a80; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.shell{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;padding-block:40px 80px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;display:grid;gap:2px}
+nav.toc .brand{font:600 1.5rem/1.1 var(--display);margin-bottom:16px}
+nav.toc .brand small{display:block;font:500 .75rem var(--body);color:var(--mute);letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
+nav.toc a{color:var(--mute);text-decoration:none;padding:6px 10px;border-radius:6px;font-weight:500;font-size:.95rem}
+nav.toc a:hover{color:var(--ink);background:var(--accent-soft)}
+nav.toc a[aria-current="true"]{color:var(--accent);background:var(--accent-soft)}
+main{min-width:0;display:grid;gap:72px}
+section{display:grid;gap:18px;scroll-margin-top:24px}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:2.6rem}
+h2{font-size:1.9rem}
+h3{font-size:1.2rem;font-family:var(--body);font-weight:700}
+p{margin:0;max-width:65ch}
+.lede{font-size:1.1rem;color:var(--mute)}
+.note{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:12px 16px;font-size:.95rem;max-width:65ch}
+.note b{color:var(--warn)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font:.85rem/1.5 var(--mono);position:relative}
+.cmd{display:flex;gap:8px;align-items:stretch}
+.cmd pre{flex:1;min-width:0}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;font-weight:600;font-size:.9rem}
+.btn:hover{border-color:var(--accent)}
+.btn.main{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;color:var(--mute);padding:8px 16px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+/* Jornada */
+.journey{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.journey button{border:1px solid var(--line);background:var(--surface);color:var(--mute);border-radius:8px;padding:10px 6px;font-size:.82rem;font-weight:600;text-align:center}
+.journey button .n{display:block;font:600 1.2rem var(--display);color:var(--ink)}
+.journey button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.journey button.done .n{color:var(--accent)}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;display:grid;gap:14px}
+.stage .where{font:.85rem var(--mono);color:var(--accent)}
+.stage ol{margin:0;padding-left:1.2em;display:grid;gap:6px;max-width:65ch}
+.stage .foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* Simulador do código */
+.sim{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:12px;align-content:start}
+.phone label{font-weight:600;font-size:.9rem}
+.phone input{font:1.4rem var(--mono);letter-spacing:.3em;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.inbox{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:20px;display:grid;gap:10px;align-content:start}
+.inbox .mail{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+.inbox .big{font:600 1.6rem var(--mono);letter-spacing:.2em;color:var(--accent)}
+.msg{font-weight:600;font-size:.92rem;min-height:1.5em}
+.msg.ok{color:var(--accent)} .msg.err{color:var(--bad)}
+/* Tabela do Portal */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.93rem}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700;white-space:nowrap}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700;white-space:nowrap}
+.pill.on{background:var(--accent-soft);color:var(--accent)}
+.pill.lock{background:var(--warn-soft);color:var(--warn)}
+/* API */
+.api{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px}
+.routes{display:grid;gap:4px;align-content:start}
+.routes h3{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:10px 0 4px}
+.routes button{display:flex;gap:8px;align-items:baseline;text-align:left;border:1px solid transparent;background:none;color:var(--ink);padding:6px 8px;border-radius:6px;font:.82rem var(--mono)}
+.routes button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.verb{font-weight:700;color:var(--accent);min-width:3.4em}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:12px;align-content:start;min-width:0}
+.resp{display:grid;gap:6px}
+.resp div{display:flex;gap:10px;align-items:baseline}
+.code{font:700 .8rem var(--mono);padding:2px 7px;border-radius:5px;background:var(--accent-soft);color:var(--accent);min-width:3.2em;text-align:center}
+.code.e{background:var(--warn-soft);color:var(--warn)}
+/* Testes */
+.score{display:flex;gap:24px;flex-wrap:wrap;align-items:baseline}
+.score .num{font:600 3rem/1 var(--display);font-variant-numeric:tabular-nums}
+.score .num small{font-size:1rem;color:var(--mute);font-family:var(--body)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.tests{display:grid;gap:6px}
+.test{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.test .area{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+.test input{width:18px;height:18px;accent-color:var(--accent)}
+.test.checked{border-color:var(--accent)}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden;max-width:420px}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+@media (max-width:820px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:28px;padding-block:20px 60px}
+  nav.toc{position:static;display:flex;flex-wrap:wrap;gap:4px}
+  nav.toc .brand{width:100%;margin-bottom:6px}
+  .api,.sim{grid-template-columns:minmax(0,1fr)}
+  .journey{grid-template-columns:repeat(3,minmax(0,1fr))}
+  h1{font-size:2rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Seções">
+    <div class="brand">Órbita<small>Guia de uso · 24/11/2026</small></div>
+    <a href="#rodar">Como rodar</a>
+    <a href="#jornada">Jornada do assinante</a>
+    <a href="#codigo">Login com código</a>
+    <a href="#portal">Portal: Pro e Max</a>
+    <a href="#api">Rotas da API</a>
+    <a href="#testes">Testes</a>
+  </nav>
+
+  <main>
+    <section id="inicio">
+      <h1>Como usar a Órbita, do site à API</h1>
+      <p class="lede">Clique, simule e confira cada recurso. Este guia cobre o que existe até a etapa 7a: site completo em modo de demonstração e API com cobrança simulada e login com código.</p>
+      <p class="note"><b>Modo de demonstração.</b> O site ainda não chama a API (isso é a etapa 7b). Nenhum e-mail é enviado, nenhum pagamento é cobrado e os dados ficam no navegador. Itens com "a confirmar" no site ainda não têm valor final.</p>
+    </section>
+
+    <section id="rodar">
+      <h2>Como rodar</h2>
+      <h3>Site (Astro), na pasta do projeto</h3>
+      <div class="cmd"><pre>npm install</pre><button class="btn" data-copy>Copiar</button></div>
+      <div class="cmd"><pre>npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
+      <p>Abre em <code>http://localhost:4321</code>.</p>
+      <h3>API (Python FastAPI), na pasta <code>api</code></h3>
+      <div class="cmd"><pre>python -m venv .venv; .venv\Scripts\pip install -r requirements.txt</pre><button class="btn" data-copy>Copiar</button></div>
+      <div class="cmd"><pre>.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000</pre><button class="btn" data-copy>Copiar</button></div>
+      <p>Abre em <code>http://localhost:8000</code>, com a documentação automática em <code>/docs</code>. Copie <code>.env.example</code> para <code>.env</code>; em desenvolvimento, <code>AUTH_CODIGO_NA_RESPOSTA=true</code> devolve o código de 6 dígitos na resposta, já que ainda não há envio de e-mail.</p>
+      <h3>Testes</h3>
+      <div class="cmd"><pre>.venv\Scripts\python.exe -m pytest -q</pre><button class="btn" data-copy>Copiar</button></div>
+    </section>
+
+    <section id="jornada">
+      <h2>Jornada do assinante</h2>
+      <p>Seis passos, na ordem em que o cliente passa. Clique em cada um.</p>
+      <div class="journey" role="tablist" aria-label="Passos" data-journey></div>
+      <div class="stage" data-stage aria-live="polite"></div>
+    </section>
+
+    <section id="codigo">
+      <h2>Login com código: experimente</h2>
+      <p>Todo cadastro e todo login terminam com um código de 6 dígitos enviado ao e-mail. Ele vale 10 minutos e aceita 5 tentativas; para pedir outro é preciso esperar 60 segundos. Simule abaixo.</p>
+      <div class="sim">
+        <form class="phone" data-sim-form>
+          <label for="sim-code">Código de verificação</label>
+          <input id="sim-code" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="000000" disabled>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn main" type="button" data-sim-start>Entrar com e-mail e senha</button>
+            <button class="btn" type="submit" data-sim-check disabled>Confirmar</button>
+            <button class="btn" type="button" data-sim-resend disabled>Reenviar</button>
+          </div>
+          <p class="msg" data-sim-msg role="status"></p>
+        </form>
+        <div class="inbox" aria-label="Caixa de entrada simulada">
+          <h3>Caixa de entrada</h3>
+          <div data-inbox><p class="lede" style="font-size:.95rem">Nenhum e-mail ainda. Clique em "Entrar com e-mail e senha".</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="portal">
+      <h2>Portal do assinante: Pro e Max</h2>
+      <p>O Portal em <code>/conta</code> tem 9 abas. Troque o plano para ver o que muda.</p>
+      <div><div class="seg" role="group" aria-label="Plano"><button aria-pressed="true" data-plan="pro">Pro · R$ 50</button><button aria-pressed="false" data-plan="max">Max · R$ 75,90</button></div></div>
+      <div class="tablewrap"><table><thead><tr><th>Aba</th><th>O que faz</th><th>Neste plano</th></tr></thead><tbody data-portal></tbody></table></div>
+      <p class="mute" style="color:var(--mute);font-size:.9rem">Cancelar, pedir reembolso e excluir a conta sempre pedem uma segunda confirmação na própria página.</p>
+    </section>
+
+    <section id="api">
+      <h2>Rotas da API</h2>
+      <p>Escolha uma rota para ver o que ela recebe e o que pode responder.</p>
+      <div class="api">
+        <div class="routes" data-routes></div>
+        <div class="detail" data-route-detail aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="testes">
+      <h2>Testes</h2>
+      <div class="score">
+        <div class="num">40<small> de 40 testes da API passam</small></div>
+        <div class="num">11<small> páginas respondem</small></div>
+        <div class="num" data-mine>0<small> de 0 conferidos por você</small></div>
+      </div>
+      <div class="progress" aria-hidden="true"><i data-bar style="width:0"></i></div>
+      <p>Rodado em 24/11/2026: <code>pytest</code> (40 testes), <code>npm run build</code> e um percurso completo no navegador. Marque cada item quando conferir você mesmo; as marcas ficam só neste navegador.</p>
+      <div class="filters" role="group" aria-label="Filtrar testes" data-filters></div>
+      <div class="tests" data-tests></div>
+      <button class="btn" type="button" data-reset style="justify-self:start">Desmarcar tudo</button>
+    </section>
+  </main>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+
+/* Copiar comandos */
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',async()=>{
+  const pre=b.previousElementSibling;
+  try{await navigator.clipboard.writeText(pre.textContent);b.textContent='Copiado'}
+  catch{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selecionado'}
+  setTimeout(()=>b.textContent='Copiar',1600);
+}));
+
+/* Índice: destaca a seção visível */
+const links=[...document.querySelectorAll('nav.toc a')];
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(a=>a.setAttribute('aria-current',String(a.hash==='#'+e.target.id)))}),{rootMargin:'-30% 0px -60% 0px'});
+document.querySelectorAll('main section[id]').forEach(s=>io.observe(s));
+
+/* Jornada */
+const passos=[
+ {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
+ {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres), ou use "Continuar com Google".','A conta só é criada depois que o código do e-mail for confirmado.']},
+ {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código.']},
+ {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado na hora.','Pix: copie o código; na demonstração, use "Simular Pix confirmado".','Boleto: vence em 3 dias; na demonstração, use "Simular boleto pago". Na vida real, a confirmação leva até 3 dias úteis.','Ao confirmar aparece "Seu plugin está pronto".']},
+ {t:'Instalar',onde:'/instalar',txt:'Quatro passos para ligar a Órbita ao Claude.',itens:['Baixe o plugin.','Envie o arquivo no menu de plugins do Claude.','Clique em "Gerar código de conexão" e digite o código quando o Claude pedir.','Copie a pergunta de teste e confira as fontes na resposta.']},
+ {t:'Portal',onde:'/conta',txt:'A área do assinante, com 9 abas. Veja a seção "Portal: Pro e Max" abaixo para o detalhe de cada uma.',itens:['No celular, as abas rolam na horizontal; no teclado, use as setas.','Status do plugin mostra acesso, consultas, conexões e a novidade mais recente.','Cancelar ou reembolso: reembolso integral em até 7 dias, sem justificar.']}
+];
+let passo=0;const visto=new Set([0]);
+function renderJornada(){
+  $('[data-journey]').innerHTML='';
+  passos.forEach((p,i)=>{const b=document.createElement('button');b.role='tab';b.setAttribute('aria-selected',i===passo);if(visto.has(i)&&i!==passo)b.className='done';
+    b.innerHTML=`<span class="n">${i+1}</span>`;b.append(p.t);b.onclick=()=>{passo=i;visto.add(i);renderJornada()};$('[data-journey]').append(b)});
+  const p=passos[passo],st=$('[data-stage]');st.innerHTML='';
+  const where=document.createElement('div');where.className='where';where.textContent=p.onde;
+  const h=document.createElement('h3');h.textContent=`${passo+1}. ${p.t}`;
+  const tx=document.createElement('p');tx.textContent=p.txt;
+  const ol=document.createElement('ol');p.itens.forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.append(li)});
+  const f=document.createElement('div');f.className='foot';
+  const prev=document.createElement('button');prev.className='btn';prev.textContent='Anterior';prev.disabled=passo===0;prev.onclick=()=>{passo--;renderJornada()};
+  const next=document.createElement('button');next.className='btn main';next.textContent=passo===passos.length-1?'Fim da jornada':'Próximo passo';next.disabled=passo===passos.length-1;next.onclick=()=>{passo++;visto.add(passo);renderJornada()};
+  f.append(prev,next);st.append(where,h,tx,ol,f);
+}
+renderJornada();
+
+/* Simulador do código */
+let sim=null;const msg=(t,c='')=>{const m=$('[data-sim-msg]');m.textContent=t;m.className='msg '+c};
+const inp=$('#sim-code'),chk=$('[data-sim-check]'),rs=$('[data-sim-resend]');let timer;
+function enviar(){
+  sim={code:String(Math.floor(Math.random()*1e6)).padStart(6,'0'),tries:5,sent:Date.now()};
+  const m=document.createElement('div');m.className='mail';
+  m.innerHTML='<div style="font-size:.85rem;color:var(--mute)">Órbita · agora</div><div style="font-weight:600">Seu código de verificação</div><div class="big"></div><div style="font-size:.85rem;color:var(--mute)">Vale 10 minutos.</div>';
+  m.querySelector('.big').textContent=sim.code;$('[data-inbox]').prepend(m);
+  [...$('[data-inbox]').children].slice(3).forEach(x=>x.remove());
+  inp.disabled=chk.disabled=false;inp.value='';inp.focus();tick();
+}
+function tick(){clearInterval(timer);const f=()=>{const s=60-Math.floor((Date.now()-sim.sent)/1000);rs.disabled=s>0;rs.textContent=s>0?`Reenviar em ${s} s`:'Reenviar';if(s<=0)clearInterval(timer)};f();timer=setInterval(f,1000)}
+$('[data-sim-start]').onclick=()=>{$('[data-inbox]').innerHTML='';enviar();msg('Enviamos um código para o seu e-mail. Digite abaixo.')};
+rs.onclick=()=>{enviar();msg('Código novo enviado. O anterior não vale mais.')};
+$('[data-sim-form]').addEventListener('submit',e=>{e.preventDefault();if(!sim)return;
+  if(sim.tries<=0)return msg('Muitas tentativas. Peça um código novo.','err');
+  if(inp.value.trim()===sim.code){msg('Código confirmado. Sessão criada e você seguiria para o checkout.','ok');inp.disabled=chk.disabled=true;sim=null;clearInterval(timer);rs.disabled=true;rs.textContent='Reenviar';return}
+  sim.tries--;msg(sim.tries>0?`Código incorreto. Restam ${sim.tries} tentativas.`:'Muitas tentativas. Peça um código novo.','err');
+});
+
+/* Portal */
+const abas=[
+ ['Status do plugin','Acesso, consultas do mês, última consulta, versão do plugin, conexões com cada IA e a novidade mais recente.','on','on'],
+ ['Novidades','Lista datada do que mudou na Órbita e nas IAs, com filtro, selo "Nova" e contador de não lidas.','on','on'],
+ ['Tutoriais','Instalação no Claude (disponível), ChatGPT, Microsoft Copilot e Gemini (em preparação).','on','on'],
+ ['Alertas por tema','Até 20 temas, com pelo menos 3 letras e sem repetidos. Tem sugestões prontas e botão de remover.','lock','on'],
+ ['Resumo semanal','Escolha das áreas do resumo que chega toda semana.','lock','on'],
+ ['Plano e pagamento','Plano, início, próxima cobrança, forma de pagamento e troca de plano.','on','on'],
+ ['Cancelar ou reembolso','Reembolso integral em até 7 dias; cancelamento sem multa, com acesso até o fim do período e opção de reativar.','on','on'],
+ ['Suporte','E-mail com botão Copiar, prazo de resposta e horário.',['Até 2 dias úteis, com convite para o Max'],['Prioritário no mesmo dia útil, com conversa de implantação']],
+ ['Conta','Salvar nome, ver o e-mail, sair e excluir a conta digitando EXCLUIR.','on','on']
+];
+let plano=store.get('guia-plano','pro');
+function renderPortal(){
+  document.querySelectorAll('[data-plan]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.plan===plano));
+  const tb=$('[data-portal]');tb.innerHTML='';
+  abas.forEach(([n,d,pro,max])=>{const v=plano==='pro'?pro:max;const tr=document.createElement('tr');
+    const a=document.createElement('td');a.textContent=n;const b=document.createElement('td');b.textContent=d;const c=document.createElement('td');
+    const s=document.createElement('span');
+    if(Array.isArray(v)){s.className='pill on';s.textContent=v[0]}else{s.className='pill '+v;s.textContent=v==='on'?'Liberada':'Convite para o Max'}
+    c.append(s);tr.append(a,b,c);tb.append(tr)});
+}
+document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{plano=b.dataset.plan;store.set('guia-plano',plano);renderPortal()});
+renderPortal();
+
+/* API */
+const rotas=[
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/cadastro',d:'Começa o cadastro e envia o código. A conta só nasce depois do código.',body:'{"nome":"Ana","email":"ana@exemplo.com","senha":"********","plano":"pro"}',r:[['202','Código enviado'],['409','E-mail já tem conta',1],['422','Dados inválidos ou senha com menos de 8 caracteres',1]]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/login',d:'Confere e-mail e senha e envia o código.',body:'{"email":"ana@exemplo.com","senha":"********"}',r:[['202','Código enviado'],['401','E-mail ou senha não conferem',1],['429','10 erros em 15 minutos',1]]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo',d:'Confirma o código e cria a sessão (cookie orbita_sessao, 30 dias).',body:'{"codigo":"123456"}',r:[['200','Sessão criada'],['400','Código incorreto, com tentativas_restantes',1],['410','Expirado (10 minutos)',1],['429','Acabaram as 5 tentativas',1]]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo/reenviar',d:'Envia um código novo; o anterior deixa de valer.',body:'{}',r:[['202','Código novo enviado'],['429','Antes de 60 s, com espere_segundos',1],['410','Não há código pendente',1]]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/senha/esqueci',d:'Pedido de troca de senha. Responde igual exista ou não a conta. O envio do link ainda será feito.',body:'{"email":"ana@exemplo.com"}',r:[['202','Sempre']]},
+ {g:'Conta e login (7a)',v:'GET',p:'/auth/sessao',d:'Diz quem está logado. É a rota que o middleware do site consulta antes de abrir /conta, /instalar e /assinar.',body:'',r:[['200','{id, email, nome}'],['401','Sem sessão',1]]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/sair',d:'Encerra a sessão, também no servidor.',body:'',r:[['204','Sessão apagada']]},
+ {g:'Cobrança (4)',v:'POST',p:'/billing/assinaturas',d:'Cria a assinatura: pro R$ 50,00 ou max R$ 75,90; cartão, Pix ou boleto (vence em 3 dias).',body:'{"plano":"pro","forma":"pix", ...}',r:[['201','Assinatura criada'],['409','ja_assinante',1]]},
+ {g:'Cobrança (4)',v:'GET',p:'/billing/assinaturas/{id}',d:'Consulta a assinatura e o status do acesso.',body:'',r:[['200','Assinatura com status_acesso']]},
+ {g:'Cobrança (4)',v:'PUT',p:'/billing/assinaturas/{id}/forma',d:'Troca a forma de pagamento para Pix ou boleto.',body:'{"forma":"boleto"}',r:[['200','Forma trocada']]},
+ {g:'Cobrança (4)',v:'DELETE',p:'/billing/assinaturas/{id}',d:'Cancela a assinatura.',body:'',r:[['200','Cancelada']]},
+ {g:'Cobrança (4)',v:'POST',p:'/billing/assinaturas/{id}/reembolso',d:'Reembolso integral em até 7 dias do primeiro pagamento.',body:'',r:[['200','Reembolso pedido'],['409','fora_do_prazo ou nada_pago',1]]},
+ {g:'Cobrança (4)',v:'POST',p:'/webhooks/asaas',d:'Recebe os eventos do Asaas, confere o token e ignora eventos repetidos. Confirmado ou recebido libera; atraso ou estorno suspende; reembolso e cancelamento encerram de vez.',body:'{"id":"evt_...","event":"PAYMENT_CONFIRMED", ...}',r:[['200','Evento aplicado ou já visto'],['401','Token inválido',1]]},
+ {g:'Simulação do Asaas (3)',v:'*',p:'/asaas-sim/v3/...',d:'Simulação fiel da API do Asaas, enquanto não há CNPJ. Para trocar pela real, muda só a URL e a chave no .env.',body:'',r:[['—','Mesmos campos, status e webhooks do Asaas']]}
+];
+let rota=0;
+function renderRotas(){
+  const box=$('[data-routes]');box.innerHTML='';let g='';
+  rotas.forEach((r,i)=>{if(r.g!==g){g=r.g;const h=document.createElement('h3');h.textContent=g;box.append(h)}
+    const b=document.createElement('button');b.setAttribute('aria-pressed',i===rota);b.innerHTML=`<span class="verb">${r.v}</span>`;
+    const s=document.createElement('span');s.textContent=r.p;b.append(s);b.onclick=()=>{rota=i;renderRotas()};box.append(b)});
+  const r=rotas[rota],d=$('[data-route-detail]');d.innerHTML='';
+  const h=document.createElement('h3');h.className='mono';h.textContent=`${r.v} ${r.p}`;
+  const p=document.createElement('p');p.textContent=r.d;d.append(h,p);
+  if(r.body){const pre=document.createElement('pre');pre.textContent=r.body;d.append(pre)}
+  const rs=document.createElement('div');rs.className='resp';
+  r.r.forEach(([c,t,e])=>{const row=document.createElement('div');const k=document.createElement('span');k.className='code'+(e?' e':'');k.textContent=c;const x=document.createElement('span');x.textContent=t;row.append(k,x);rs.append(row)});
+  d.append(rs);
+}
+renderRotas();
+
+/* Testes */
+const testes=[
+ ['API','27 testes de cobrança e da simulação do Asaas (etapas 3 e 4)'],
+ ['API','Cadastro só cria a conta depois do código'],
+ ['API','Senha guardada com scrypt, nunca em texto'],
+ ['API','Cadastro recusa e-mail repetido, e-mail inválido e senha curta'],
+ ['API','Login confere a senha e ainda pede o código'],
+ ['API','Código errado desconta tentativas e bloqueia na quinta'],
+ ['API','Código expira em 10 minutos'],
+ ['API','Reenviar espera 60 s e invalida o código anterior'],
+ ['API','10 senhas erradas bloqueiam o login'],
+ ['API','"Esqueci a senha" não revela se a conta existe'],
+ ['API','Sair apaga a sessão no servidor'],
+ ['API','Cookies HttpOnly e CORS só para o site'],
+ ['API','Servidor real: cadastro, código, sessão e sair pela rede'],
+ ['Site','Build do site passa'],
+ ['Site','11 páginas respondem; endereço inexistente dá 404'],
+ ['Navegador','Criar conta com código e seguir para o checkout'],
+ ['Navegador','Pagar por boleto e ver "Seu plugin está pronto"'],
+ ['Navegador','9 abas do Portal no Pro: Alertas e Resumo com convite'],
+ ['Navegador','9 abas no Max: Alertas, Resumo e suporte prioritário liberados'],
+ ['Navegador','Temas: "IC" e repetido recusados; dois temas salvos'],
+ ['Navegador','Cancelar, reativar e pedir reembolso'],
+ ['Navegador','Gerar código de conexão na página Instalar']
+];
+let marcados=new Set(store.get('guia-testes',[]));let filtro='Todos';
+function renderTestes(){
+  const f=$('[data-filters]');f.innerHTML='';
+  ['Todos','API','Site','Navegador'].forEach(n=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.setAttribute('aria-pressed',n===filtro);if(n===filtro)b.classList.add('main');b.onclick=()=>{filtro=n;renderTestes()};f.append(b)});
+  const box=$('[data-tests]');box.innerHTML='';
+  testes.forEach(([a,t],i)=>{if(filtro!=='Todos'&&a!==filtro)return;
+    const l=document.createElement('label');l.className='test'+(marcados.has(i)?' checked':'');
+    const c=document.createElement('input');c.type='checkbox';c.id='t'+i;c.checked=marcados.has(i);
+    c.onchange=()=>{c.checked?marcados.add(i):marcados.delete(i);store.set('guia-testes',[...marcados]);renderTestes()};
+    const s=document.createElement('span');s.textContent=t;const ar=document.createElement('span');ar.className='area';ar.textContent=a;
+    l.append(c,s,ar);box.append(l)});
+  const n=marcados.size;$('[data-mine]').innerHTML=`${n}<small> de ${testes.length} conferidos por você</small>`;
+  $('[data-bar]').style.width=(n/testes.length*100)+'%';
+}
+$('[data-reset]').onclick=()=>{marcados.clear();store.set('guia-testes',[]);renderTestes()};
+renderTestes();
+</script>

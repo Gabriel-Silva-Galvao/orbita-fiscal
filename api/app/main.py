@@ -1,5 +1,6 @@
 """API da Órbita (Python/FastAPI).
 
+- /auth: conta, login com código por e-mail e sessão (etapa 7a).
 - /billing e /webhooks/asaas: cobrança da Órbita e liberação do acesso (etapa 4).
 - /asaas-sim: simulação do Asaas, enquanto não há conta (etapa 3).
 Rodar: uvicorn app.main:app --reload --port 8000 (dentro de api/).
@@ -7,9 +8,10 @@ Rodar: uvicorn app.main:app --reload --port 8000 (dentro de api/).
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app import billing
+from app import auth, billing
 from app.asaas.client import AsaasClient
 from app.asaas_sim.router import criar_router, erro
 from app.asaas_sim.store import SimError, Store
@@ -36,6 +38,15 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
     app = FastAPI(title="API da Órbita", version="0.2.0")
     settings = get_settings()
     app.state.banco = banco or Banco(settings.database_path)
+    with app.state.banco.trava:
+        app.state.banco.con.executescript(auth.ESQUEMA)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[settings.site_url],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["Content-Type"],
+    )
     app.state.asaas = asaas or AsaasClient(settings.asaas_base_url, settings.asaas_api_key)
 
     @app.exception_handler(SimError)
@@ -64,6 +75,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         )
         app.include_router(criar_router(app.state.asaas_sim))
 
+    app.include_router(auth.criar_router())
     app.include_router(billing.criar_router())
     return app
 

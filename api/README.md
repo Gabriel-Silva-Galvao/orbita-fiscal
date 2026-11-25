@@ -77,3 +77,22 @@ Regras imitadas:
 - **Webhooks:** só a resposta HTTP 200 conta como entregue; depois de 15 falhas seguidas, a fila pausa.
 
 Limitação: o estado fica em memória e some quando a API reinicia. O QR Code do Pix é uma imagem fixa, sem leitura real.
+
+## Conta e login (etapa 7a)
+
+E-mail e senha, sempre com código de 6 dígitos por e-mail. A conta só nasce depois do código confirmado.
+
+| Rota | Resposta |
+| --- | --- |
+| `POST /auth/cadastro` `{nome, email, senha, plano?}` | 202 código enviado, 409 e-mail já tem conta, 422 dados inválidos ou senha com menos de 8 caracteres |
+| `POST /auth/login` `{email, senha}` | 202 código enviado, 401 não confere, 429 depois de 10 erros em 15 minutos |
+| `POST /auth/codigo` `{codigo}` | 200 sessão criada (cookie `orbita_sessao`, 30 dias), 400 `{tentativas_restantes}`, 410 expirado (10 minutos), 429 sem tentativas (5) |
+| `POST /auth/codigo/reenviar` | 202, 429 `{espere_segundos}` antes de 60 s, 410 sem código pendente |
+| `POST /auth/senha/esqueci` `{email}` | 202 sempre, para não revelar se a conta existe |
+| `GET /auth/sessao` | 200 `{id, email, nome}` ou 401. É a rota que o middleware do site consulta |
+| `POST /auth/sair` | 204, e a sessão é apagada no servidor |
+
+- Senha guardada com scrypt; código e tokens só como SHA-256; cookies HttpOnly e SameSite=Lax (`COOKIE_SECURE=true` em produção).
+- CORS liberado só para `SITE_URL`, com cookies.
+- Ainda não há provedor de e-mail: o código vai para o log da API. Em desenvolvimento, `AUTH_CODIGO_NA_RESPOSTA=true` também devolve o código em `codigo_dev`. Em produção, deixe `false`.
+- Ainda não feito: login pelo Google e o link de troca de senha.

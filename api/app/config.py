@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     api_public_url: str = "http://localhost:8000"
     # Banco SQLite com assinantes, assinaturas e eventos recebidos.
     database_path: str = "orbita.db"
+    # Conta e login (etapa 7a).
+    # Endereço do site, liberado no CORS com cookies (o site chama a API do navegador).
+    site_url: str = "http://localhost:4321"
+    # Cookies só por HTTPS. Ligue em produção.
+    cookie_secure: bool = False
+    # Só em desenvolvimento: devolve o código de 6 dígitos na resposta (não há provedor de e-mail ainda).
+    auth_codigo_na_resposta: bool = False
 
 
 @lru_cache
