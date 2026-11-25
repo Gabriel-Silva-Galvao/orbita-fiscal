@@ -1,12 +1,12 @@
 ---
 /**
  * Entrar e criar conta (briefing, Página 2).
- * Decisão de 24/11/2026 (substitui o acesso só por link): Google ou e-mail e senha, sempre com
- * verificação em duas etapas por código enviado ao e-mail. Vale para criar conta e para entrar.
+ * Só e-mail e senha (o Google saiu em 25/11/2026), sempre com verificação em duas etapas por
+ * código enviado ao e-mail. Vale para criar conta e para entrar.
  *
- * Fluxo: formulário (ou Google) -> etapa "código" (6 dígitos, 10 minutos) -> destino.
+ * Fluxo: formulário -> etapa "código" (6 dígitos, 10 minutos) -> destino.
  * Parâmetros: ?plano=pro|max mostra a faixa do plano e segue para o Checkout;
- * ?modo=criar abre "Criar conta"; ?etapa=codigo abre direto no código (volta do Google);
+ * ?modo=criar abre "Criar conta";
  * ?next=<rota> volta para a página pedida pelo middleware; ?erro=codigo-expirado avisa.
  *
  * API (PUBLIC_AUTH_ENDPOINT é a base da API de autenticação em FastAPI; chamadas com cookie):
@@ -15,12 +15,9 @@
  *   POST /codigo           {codigo}                    -> 200 sessão criada (cookie) | 400 {tentativas_restantes} | 410 expirado
  *   POST /codigo/reenviar  {}                          -> 202 | 429 espere
  *   POST /senha/esqueci    {email}                     -> 202 (sempre, para não revelar contas)
- *   GET  /google?next=<rota>: OAuth; na volta a API envia o código ao e-mail da conta Google e
- *     redireciona para /entrar?etapa=codigo&next=<rota>.
  * 429 em qualquer rota = muitas tentativas. Sem PUBLIC_AUTH_ENDPOINT, roda em demonstração.
  */
 import Focus from '../layouts/Focus.astro';
-import Icon from '../components/Icon.astro';
 import { plans, brl } from '../data/plans';
 
 const endpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
@@ -29,7 +26,7 @@ const planData = JSON.stringify(
 );
 ---
 
-<Focus title="Entrar · Órbita" description="Entre ou crie sua conta na Órbita com o Google ou com e-mail e senha, com verificação em duas etapas.">
+<Focus title="Entrar · Órbita" description="Entre ou crie sua conta na Órbita com e-mail e senha, com verificação em duas etapas.">
   <div class="wrap auth" data-auth data-endpoint={endpoint} data-plans={planData}>
     <div class="auth-card">
       <p class="plan-band" data-plan-band hidden>
@@ -43,10 +40,10 @@ const planData = JSON.stringify(
       </div>
 
       <div id="painel" role="tabpanel" aria-labelledby="tab-entrar" class="panel">
-        <!-- Etapa 1: Google ou e-mail e senha -->
+        <!-- Etapa 1: e-mail e senha -->
         <div class="step" data-step="form">
           <h1 class="display-md" data-title>Entre na sua conta</h1>
-          <p class="mute" data-sub>Use o Google ou seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.</p>
+          <p class="mute" data-sub>Use seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.</p>
 
           {!endpoint && (
             <p class="demo">
@@ -55,13 +52,6 @@ const planData = JSON.stringify(
           )}
 
           <p class="notice is-error" data-error role="alert" hidden></p>
-
-          <button type="button" class="btn-alt" data-google>
-            <Icon name="mdi:google" size={20} />
-            Continuar com Google
-          </button>
-
-          <p class="or">ou</p>
 
           <form class="form" novalidate data-form>
             <div class="field" data-name-field hidden>
@@ -367,8 +357,8 @@ const planData = JSON.stringify(
     passInput.autocomplete = criar ? 'new-password' : 'current-password';
     $('[data-title]').textContent = criar ? 'Crie sua conta' : 'Entre na sua conta';
     $('[data-sub]').textContent = criar
-      ? 'Use o Google ou crie uma senha. Em seguida, confirme seu e-mail com o código que enviamos.'
-      : 'Use o Google ou seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.';
+      ? 'Crie uma senha. Em seguida, confirme seu e-mail com o código que enviamos.'
+      : 'Use seu e-mail e senha. Depois, confirme com o código que enviamos ao seu e-mail.';
     submit.textContent = criar ? 'Criar conta' : 'Continuar';
     clearErrors();
   }
@@ -402,9 +392,6 @@ const planData = JSON.stringify(
     codeError.hidden = !msg;
   };
 
-  if (params.get('erro') === 'google-indisponivel')
-    showError('O acesso pelo Google ainda não está disponível. Use e-mail e senha.');
-  if (params.get('erro') === 'codigo-expirado') showError('O código de verificação expirou. Entre de novo para receber outro.');
 
   /* ---------- Senha: mostrar e ocultar ---------- */
   const toggle = $<HTMLButtonElement>('[data-toggle-pass]');
@@ -654,21 +641,8 @@ const planData = JSON.stringify(
     show('reset');
   });
 
-  /* ---------- Google ---------- */
-  $('[data-google]').addEventListener('click', () => {
-    // Na volta do Google, a API manda o código ao e-mail da conta e reabre esta página na etapa do código.
-    const back = `/entrar?etapa=codigo${plan ? `&plano=${plan}` : ''}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ''}`;
-    if (endpoint) {
-      location.href = `${endpoint}/google?modo=${mode}&next=${encodeURIComponent(back)}`;
-      return;
-    }
-    demo.email = 'conta.google@exemplo.com';
-    demo.pendingAccount = null;
-    newDemoCode();
-    goToCode('o e-mail da sua conta Google (demonstração)');
-  });
-
   setMode(mode);
   renderPlan();
-  if (params.get('etapa') === 'codigo' && endpoint) goToCode('o e-mail da sua conta Google');
+  // Depois do setMode, que limpa os avisos: senão a mensagem da volta da API some sem aparecer.
+  if (params.get('erro') === 'codigo-expirado') showError('O código de verificação expirou. Entre de novo para receber outro.');
 </script>

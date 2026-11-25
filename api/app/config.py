@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     # Só em desenvolvimento: devolve o código de 6 dígitos na resposta (não há provedor de e-mail ainda).
     auth_codigo_na_resposta: bool = False
+    # Envio do código (2FA) por e-mail. Sem smtp_host, o código vai para o log da API.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_ssl: bool = False  # true para a porta 465 (SSL direto); false usa STARTTLS
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "Órbita <nao-responda@orbitafiscal.com.br>"
 
 
 @lru_cache

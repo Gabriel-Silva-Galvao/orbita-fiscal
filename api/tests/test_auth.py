@@ -12,7 +12,7 @@ from app import auth
 def caixa(monkeypatch):
     """Caixa de entrada falsa: guarda o último código enviado para cada e-mail."""
     recebidos: dict[str, str] = {}
-    monkeypatch.setattr(auth, "enviar_codigo_log", lambda email, codigo: recebidos.__setitem__(email, codigo))
+    monkeypatch.setattr(auth, "enviar_codigo", lambda email, codigo: recebidos.__setitem__(email, codigo))
     return recebidos
 
 
@@ -144,10 +144,38 @@ def test_cors_libera_o_site_com_cookies(api):
     assert "access-control-allow-origin" not in r.headers
 
 
-def test_google_ainda_indisponivel_volta_ao_site(api):
+def test_login_pelo_google_nao_existe_mais(api):
     http, _, _ = api
-    r = http.get("/auth/google?modo=entrar&next=/conta", follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"].endswith("/entrar?erro=google-indisponivel")
+    assert http.get("/auth/google", follow_redirects=False).status_code == 404
+
+
+def test_email_do_codigo_por_smtp(monkeypatch):
+    from app import correio as em
+    from app.config import get_settings
+    enviados = []
+
+    class SMTPFalso:
+        def __init__(self, host, port, timeout):
+            enviados.append(("conexao", host, port))
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def starttls(self, context): enviados.append("starttls")
+        def login(self, u, p): enviados.append(("login", u))
+        def send_message(self, m): enviados.append(m)
+
+    monkeypatch.setenv("SMTP_HOST", "smtp.teste.local")
+    monkeypatch.setenv("SMTP_USER", "usuario")
+    monkeypatch.setenv("SMTP_PASSWORD", "x")
+    get_settings.cache_clear()
+    monkeypatch.setattr(em.smtplib, "SMTP", SMTPFalso)
+    try:
+        em.enviar_codigo("ana@exemplo.com", "123456")
+    finally:
+        get_settings.cache_clear()
+    msg = enviados[-1]
+    assert ("conexao", "smtp.teste.local", 587) in enviados and "starttls" in enviados
+    assert msg["To"] == "ana@exemplo.com" and "123456" in msg["Subject"]
+    assert "123456" in msg.get_body(("plain",)).get_content()
 
 
 def test_trocar_nome(api, caixa):

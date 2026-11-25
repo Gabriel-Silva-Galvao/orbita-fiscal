@@ -33,7 +33,7 @@ export const novidades: Novidade[] = [
     data: '2026-11-24',
     origem: 'orbita',
     titulo: 'Verificação em duas etapas no login',
-    texto: 'Todo login, pelo Google ou por e-mail e senha, agora pede um código de 6 dígitos enviado ao seu e-mail.',
+    texto: 'Todo login agora pede um código de 6 dígitos enviado ao seu e-mail.',
   },
   {
     id: '2026-11-24-marca',

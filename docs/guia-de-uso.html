@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · etapa 10f-4 · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · 2FA por e-mail, sem Google · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -260,7 +260,7 @@ document.querySelectorAll('main section[id]').forEach(s=>io.observe(s));
 /* Jornada */
 const passos=[
  {t:'Conhecer',onde:'/',txt:'A página inicial explica a Órbita, mostra exemplos de conversa e compara os planos.',itens:['Veja os exemplos nas abas, como "Prescrição intercorrente" e "ICMS no PIS/Cofins".','Na seção "Na IA que você já usa", veja onde a Órbita funciona: Claude disponível; ChatGPT, Microsoft Copilot e Gemini em preparação.','Compare o Pro (R$ 50/mês) e o Max (R$ 75,90/mês).','Tire dúvidas nas perguntas frequentes ou use o formulário de contato.','No rodapé: tema claro, escuro ou automático, e preferências de cookies.']},
- {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres, com letras e números).','A conta só é criada depois que o código do e-mail for confirmado.','Com a API ligada, um e-mail que já tem conta é recusado com aviso.','"Continuar com Google" ainda não existe: volta ao Entrar com o aviso para usar e-mail e senha.']},
+ {t:'Criar conta',onde:'/entrar?modo=criar',txt:'A conta vem antes da compra. Quem clica em "Assinar" sem conta vem para cá, com o plano já escolhido.',itens:['Preencha nome, e-mail e senha (mínimo 8 caracteres, com letras e números).','A conta só é criada depois que o código do e-mail for confirmado.','Com a API ligada, um e-mail que já tem conta é recusado com aviso.','Só e-mail e senha: o login pelo Google saiu em 25/11/2026.','2FA: o código de 6 dígitos vai por e-mail (SMTP no api/.env); sem SMTP_HOST, aparece na tela e no log da API.']},
  {t:'Código',onde:'/entrar (etapa do código)',txt:'O código de 6 dígitos chega por e-mail. Na demonstração do site, ele aparece na tela.',itens:['Vale 10 minutos e aceita 5 tentativas.','"Reenviar" libera depois de 60 segundos.','Depois de confirmar, a sessão fica num cookie por 30 dias e o site segue direto para o checkout do plano.','Para entrar depois: e-mail e senha em /entrar, e de novo o código. Sem plano, o Entrar leva ao Portal.']},
  {t:'Assinar',onde:'/assinar/pro ou /assinar/max',txt:'Informe nome e CPF ou CNPJ da nota e escolha a forma de pagamento. O acesso só é liberado depois que o pagamento é confirmado.',itens:['Cartão: aprovado ou recusado na hora. Na simulação, o cartão 4444 4444 4444 4448 é aprovado e o 5184 0197 4037 3151 é recusado, com a mensagem do banco.','Pix: aparecem o QR Code e o copia e cola da cobrança. "Simular Pix confirmado" faz o papel do banco.','Boleto: aparecem a linha digitável e o vencimento em 3 dias. "Simular boleto pago" faz o papel do banco; na vida real, até 3 dias úteis.','Enquanto espera o Pix ou o boleto, a página confere sozinha a cada 5 s se o acesso foi liberado.','Voltar e escolher outra forma substitui a cobrança que estava esperando.','Quem já tem assinatura ativa recebe o aviso e o link para Minha conta, sem nova cobrança.']},
  {t:'Instalar',onde:'/instalar',txt:'Quatro passos para ligar a Órbita ao Claude.',itens:['Baixe o plugin.','Envie o arquivo no menu de plugins do Claude.','Clique em "Gerar código de conexão" e digite o código quando o Claude pedir.','Copie a pergunta de teste e confira as fontes na resposta.']},
@@ -335,7 +335,6 @@ const rotas=[
  {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo',d:'Confirma o código e cria a sessão (cookie orbita_sessao, 30 dias).',body:'{"codigo":"123456"}',r:[['200','Sessão criada'],['400','Código incorreto, com tentativas_restantes',1],['410','Expirado (10 minutos)',1],['429','Acabaram as 5 tentativas',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/codigo/reenviar',d:'Envia um código novo; o anterior deixa de valer.',body:'{}',r:[['202','Código novo enviado'],['429','Antes de 60 s, com espere_segundos',1],['410','Não há código pendente',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/senha/esqueci',d:'Pedido de troca de senha. Responde igual exista ou não a conta. O envio do link ainda será feito.',body:'{"email":"ana@exemplo.com"}',r:[['202','Sempre']]},
- {g:'Conta e login (7a)',v:'GET',p:'/auth/google',d:'Login pelo Google ainda não existe. Por ora, devolve ao site com o aviso para usar e-mail e senha.',body:'',r:[['303','Volta para /entrar?erro=google-indisponivel']]},
  {g:'Conta e login (7a)',v:'GET',p:'/auth/sessao',d:'Diz quem está logado. É a rota que o middleware do site consulta antes de abrir /conta, /instalar e /assinar.',body:'',r:[['200','{id, email, nome}'],['401','Sem sessão',1]]},
  {g:'Conta e login (7a)',v:'PUT',p:'/auth/conta',d:'Troca o nome da conta.',body:'{"nome":"Ana Souza"}',r:[['200','Conta atualizada'],['422','Nome inválido',1]]},
  {g:'Conta e login (7a)',v:'DELETE',p:'/auth/conta',d:'Exclui a conta, o login e as sessões. Dados de cobrança ficam pelo prazo legal.',body:'',r:[['204','Conta excluída'],['409','Assinatura ainda renova: cancele antes',1]]},
@@ -381,7 +380,7 @@ const testes=[
  ['API','Sair apaga a sessão no servidor'],
  ['API','Cookies HttpOnly e CORS só para o site'],
  ['API','Servidor real: cadastro, código, sessão e sair pela rede'],
- ['API','Botão do Google volta ao site com aviso'],
+ ['API','Sem rota do Google (/auth/google responde 404); código do 2FA enviado por SMTP quando configurado'],
  ['Site + API','Sem sessão, /conta, /instalar e /assinar levam ao Entrar'],
  ['Site + API','Assinar o Max sem conta: criar conta, código da API na tela, checkout'],
  ['Site + API','Código errado avisa; o certo cria a sessão (cookie invisível a scripts)'],

@@ -7,16 +7,16 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
                                                               | 400 {tentativas_restantes} | 410 expirado | 429 sem tentativas
   POST /auth/codigo/reenviar  {}                           -> 202 | 429 espere 60 s | 410 sem desafio
   POST /auth/senha/esqueci    {email}                      -> 202 sempre (não revela se a conta existe)
-  GET  /auth/google                                         -> 303 de volta ao site (?erro=google-indisponivel), por ora
   GET  /auth/sessao                                        -> 200 {id, email, nome} | 401
   PUT  /auth/conta            {nome}                       -> 200 | 422
   DELETE /auth/conta                                       -> 204 | 409 assinatura_ativa (cancele antes)
   POST /auth/sair                                          -> 204
 
 Segurança: senha com scrypt (biblioteca padrão), código e tokens guardados só como SHA-256,
-cookies HttpOnly. A conta só nasce depois do código confirmado. Login pelo Google: etapa futura.
-Envio de e-mail: ainda não há provedor; o código vai para o log da API (e, em desenvolvimento,
-na resposta, se AUTH_CODIGO_NA_RESPOSTA=true).
+cookies HttpOnly. A conta só nasce depois do código confirmado. Só e-mail e senha: o login
+pelo Google saiu em 25/11/2026. Envio do código: por SMTP (app/correio.py) quando SMTP_HOST está
+definido; sem ele, vai para o log da API (e, em desenvolvimento, na resposta, se
+AUTH_CODIGO_NA_RESPOSTA=true).
 """
 from __future__ import annotations
 
@@ -31,10 +31,11 @@ from collections import defaultdict, deque
 from typing import Callable
 
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.correio import enviar_codigo
 
 log = logging.getLogger("orbita.auth")
 
@@ -91,10 +92,6 @@ def confere_senha(senha: str, guardado: str) -> bool:
         return False
     novo = hashlib.scrypt(senha.encode(), salt=bytes.fromhex(sal), n=2**14, r=8, p=1)
     return hmac.compare_digest(novo.hex(), dk)
-
-
-def enviar_codigo_log(email: str, codigo: str) -> None:
-    log.warning("Código de verificação para %s: %s (sem provedor de e-mail ainda)", email, codigo)
 
 
 def usuario_logado(req: Request, orbita_sessao: str | None = Cookie(None)) -> dict:
@@ -156,7 +153,7 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             _sha(token), finalidade, email, nome, senha_hash, _sha(codigo), agora + CODIGO_VALIDADE, CODIGO_TENTATIVAS, agora,
         )
         cookie(resp, COOKIE_DESAFIO, token, CODIGO_VALIDADE)
-        (enviar or enviar_codigo_log)(email, codigo)
+        (enviar or enviar_codigo)(email, codigo)
         corpo = {"enviado_para": email, "validade_segundos": CODIGO_VALIDADE}
         if get_settings().auth_codigo_na_resposta:
             corpo["codigo_dev"] = codigo
@@ -243,11 +240,6 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             # Troca de senha por link: etapa futura. Por ora, só registra o pedido.
             log.warning("Pedido de troca de senha para %s (envio do link: a definir)", email)
         return {"ok": True}
-
-    @r.get("/google")
-    def google():
-        # Login pelo Google ainda não existe: volta ao site com um aviso, em vez de uma página de erro.
-        return RedirectResponse(f"{get_settings().site_url}/entrar?erro=google-indisponivel", status_code=303)
 
     @r.get("/sessao")
     def sessao(req: Request, orbita_sessao: str | None = Cookie(None)):

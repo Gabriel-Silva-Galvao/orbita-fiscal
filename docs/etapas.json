@@ -67,15 +67,15 @@
   ]},
   {"id": "e07", "titulo": "Entrar e criar conta", "itens": [
     ["Tela com abas Entrar e Criar conta", true],
-    ["Botão Continuar com Google", true],
     ["E-mail e senha, com mostrar senha e Esqueci a senha", true],
     ["Verificação em duas etapas por código no e-mail, no cadastro e no login", true],
     ["Faixa do plano escolhido, com troca", true],
     ["Estados: código enviado, reenvio, código errado, expirado, já cadastrado, erro", true],
     ["Volta para a página pedida depois de entrar", true],
     ["Servidor de autenticação na API FastAPI", true],
-    ["Login com Google de verdade (OAuth)", false],
-    ["Envio dos e-mails com o código e com o link de senha nova", false]
+    ["Login pelo Google retirado (só e-mail e senha)", true],
+    ["Envio do código 2FA por SMTP (falta só configurar o provedor)", true],
+    ["Envio do link de senha nova", false]
   ]},
   {"id": "e08", "titulo": "Checkout", "itens": [
     ["Resumo do plano com próxima cobrança", true],
