@@ -2,7 +2,12 @@
 dos webhooks da simulação para a rota /webhooks/asaas da própria API."""
 from __future__ import annotations
 
-import pytest
+import os
+
+# Os testes rodam contra a simulação do Asaas, que fica desligada por padrão (item 17).
+os.environ.setdefault("ASAAS_SIM_ENABLED", "true")
+
+import pytest  # noqa: E402
 from fastapi.testclient import TestClient
 
 from app.asaas.client import AsaasClient

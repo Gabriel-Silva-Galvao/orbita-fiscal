@@ -15,7 +15,7 @@ from app import auth, billing, plugin
 from app.asaas.client import AsaasClient
 from app.asaas_sim.router import criar_router, erro
 from app.asaas_sim.store import SimError, Store
-from app.config import get_settings
+from app.config import get_settings, problemas_de_producao
 from app.db import Banco
 
 # Eventos que a Órbita assina no webhook do Asaas.
@@ -35,8 +35,12 @@ EVENTOS_WEBHOOK = [
 
 
 def create_app(store: Store | None = None, banco: Banco | None = None, asaas: AsaasClient | None = None) -> FastAPI:
-    app = FastAPI(title="API da Órbita", version="0.2.0")
     settings = get_settings()
+    # Item 17: a API se recusa a subir com configuração perigosa (simulação em produção, segredos de exemplo).
+    erros = problemas_de_producao(settings)
+    if erros:
+        raise RuntimeError("Configuração insegura da API:\n- " + "\n- ".join(erros))
+    app = FastAPI(title="API da Órbita", version="0.2.0")
     app.state.banco = banco or Banco(settings.database_path)
     with app.state.banco.trava:
         app.state.banco.con.executescript(auth.ESQUEMA)

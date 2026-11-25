@@ -373,7 +373,7 @@ aos primeiros clientes do período de teste.
 
 ### 17. Documentação completa do backend e da segurança — Executado (25/11/2026)
 
-**Feito.** `docs/backend-e-seguranca.md`: arquitetura, arquivos, tabelas, todas as rotas, configuração de desenvolvimento e produção, o que já está seguro, 16 pontos de risco classificados (2 críticos: simulação do Asaas ligada por padrão e token do webhook de exemplo; 3 altos: cartão passando pela API, código do 2FA no log/resposta e limite de tentativas só na memória e só no login), LGPD, lista do dia da publicação e cobertura dos testes. Nenhum código foi mudado neste item; as correções ficam como próximos passos.
+**Feito.** `docs/backend-e-seguranca.md`: arquitetura, arquivos, tabelas, todas as rotas, configuração de desenvolvimento e produção, o que já está seguro, 16 pontos de risco classificados (2 críticos: simulação do Asaas ligada por padrão e token do webhook de exemplo; 3 altos: cartão passando pela API, código do 2FA no log/resposta e limite de tentativas só na memória e só no login), LGPD, lista do dia da publicação e cobertura dos testes. Em seguida, corrigidos os dois críticos: simulação do Asaas desligada por padrão e trava que impede a API de subir com configuração perigosa (simulação em produção, token do webhook ou chave de exemplo, código do 2FA na resposta); webhook compara o token em tempo constante. 6 testes novos (72 no total). Os três riscos altos (S3 a S5) continuam abertos.
 
 Documento com: arquitetura, cada rota e contrato, banco e tabelas, fluxo de login e 2FA, sessão, cobrança
 e webhooks do Asaas, configuração (`.env`), testes, e uma análise de segurança por ponto crítico:

@@ -1,7 +1,7 @@
 # Backend da Órbita e segurança
 
 Documento do item 17 da rodada de testes (25/11/2026). Descreve a API inteira (`api/`) e analisa a segurança
-ponto a ponto. Revisado a partir do código no commit `710141f`; 66 testes automatizados passando.
+ponto a ponto. Revisado a partir do código no commit `710141f`; S1 e S2 corrigidos em seguida (72 testes passando).
 
 Legenda de risco: **Crítico** (impede publicar), **Alto** (resolver antes de ter clientes), **Médio**
 (resolver no primeiro ciclo depois de publicar), **Baixo** (melhoria).
@@ -154,10 +154,10 @@ O `api/.env` está no `.gitignore` e nunca vai para o repositório.
 
 | # | Ponto | Risco | Situação hoje | O que fazer |
 |---|---|---|---|---|
-| S1 | **Simulação do Asaas ligada por padrão** | **Crítico** | `ASAAS_SIM_ENABLED` vale `true` se o `.env` não disser nada. Com ela ligada, `/asaas-sim/.../confirm` e `/billing/assinatura/simular-pagamento` dão acesso sem pagar, e a chave da simulação é pública no repositório. | Padrão `false` no código; a API **se recusa a subir** em produção com a simulação ligada. |
-| S2 | **Token do webhook de exemplo** | **Crítico** | O padrão está no código e no repositório. Quem o souber pode mandar um `PAYMENT_RECEIVED` falso e liberar acesso. | Recusar subir sem um token próprio fora da simulação; comparar com `hmac.compare_digest`; opcional: conferir o pagamento no Asaas (`GET /payments/{id}`) antes de liberar. |
+| S1 | **Simulação do Asaas ligada por padrão** | ~~Crítico~~ **Corrigido** | `ASAAS_SIM_ENABLED` vale `true` se o `.env` não disser nada. Com ela ligada, `/asaas-sim/.../confirm` e `/billing/assinatura/simular-pagamento` dão acesso sem pagar, e a chave da simulação é pública no repositório. | **Feito em 25/11/2026:** padrão `false`; a API se recusa a subir com a simulação ligada e `COOKIE_SECURE=true`. O desenvolvimento liga a simulação no `.claude/launch.json` e nos testes. |
+| S2 | **Token do webhook de exemplo** | ~~Crítico~~ **Corrigido** | O padrão está no código e no repositório. Quem o souber pode mandar um `PAYMENT_RECEIVED` falso e liberar acesso. | **Feito em 25/11/2026:** fora da simulação, a API se recusa a subir com o token de exemplo (ou com menos de 32 caracteres) e com a chave da simulação; a comparação usa `hmac.compare_digest`. Ainda opcional: conferir o pagamento no Asaas antes de liberar. |
 | S3 | **Dados do cartão passam pela API** | **Alto** | O Checkout envia número, validade e CVV para a nossa API, que repassa ao Asaas. Isso coloca a Órbita no escopo mais pesado do PCI DSS. | Usar a tokenização do Asaas no navegador ou o checkout/link de pagamento do Asaas, para o número nunca tocar nosso servidor. Já está na lista do Checkout ("campos seguros do provedor"). |
-| S4 | **Código de 2FA no log e na resposta** | **Alto** | Sem SMTP, o código vai para o log; com `AUTH_CODIGO_NA_RESPOSTA=true`, vai na resposta. | Em produção: SMTP obrigatório e `AUTH_CODIGO_NA_RESPOSTA=false` (a API recusa subir com ele ligado fora da simulação). |
+| S4 | **Código de 2FA no log e na resposta** | **Alto** | Sem SMTP, o código vai para o log; com `AUTH_CODIGO_NA_RESPOSTA=true`, vai na resposta. | Em produção: SMTP obrigatório. **Feito:** a API se recusa a subir com `AUTH_CODIGO_NA_RESPOSTA=true` fora da simulação. Falta: exigir SMTP fora da simulação. |
 | S5 | **Limite de tentativas na memória e só no login** | **Alto** | O limite de 10 falhas/15 min é por e-mail, fica na memória (zera ao reiniciar) e não existe no cadastro, no reenvio por e-mail diferente nem no "esqueci a senha". Dá para disparar e-mails de código para qualquer endereço (incômodo e custo do provedor). | Limite por IP e por e-mail em todas as rotas de `/auth` (tabela no banco ou Redis); CAPTCHA invisível depois de N tentativas. |
 | S6 | **`/docs` e `/openapi.json` abertos** | Médio | Mostram todas as rotas a qualquer um. | Desligar em produção (`docs_url=None`) ou proteger. |
 | S7 | **Cabeçalhos de segurança** | Médio | A API e o site não mandam HSTS, CSP, `X-Frame-Options`, `Referrer-Policy`. | Configurar no proxy (Nginx/Caddy) ou num middleware: HSTS, CSP restrita, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`. |

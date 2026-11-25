@@ -13,6 +13,7 @@ só com a simulação ligada,
 """
 from __future__ import annotations
 
+import hmac
 from datetime import date, datetime, timedelta
 from typing import Literal
 
@@ -322,7 +323,8 @@ def criar_router() -> APIRouter:
 
     @router.post("/webhooks/asaas", tags=["Webhooks"])
     async def webhook(request: Request, asaas_access_token: str | None = Header(default=None, alias="asaas-access-token"), banco: Banco = Depends(get_banco)):
-        if asaas_access_token != get_settings().asaas_webhook_token:
+        # Comparação em tempo constante (item 17, S2): não vaza quanto do token acertou.
+        if not asaas_access_token or not hmac.compare_digest(asaas_access_token, get_settings().asaas_webhook_token):
             raise HTTPException(401, detail={"codigo": "token_invalido", "mensagem": "Token do webhook inválido."})
         evento = await request.json()
         eid, nome = evento.get("id"), evento.get("event")
