@@ -7,8 +7,8 @@
  */
 const TAU = Math.PI * 2;
 const RINGS = {
-  in: { rx: 27, ry: 17, period: 7000 },
-  out: { rx: 43, ry: 28, period: 12000 },
+  in: { rx: 27, ry: 17, period: 16000 },
+  out: { rx: 43, ry: 28, period: 28000 },
 } as const;
 
 interface Electron {
@@ -85,8 +85,8 @@ export function startOrbits(root: ParentNode = document) {
     for (const o of orbits) {
       if (!o.visible) continue;
       const boost = Number(o.svg.dataset.boost ?? 0);
-      const target = o.hot ? 6 : boost > 0 ? boost : 1;
-      o.speed += (target - o.speed) * Math.min(1, dt / 220);
+      const target = o.hot ? 2.2 : boost > 0 ? boost : 1;
+      o.speed += (target - o.speed) * Math.min(1, dt / 900);
       const tiltTarget = o.hot ? -14 : -28;
       o.tilt += (tiltTarget - o.tilt) * Math.min(1, dt / 260);
       o.rings.setAttribute('transform', `rotate(${o.tilt.toFixed(2)} 50 50)`);

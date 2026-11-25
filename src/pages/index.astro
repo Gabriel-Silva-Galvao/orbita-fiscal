@@ -10,7 +10,6 @@ import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
 import Faq from '../components/Faq.astro';
 import Footer from '../components/Footer.astro';
-import Contact from '../components/Contact.astro';
 import AiConnections from '../components/AiConnections.astro';
 import StructuredData from '../components/StructuredData.astro';
 
@@ -286,7 +285,20 @@ const trust = [
         <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser</p>
       </div>
     </section>
-    <Contact />
+
+    <!-- Prévia da Ajuda: o formulário completo fica em /ajuda#contato (etapa 10f-4). -->
+    <section class="section help-peek" aria-labelledby="ajuda-title">
+      <div class="wrap peek" data-reveal>
+        <div>
+          <h2 id="ajuda-title" class="display-md">Ficou alguma dúvida?</h2>
+          <p class="mute">Na Ajuda estão as respostas sobre instalação, cobrança, reembolso e dados. E, se faltar alguma, uma pessoa da equipe responde pelo formulário.</p>
+        </div>
+        <div class="peek-actions">
+          <Button href="/ajuda" variant="secondary">Ver a Ajuda</Button>
+          <Button href="/ajuda#contato">Escrever para a equipe</Button>
+        </div>
+      </div>
+    </section>
   </main>
   </div>
 
@@ -294,6 +306,31 @@ const trust = [
 </Base>
 
 <style>
+  .peek {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--soft);
+  }
+  .peek > div:first-child {
+    max-width: 60ch;
+  }
+  .peek h2 {
+    margin: 0 0 var(--space-2);
+  }
+  .peek p {
+    margin: 0;
+  }
+  .peek-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
   .final {
     display: grid;
     justify-items: center;

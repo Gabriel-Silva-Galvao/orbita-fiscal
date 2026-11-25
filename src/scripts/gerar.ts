@@ -80,7 +80,7 @@ export function gerarNoTopo() {
     await esperar(300);
     await escrever(qTexto, pergunta, 32);
     fig.classList.add('is-live');
-    if (atomo) atomo.dataset.boost = '5';
+    if (atomo) atomo.dataset.boost = '2.5';
     for (const b of BASES) {
       status.textContent = `Consultando a base da Órbita: ${b}…`;
       await esperar(230);

@@ -7,7 +7,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { startOrbits } from './orbit';
-import { startHeroChips } from './hero-chips';
 
 declare global {
   interface Window {
@@ -27,11 +26,9 @@ if (root.classList.contains('anim')) {
   startOrbits();
   progressBar();
   stickyNav();
-  startHeroChips();
   parallax();
   reveals();
   stepsLine();
-  orbitReveal();
   drawOnView();
   // Fontes e imagens mudam alturas: recalcula os gatilhos quando tudo carrega.
   window.addEventListener('load', () => ScrollTrigger.refresh());
@@ -146,23 +143,6 @@ function splitHeadings() {
       if (i < all.length - 1) vis.append(' ');
     });
     h.replaceChildren(sr, vis);
-  });
-}
-
-/* Brasília: a foto se abre como uma órbita, de um círculo pequeno até a moldura inteira. */
-function orbitReveal() {
-  document.querySelectorAll<HTMLElement>('[data-orbit-reveal]').forEach((box) => {
-    const photo = box.querySelector<HTMLElement>('.br-photo');
-    if (!photo) return;
-    gsap.fromTo(
-      photo,
-      { '--open': 0 },
-      {
-        '--open': 1,
-        ease: 'none',
-        scrollTrigger: { trigger: box, start: 'top 90%', end: 'center 50%', scrub: 0.6 },
-      },
-    );
   });
 }
 
