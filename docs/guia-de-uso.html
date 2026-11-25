@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · 2FA por e-mail, sem Google · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · rodada de testes, itens 19, 21 e 22 · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -164,10 +164,11 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Etapa 10f-2 pronta: no lugar do átomo e dos cartões de lei, o topo mostra um trecho real da resposta do Claude Opus 5.5 com a Órbita (a pergunta de crime tributário) e cinco das fontes citadas, com o link "Compare com a resposta sem a Órbita". No celular, o botão de assinar subiu para o meio da primeira tela.</p>
       <p>Etapa 10f-3 pronta: a cena da biblioteca (foto das lombadas com cartões de lei virando) virou o bloco "O que a Órbita consulta.". São seis grupos de fontes: legislação, tribunais superiores, Justiça Federal e estadual, contencioso administrativo, consultas e pareceres, e controle externo. Ainda sem números: a lista completa, o período e a atualização continuam a definir.</p>
       <p>Etapa 10g (a IA em ação): as respostas aparecem sendo geradas ao vivo. No topo, a pergunta é digitada, o átomo acelera enquanto a Órbita consulta a base, a resposta é escrita com as citações acendendo e as fontes surgem uma a uma. No comparativo, as duas colunas são geradas juntas: sem a Órbita, direto da memória do modelo; com a Órbita, primeiro a busca (bases acendendo, barra e contador de fontes) e depois o texto. O selo da análise aparece no fim. O texto é sempre o original. Com movimento reduzido, tudo aparece pronto.</p>
-      <p>O átomo de lítio voltou na opção A, escolhida em 25/11/2026: ele gira atrás do cartão de resposta e acelera enquanto a Órbita consulta a base. No celular, aparece à esquerda do cartão. As opções B e C foram testadas e saíram. Proposta visual: artefato "Órbita em ação".</p>
+      <p>O átomo de lítio do topo saiu no item 19 da rodada de testes; o cartão de resposta gerada ao vivo ficou sozinho ao lado do título. Proposta visual original: artefato "Órbita em ação".</p>
       <p>A página não pula enquanto o texto é gerado: o cartão e as colunas guardam a altura final antes de esvaziar (CLS 0,0048 medido).</p>
       <p>Na seção "Feito para quem assina o que entrega", a foto do Congresso perdeu os cartões de norma e súmula: ela agora sai do desfoque devagar e depois respira num zoom lento.</p>
       <p>Etapa 10f-4: o formulário de contato fica em <a href="http://localhost:4321/ajuda#contato">/ajuda#contato</a>; na página inicial, o bloco "Ficou alguma dúvida?" leva até ele. Todos os links "Fale com a equipe" apontam para a Ajuda. O átomo gira mais devagar, e o hover na logo acelera de leve.</p>
+      <p>Rodada de testes (itens 19, 21 e 22): o topo ficou sem o átomo, com as órbitas do fundo paradas; saíram a linha "Menos tempo caçando lei…" e a seção "Feito para quem assina o que entrega". O plano completo da rodada está em docs/rodada-de-testes.md.</p>
       <p>Falta só a animação de explosão do átomo.</p>
       <p>O que falta fora do código está em tópicos no <a href="https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm">painel de progresso</a>.</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>
@@ -425,7 +426,7 @@ const testes=[
  ['SEO','Site compilado: LCP no título em ~190 ms (desktop) e ~130 ms (celular), sem rede'],
  ['SEO','Nada pula na tela ao carregar (CLS 0) no desktop e no celular'],
  ['Site','Topo parado: tudo visível desde o primeiro instante, sem órbita nem cartões girando'],
- ['Site','Animações do resto da página continuam: títulos letra a letra, entradas e a foto de Brasília acendendo do desfoque'],
+ ['Site','Animações do resto da página continuam: títulos letra a letra, entradas em cascata'],
  ['Site','"Do monte de papel à peça revisada" virou uma linha, também no celular, sem rolagem lateral'],
  ['Site','Cabeçalho fixo no topo em toda a rolagem, para baixo e para cima'],
  ['Site','Comparativo: cinco perguntas, com e sem a Órbita lado a lado e o texto original'],

@@ -3,8 +3,7 @@
  * O texto é sempre o real, que já está no HTML: o script só o esconde e o devolve palavra por palavra.
  * Sem movimento (movimento reduzido, ou o motor de animação desligado), nada acontece e tudo aparece pronto.
  *
- * - Topo: a pergunta é digitada, o átomo acelera enquanto a Órbita "consulta a base" (as bases passam no
- *   status), a resposta é escrita com as citações acendendo e as fontes surgem uma a uma.
+ * - Topo: a pergunta é digitada, a Órbita "consulta a base" (as bases passam no status), a resposta é escrita com as citações acendendo e as fontes surgem uma a uma.
  * - Comparativo: as duas colunas são geradas ao mesmo tempo. Sem a Órbita, o texto sai direto da memória do
  *   modelo; com a Órbita, primeiro a busca (bases acendendo, barra e contador de fontes) e depois o texto.
  *   No fim aparece o selo da análise. Cada pergunta toca uma vez, quando a aba é aberta.
@@ -63,7 +62,6 @@ export function gerarNoTopo() {
   const texto = fig.querySelector<HTMLElement>('[data-g-text]')!;
   const original = texto.textContent ?? '';
   const fontes = Array.from(fig.querySelectorAll<HTMLElement>('[data-g-chips] li'));
-  const atomo = document.querySelector<SVGSVGElement>('.hero-atom svg');
 
   // Antes de esvaziar, cada parte guarda a altura final: a página não pula enquanto o texto é gerado.
   const chips = fig.querySelector<HTMLElement>('[data-g-chips]');
@@ -80,12 +78,10 @@ export function gerarNoTopo() {
     await esperar(300);
     await escrever(qTexto, pergunta, 32);
     fig.classList.add('is-live');
-    if (atomo) atomo.dataset.boost = '2.5';
     for (const b of BASES) {
       status.textContent = `Consultando a base da Órbita: ${b}…`;
       await esperar(230);
     }
-    if (atomo) delete atomo.dataset.boost;
     status.textContent = `${nFontes(fontes.length)}`;
     await escrever(texto, original, 45, true);
     for (const f of fontes) {

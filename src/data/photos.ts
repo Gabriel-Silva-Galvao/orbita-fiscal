@@ -16,13 +16,6 @@ const u = (slug: string) => `https://unsplash.com/photos/${slug}`;
 const p = (handle: string) => `https://unsplash.com/@${handle}`;
 
 export const photos = {
-  congresso: {
-    id: 'photo-1720650154225-ab0dbdf78d2c',
-    page: u('fYy4SWxcgOs'),
-    author: 'Gabriel Tiveron',
-    profile: p('gabrieltiveron'),
-    alt: 'Congresso Nacional, em Brasília, refletido no espelho d’água.',
-  },
   mesa: {
     id: 'photo-1487017159836-4e23ece2e4cf',
     page: u('9l_326FISzk'),
