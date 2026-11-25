@@ -417,6 +417,167 @@ público a advogados, no site inteiro.
 **Ordem de execução do bloco E.** 25 (planos, API e site) → 27 (público, no site inteiro) → 26 (empresarial e a
 animação do e-mail). Depois, o bloco C, já com os planos novos.
 
+## Bloco F: ideias da rodada de 25/11/2026 (noite)
+
+### 28. Avaliações de usuários na boas-vindas — Lapidado (25/11/2026)
+
+**Pedido.** Avaliações de outros usuários na página de boas-vindas (item 3), para deixar evidente o valor e que a
+pessoa não precisa se arrepender da compra.
+
+**Limite que não muda.** Só avaliações **reais e autorizadas**. Avaliação inventada, ou de pessoa que não existe, é
+publicidade enganosa (CDC, art. 37) e fere o Código do CONAR; a nota e a foto também são dados pessoais (LGPD). Até
+haver clientes, o espaço fica pronto no código e **não aparece** (decisão do item 3).
+
+**Como colher as avaliações (o que torna a ideia possível).**
+1. **Pedido no momento certo:** depois de 7 dias de uso, ou da 10ª consulta, o Portal mostra "Como está sendo a
+   Órbita?" com nota de 1 a 5 e um texto opcional. Quem der 4 ou 5 vê o convite "Podemos mostrar sua avaliação no
+   site?".
+2. **Autorização explícita:** caixa marcada pela pessoa, com o que será mostrado (nome, cargo/área, cidade, foto opcional),
+   onde e por quanto tempo; pode retirar a qualquer momento no Portal (Conta e segurança). Guardamos data e texto da
+   autorização.
+3. **Revisão antes de publicar:** a equipe aprova cada avaliação (sem editar o sentido; correção só de digitação, com
+   aceite da pessoa).
+4. **Foto:** a pessoa envia ou usa as iniciais; nunca foto de banco de imagens.
+
+**Como aparece na boas-vindas.**
+- Faixa "O que dizem advogados, contadores e empresários que usam a Órbita", com 3 avaliações (uma de cada público quando
+  houver), nota em estrelas, nome, área e cidade, e a data.
+- Média geral e quantidade ("4,8 de 5, em 120 avaliações") só quando houver pelo menos 20 avaliações.
+- Ao lado: "Não gostou? Reembolso integral em até 7 dias" com o link, que é o que mais tira o medo de se arrepender.
+- Com o tempo, a mesma faixa pode ir para a landing e para a página de planos.
+
+**O que precisa ser construído.** Tabela `avaliacoes` (nota, texto, autorizada, aprovada, datas), rotas para enviar,
+autorizar, retirar e listar as aprovadas; o pedido no Portal; a faixa (já prevista no item 3); tela simples de
+aprovação para a equipe. Texto da autorização revisado por advogado.
+
+### 29. Pagamentos no sandbox do Asaas — Lapidado (25/11/2026)
+
+**Existe teste?** Sim. O Asaas tem um ambiente **Sandbox**, separado da produção: site `sandbox.asaas.com` e API
+`https://api-sandbox.asaas.com/v3`, com chave própria (diferente da de produção). Nele dá para testar cliente,
+assinatura, cartão de teste, Pix e boleto, estorno e webhooks, sem dinheiro de verdade.
+
+**O que depende do Gabriel.**
+1. Criar a conta Sandbox em `sandbox.asaas.com`. A documentação não deixa claro se o Sandbox exige CNPJ; a produção
+   aceita pessoa física sem CNPJ. Conferir no cadastro.
+2. Gerar a chave da API no Sandbox e colocar **só** no `api/.env` (nunca no chat):
+   `ASAAS_BASE_URL=https://api-sandbox.asaas.com/v3`, `ASAAS_API_KEY=...`, `ASAAS_SIM_ENABLED=false` e um
+   `ASAAS_WEBHOOK_TOKEN` próprio (32+ caracteres).
+
+**O que muda no código.**
+- O cliente do Asaas já fala com o Sandbox sem mudança (só a URL e a chave).
+- **Webhook:** o Asaas precisa alcançar a API, e `localhost` não é alcançável da internet. Opções: um túnel
+  (Cloudflare Tunnel ou ngrok) com a URL cadastrada no painel do Sandbox; ou, enquanto não houver túnel, a API
+  confere o status da cobrança no Asaas quando o Portal abre (consulta de reserva). Proposta: as duas.
+- **Trava de segurança (item 17):** hoje a API recusa subir sem a simulação e com o código do 2FA na resposta. No
+  Sandbox de desenvolvimento, o código na resposta ainda é útil: a trava passa a olhar `COOKIE_SECURE` (produção) em
+  vez de só a simulação.
+- **Cartão:** no Sandbox, usar os cartões de teste do Asaas; é a hora de trocar os campos do cartão pela tokenização
+  do Asaas (risco S3).
+- O botão "Simular pagamento" some fora da simulação; no Sandbox, o Pix e o boleto são confirmados pelo painel do
+  Asaas (ou pela rota de confirmação do Sandbox).
+
+**Teste.** Assinatura nas três formas pelo Sandbox, webhook chegando pelo túnel, acesso liberado, cancelamento e
+reembolso refletidos no painel do Asaas.
+
+### 30. FAQ: bug no clique do "+" e animação suave — Diagnosticado (25/11/2026)
+
+**O que acontece hoje** (`src/components/Faq.astro`):
+- Ao fechar, o "+" só gira de volta **depois** que a animação de fechar termina (o `open` do `<details>` só sai no fim):
+  o ícone fica atrasado 220 ms e "pula".
+- Clicar de novo durante a animação não é bloqueado: a pergunta pode ficar aberta com o ícone de fechada (ou o
+  contrário), e duas podem ficar abertas.
+- No fim da animação de fechar, a resposta pode piscar inteira por um quadro antes de sumir.
+- Abrir uma pergunta fecha outra acima dela: o conteúdo abaixo sobe de uma vez (salto).
+
+**Como vai ficar.**
+- Estado próprio em cada item (`data-estado="aberto|fechado"`), aplicado no clique: o "+" gira na hora, junto com o
+  conteúdo.
+- Altura animada por CSS (grade com `grid-template-rows: 0fr → 1fr`), com a mesma curva e duração para abrir e fechar
+  (~280 ms) e o texto entrando com leve fade e deslize; nada de animação por JavaScript medindo altura.
+- Cliques durante a animação são ignorados; uma aberta por vez continua.
+- Quando a pergunta que fecha está acima, a página compensa a rolagem para a pergunta clicada não sair do lugar.
+- Teclado (Enter/espaço), leitor de tela (`aria-expanded`) e movimento reduzido (abre sem animação).
+- Testar nas 6 perguntas da landing e nas da Ajuda, no computador e no celular, clicando rápido várias vezes.
+
+### 31. /bases: fade nos cards e o estado novo zera o filtro — Lapidado (25/11/2026)
+
+**Pedido.** Animação de saída (fade out) nos cards de cada base; ao clicar num estado novo no mapa, zerar o filtro
+que estava aplicado na lista lá embaixo.
+
+**Como vai ficar.**
+- **Troca de cards:** ao filtrar, buscar ou mudar de página, os cards que saem fazem fade out (e descem 6 px) em
+  ~180 ms; depois os novos entram com fade in em cascata (como hoje). Movimento reduzido: troca direta.
+- **Estado novo zera o filtro:** ao escolher outro estado no mapa, a lista volta ao início: limpa o filtro de estado
+  anterior ("Estado: XX ✕"), o tipo e a busca, e volta à página 1. O painel do estado novo abre normalmente; a lista só
+  filtra pelo estado novo se a pessoa clicar em "Ver as bases de XX na lista".
+- Desmarcar o estado (segundo clique) também zera, como já faz hoje.
+
+### 32. Rodapé padronizado e enxuto — Lapidado com pesquisa (25/11/2026)
+
+**O que a pesquisa mostra** (guias de UX e galerias de rodapés de SaaS): o rodapé deve ser um sistema organizado, não
+uma pilha de links; o essencial é links legais (privacidade, termos, cookies), aviso de copyright e dados da empresa,
+contato/suporte e poucos grupos com títulos claros (Produto, Empresa, Suporte, Legal). Bons rodapés mostram coisas
+diferentes para quem está logado; selos de confiança e contato ajudam; não esconder suporte atrás de cadastro.
+
+**Problemas do rodapé atual.** 5 grupos de links + resumo de privacidade em 3 parágrafos + faixa de empresa,
+atendimento e pagamento + barra com tema e cookies: tudo junto, com repetições (contato aparece 3 vezes, CNPJ 2 vezes,
+links legais 2 vezes).
+
+**Proposta (padrão da Órbita).**
+1. **Linha principal, 4 colunas curtas:**
+   - Marca: logo, uma frase ("Legislação e jurisprudência com a fonte, no Claude"), redes.
+   - **Produto:** Como funciona, O que cobre, Planos, Para empresas, Instalar o plugin.
+   - **Suporte:** Central de ajuda, Fale com a equipe, Status do serviço (futuro).
+   - **Legal:** Termos de uso, Privacidade, Reembolso, Cookies.
+2. **Faixa de confiança, uma linha:** formas de pagamento (cartão, Pix, boleto) · "Pagamento processado pelo Asaas" ·
+   "Dados tratados conforme a LGPD".
+3. **Linha final:** © ano, razão social e CNPJ (uma vez só) · Encarregado de dados (link) · Créditos · tema e
+   preferências de cookies.
+- Sai: o resumo de privacidade em parágrafos (fica na página de Privacidade), a coluna "Sua conta" (vai para o menu do
+  avatar e para o Entrar) e as repetições.
+- Logado: a coluna Produto troca "Planos" por "Minha conta" e "Planos" vira "Mudar de plano".
+- O rodapé curto das páginas de foco (item 2) continua como está.
+
+### 33. Compra só do que faz sentido, upgrade com melhorias e comparação de planos — Lapidado com pesquisa (25/11/2026)
+
+**Pedido.** Quem já tem um plano não pode entrar na compra de outro (nem por link, nem por botão); o botão do plano
+dele aparece como "Seu plano"; no upgrade, mostrar o que melhora; e uma comparação dos planos com ✓ e ✗, como fazem a
+Anthropic e o ChatGPT.
+
+**Regras de compra.**
+- **No servidor (middleware), não só no botão:** com assinatura ativa ou pendente, `/assinar/{plano}`:
+  - plano igual ao atual → vai para o Portal (Plano e pagamento) com o aviso "Você já assina o Prata";
+  - plano abaixo → vai para o Portal com "Para mudar para um plano menor, fale com a equipe" (ou downgrade no fim do
+    período, regra a definir);
+  - plano acima → abre a **tela de upgrade** (não o checkout de compra nova).
+- A API também recusa uma segunda assinatura (já faz: 409 `ja_assinante`).
+- **Botões dos cards** (landing, /empresas, Portal), para quem está logado: plano atual → "Seu plano" (desativado, com
+  selo); planos abaixo → "Incluído no seu plano"; planos acima → "Fazer upgrade". Pagamento pendente → "Concluir
+  pagamento" no plano escolhido.
+
+**Tela de upgrade** (`/assinar/{plano}` quando já existe assinatura menor):
+- "Do Prata para o Ouro": o que você ganha (só os itens novos, com ✓ verde), o que continua (resumido), o novo valor
+  e como fica a cobrança (proporcional ou na próxima fatura: regra "a definir", marcada na tela).
+- Botão "Confirmar upgrade"; na API, troca o valor da assinatura no Asaas (rota nova `PUT /billing/assinatura/plano`).
+
+**Comparação dos planos** (referência: a seção "Compare features across plans" do ChatGPT, com linhas agrupadas e
+Sim/Não/Limitado por plano, e a página de planos da Anthropic):
+- Abaixo dos cards, "Compare os planos": tabela com os três planos no topo (fixos ao rolar) e linhas agrupadas:
+  **Pesquisa** (base inteira, fonte em cada resposta, limite de consultas), **Recursos** (alertas por tema, resumo
+  semanal, acesso antecipado), **Suporte** (canal, prazo, implantação), **Conta** (usuários, nota fiscal).
+- Em cada célula: ✓, ✗ ou o valor ("100/mês", "Ilimitado"); o que ainda não foi definido aparece "a definir", nunca
+  um valor inventado.
+- No celular: um plano por vez, com abas Bronze/Prata/Ouro sobre a tabela.
+- Uma frase por plano respondendo "por que subir": Prata, "para quem pesquisa toda semana"; Ouro, "para quem quer ser
+  avisado do que muda".
+- A tabela lê os mesmos dados de `src/data/plans.ts` (uma fonte só para cards, tabela, upgrade e Termos).
+
+**Depende de.** As especificações de cada plano (item 25) para preencher a tabela; até lá, a estrutura fica pronta
+com "a definir".
+
+**Ordem sugerida para o bloco F.** 30 (FAQ, pequeno) → 31 (/bases, pequeno) → 32 (rodapé, médio) → 33 (compra e
+comparação, alto) → 29 (Sandbox, quando a conta existir) → 28 (avaliações, junto com a boas-vindas).
+
 ## Bloco C: plataforma do assinante
 
 ### 3. Página de boas-vindas depois da compra — Fechado na teoria (25/11/2026)
@@ -539,7 +700,7 @@ Vídeo curto (60 a 90 s) com cada passo do download e da conexão do plugin, na 
 boas-vindas. Pode ser feito com Remotion (skill da organização) depois que o plugin real existir, para mostrar
 as telas verdadeiras do Claude.
 
-### 12. Depoimentos com foto na boas-vindas — Só documentar
+### 12. Depoimentos com foto na boas-vindas — Ver item 28
 
 Só com clientes reais e autorização por escrito (uso de nome, foto e texto). Depoimento inventado é
 publicidade enganosa (CDC, art. 37, e Código do CONAR). Plano: deixar o espaço pronto e pedir depoimentos
@@ -571,8 +732,9 @@ saem do painel da pesquisa?
 1. ~~Bloco A~~ feito: 1 e 10, 2, 4, 6, 14, 15, 19, 21 a 24.
 2. ~~Documento do item 17~~ feito, com os dois riscos críticos corrigidos.
 3. ~~Bloco B~~ feito: 13 e 20.
-4. **Bloco E** (mudança dos planos e do público): 25 → 27 → 26.
+4. ~~Bloco E~~ feito: 25, 27 e 26.
 5. Bloco C, teoria fechada em 25/11/2026 (ajustar Pro/Max para Bronze/Prata/Ouro). Ordem de execução: 5 e 8 (layout do Portal e as 7 páginas), 9 (conta e
    segurança), 11 (checkout branco), 3 (boas-vindas).
-6. Riscos altos de segurança (S3 a S5) antes de publicar.
-7. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
+6. **Bloco F**: 30 → 31 → 32 → 33 → 29 (com a conta Sandbox do Asaas) → 28 (com a boas-vindas).
+7. Riscos altos de segurança (S3 a S5) antes de publicar.
+8. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
