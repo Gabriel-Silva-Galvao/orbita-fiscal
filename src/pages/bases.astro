@@ -1,0 +1,1100 @@
+---
+/**
+ * O que a Órbita cobre (item 20 da rodada de testes, 25/11/2026).
+ * Página de venda com tudo o que o plugin consulta: totais, mapa do Brasil por estado, filtros por tipo,
+ * busca e um cartão por base com quantidade, período e documento mais recente.
+ * Os números vêm de src/data/cobertura.json, gerado por scripts/cobertura (levantar.py + montar.py) com os
+ * comandos documentados de cada base; a página não consulta o servidor ao vivo.
+ */
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Button from '../components/Button.astro';
+import cobertura from '../data/cobertura.json';
+// Mapa do Brasil por estado: @svg-maps/brazil (Victor Cazanave, CC BY 4.0). Crédito na nota final e no rodapé.
+import brasil from '@svg-maps/brazil';
+
+type BaseInfo = (typeof cobertura.bases)[number];
+
+const num = (n: number) => n.toLocaleString('pt-BR');
+const data = (d: string | null) => (!d ? null : d.length === 4 ? d : `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`);
+const ano = (d: string | null) => (d ? d.slice(0, 4) : null);
+const tipoNome = Object.fromEntries(cobertura.tipos.map((t) => [t.id, t.nome]));
+const NOMES_UF: Record<string, string> = {
+  AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal',
+  ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais',
+  PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí', RJ: 'Rio de Janeiro',
+  RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia', RR: 'Roraima', SC: 'Santa Catarina',
+  SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins',
+};
+
+const bases = cobertura.bases as BaseInfo[];
+const porTipo = cobertura.tipos
+  .map((t) => ({ ...t, bases: bases.filter((b) => b.tipo === t.id) }))
+  .filter((t) => t.bases.length)
+  .map((t) => ({ ...t, docs: t.bases.reduce((s, b) => s + (b.total ?? 0), 0) }));
+
+const tribunais = bases.filter((b) => ['superiores', 'federal', 'estadual'].includes(b.tipo)).reduce((s, b) => s + (b.total ?? 0), 0);
+const ufsCobertas = new Set(bases.map((b) => b.uf).filter(Boolean));
+const levantado = data(cobertura.levantado_em);
+
+// Cada estado do mapa com a intensidade da cor pelo número de documentos (raiz quadrada, para os pequenos aparecerem).
+const docsUf = (uf: string) => bases.filter((b) => b.uf === uf).reduce((s, b) => s + (b.total ?? 0), 0);
+const estados = brasil.locations.map((l) => ({ uf: l.id.toUpperCase(), nome: l.name, path: l.path }));
+const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
+---
+
+<Base
+  title="O que a Órbita cobre: as bases de legislação e jurisprudência · Órbita"
+  description={`${num(cobertura.total_documentos)} documentos em ${cobertura.total_bases} bases: STF, STJ, TRFs, TJs, CARF, conselhos estaduais, Receita Federal, PGFN e legislação. Veja o que a Órbita consulta.`}
+>
+  <div class="page-sheet">
+    <Nav
+      links={[
+        { href: '#mapa', label: 'Mapa' },
+        { href: '#todas', label: 'Todas as bases' },
+        { href: '/#planos', label: 'Planos' },
+      ]}
+      signIn="/entrar"
+      cta={{ href: '/#planos', label: 'Assinar' }}
+    />
+
+    <main id="conteudo">
+      <!-- Topo de venda: os totais -->
+      <section class="section cb-top" aria-labelledby="cb-title">
+        <div class="wrap">
+          <p class="overline">O que a Órbita cobre</p>
+          <h1 id="cb-title" class="display-xl cb-h1">
+            <span data-count={cobertura.total_documentos}>{num(cobertura.total_documentos)}</span> documentos para a sua IA citar
+          </h1>
+          <p class="lead cb-lead">
+            Lei, súmula, acórdão e consulta da Receita: tudo o que a Órbita pesquisa quando você pergunta no Claude.
+            Cada resposta sai daqui, com a fonte para conferir.
+          </p>
+          <ul class="cb-stats">
+            <li><strong data-count={cobertura.total_bases}>{cobertura.total_bases}</strong><span>bases</span></li>
+            <li><strong data-count={tribunais}>{num(tribunais)}</strong><span>decisões de tribunais</span></li>
+            <li><strong data-count={ufsCobertas.size}>{ufsCobertas.size}</strong><span>estados com base própria</span></li>
+          </ul>
+          <div class="cb-actions">
+            <Button href="/#planos">Assinar a partir de R$ 50/mês</Button>
+            <Button href="#todas" variant="secondary">Ver todas as bases</Button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Por tipo -->
+      <section class="section section-alt" aria-labelledby="tipos-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="tipos-title" class="display-lg">Do STF ao conselho do seu estado</h2>
+            <p class="lead">Clique num grupo para ver as bases dele.</p>
+          </div>
+          <ul class="cb-tipos">
+            {
+              porTipo.map((t) => (
+                <li>
+                  <button type="button" class="cb-tipo" data-pick-tipo={t.id}>
+                    <strong>{num(t.docs)}</strong>
+                    <span class="cb-tipo-n">{t.nome}</span>
+                    <span class="small mute">{t.bases.length === 1 ? '1 base' : `${t.bases.length} bases`}</span>
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      <!-- Mapa -->
+      <section id="mapa" class="section" aria-labelledby="mapa-title">
+        <div class="wrap cb-mapa-grid">
+          <div>
+            <div class="section-head">
+              <h2 id="mapa-title" class="display-lg">O direito do seu estado também</h2>
+              <p class="lead">
+                Tribunal de Justiça, conselho de contribuintes, consultas da Fazenda e legislação tributária, estado por estado.
+                Clique num estado.
+              </p>
+            </div>
+          </div>
+          <div class="cb-uf-painel" data-uf-painel aria-live="polite">
+            <p class="mute">Escolha um estado no mapa para ver as bases dele.</p>
+          </div>
+          <div class="cb-mapa">
+            <div class="cb-tip" data-tip aria-hidden="true" hidden></div>
+            <svg viewBox={brasil.viewBox} role="group" aria-label="Mapa do Brasil por estado">
+              {
+                estados.map((e, k) => {
+                  const d = docsUf(e.uf);
+                  const nivel = d ? 0.25 + 0.75 * Math.sqrt(d / maxUf) : 0;
+                  return (
+                    <path
+                      d={e.path}
+                      class:list={['cb-uf', { 'is-vazio': !d }]}
+                      style={`--n:${nivel.toFixed(2)};--k:${k}`}
+                      data-uf={e.uf}
+                      data-nome={e.nome}
+                      tabindex="0"
+                      role="button"
+                      aria-label={d ? `${e.nome}: ${num(d)} documentos` : `${e.nome}: coberto pelos tribunais superiores e federais`}
+                    >
+                      <title>{d ? `${e.nome}: ${num(d)} documentos` : e.nome}</title>
+                    </path>
+                  );
+                })
+              }
+            </svg>
+            <p class="small mute cb-legenda"><span class="cb-leg-bar" aria-hidden="true"></span> Cor mais forte, mais documentos</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Faixa de venda -->
+      <section class="section section-alt cb-faixa">
+        <div class="wrap cb-faixa-in">
+          <p class="display-md">Sem a base, a IA responde de memória. Com a Órbita, ela cita a fonte.</p>
+          <Button href="/#exemplo" variant="secondary">Ver a mesma pergunta com e sem a Órbita</Button>
+        </div>
+      </section>
+
+      <!-- Todas as bases -->
+      <section id="todas" class="section" aria-labelledby="todas-title">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 id="todas-title" class="display-lg">Todas as bases</h2>
+            <p class="lead">Procure por tribunal, órgão ou estado.</p>
+          </div>
+          <div class="cb-ctrl">
+            <label class="cb-busca">
+              <span class="sr-only">Buscar base</span>
+              <input type="search" placeholder="Ex.: CARF, Bahia, PGFN, súmula" data-busca autocomplete="off" />
+            </label>
+            <div class="cb-chips" role="group" aria-label="Filtrar por tipo">
+              <button type="button" class="cb-chip" aria-pressed="true" data-tipo="">Todas</button>
+              {porTipo.map((t) => <button type="button" class="cb-chip" aria-pressed="false" data-tipo={t.id}>{t.nome}</button>)}
+            </div>
+            <div class="cb-filtro-linha">
+              <p class="small mute" data-contagem aria-live="polite">{bases.length} bases</p>
+              <button type="button" class="cb-uf-filtro" data-uf-filtro hidden></button>
+            </div>
+          </div>
+          <ul class="cb-lista">
+            {
+              bases.map((b) => (
+                <li
+                  class="cb-card"
+                  data-card
+                  tabindex="0"
+                  role="button"
+                  aria-expanded="false"
+                  data-tipo={b.tipo}
+                  data-uf={b.uf ?? ''}
+                  data-texto={`${b.titulo} ${b.id} ${b.uf ?? 'nacional'} ${b.uf ? NOMES_UF[b.uf] : ''} ${tipoNome[b.tipo] ?? ''}`.toLowerCase()}
+                  data-fonte={b.fonte ?? ''}
+                  data-periodo={b.inicio && b.fim ? `De ${data(b.inicio)} a ${data(b.fim)}` : b.fim ? `Mais recente: ${data(b.fim)}` : 'Período a confirmar'}
+                  data-carga={b.ultima_carga ? data(b.ultima_carga) : ''}
+                  data-area={b.plugin === 'orbita-juridica' ? 'Jurídico' : 'Tributário'}
+                  data-tipo-nome={tipoNome[b.tipo]}
+                >
+                  <p class="cb-card-k small">
+                    {tipoNome[b.tipo]} · {b.uf ?? 'Nacional'} · {b.plugin === 'orbita-juridica' ? 'Jurídico' : 'Tributário'}
+                  </p>
+                  <h3 class="cb-card-t">{b.titulo}</h3>
+                  <p class="cb-card-n">
+                    {b.total !== null ? <><strong>{num(b.total)}</strong> {b.unidade === 'documentos' ? 'documentos' : b.unidade}</> : <span class="mute">quantidade a confirmar</span>}
+                  </p>
+                  <p class="small mute">
+                    {b.inicio && b.fim ? `De ${ano(b.inicio)} a ${data(b.fim)}` : b.fim ? `Mais recente: ${data(b.fim)}` : 'Período a confirmar'}
+                    {b.ultima_carga && ` · atualizada em ${data(b.ultima_carga)}`}
+                  </p>
+                  <span class="cb-card-abrir small" aria-hidden="true">Ver detalhes</span>
+                  <dl class="cb-card-mais" hidden>
+                    {b.fonte && (<><dt>O que é</dt><dd>{b.fonte}</dd></>)}
+                    <dt>Área</dt>
+                    <dd>{b.plugin === 'orbita-juridica' ? 'Jurídico (plugin Órbita Jurídica)' : 'Tributário (plugin Órbita Fiscal)'}</dd>
+                    <dt>Período</dt>
+                    <dd>{b.inicio && b.fim ? `De ${data(b.inicio)} a ${data(b.fim)}` : b.fim ? `Mais recente: ${data(b.fim)}` : 'a confirmar'}</dd>
+                    {b.ultima_carga && (<><dt>Atualizada em</dt><dd>{data(b.ultima_carga)}</dd></>)}
+                  </dl>
+                </li>
+              ))
+            }
+          </ul>
+          <nav class="cb-pager" aria-label="Páginas da lista de bases" data-pager></nav>
+          <p class="cb-vazio mute" data-vazio hidden>Nenhuma base com esse nome. Tente o tribunal, o órgão ou o estado.</p>
+        </div>
+      </section>
+
+      <!-- CTA final -->
+      <section class="section section-alt final-cta">
+        <div class="wrap cb-final">
+          <h2 class="display-lg">Tudo isso dentro do Claude, a partir de R$ 50/mês</h2>
+          <p class="lead">Reembolso integral em até 7 dias. Cancele quando quiser.</p>
+          <div class="cb-actions">
+            <Button href="/assinar/pro" variant="secondary">Assinar o Pro</Button>
+            <Button href="/assinar/max">Assinar o Max</Button>
+          </div>
+          <p class="small mute">
+            Números levantados em {levantado} nas próprias bases da Órbita. "Documentos" são acórdãos, decisões, consultas,
+            pareceres e normas, conforme a base; o período vai do documento mais antigo ao mais recente com data. Mapa: @svg-maps/brazil, de Victor Cazanave (CC BY 4.0).
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <Footer />
+</Base>
+
+<script>
+  /* Contadores, mapa, filtros e busca. Sem JavaScript, a página mostra tudo e os números finais. */
+  const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fmt = (n: number) => Math.round(n).toLocaleString('pt-BR');
+
+  if (!reduzido) {
+    const io = new IntersectionObserver((es) => {
+      es.forEach((e) => {
+        if (!e.isIntersecting) return;
+        io.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const alvo = Number(el.dataset.count);
+        const t0 = performance.now();
+        const passo = (t: number) => {
+          const p = Math.min(1, (t - t0) / 1400);
+          el.textContent = fmt(alvo * (1 - Math.pow(1 - p, 3)));
+          if (p < 1) requestAnimationFrame(passo);
+        };
+        requestAnimationFrame(passo);
+      });
+    });
+    document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => io.observe(el));
+  }
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-card]'));
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tipo]')).filter((b) => b.tagName === 'BUTTON');
+  const busca = document.querySelector<HTMLInputElement>('[data-busca]')!;
+  const contagem = document.querySelector<HTMLElement>('[data-contagem]')!;
+  const vazio = document.querySelector<HTMLElement>('[data-vazio]')!;
+  const estado = { tipo: '', uf: '', q: '' };
+  const semAcento = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  // A lista mostra 12 bases por página: menos cartões na tela de uma vez, página mais leve.
+  const POR_PAGINA = 12;
+  const pager = document.querySelector<HTMLElement>('[data-pager]')!;
+  const filtroUf = document.querySelector<HTMLButtonElement>('[data-uf-filtro]')!;
+  let pagina = 1;
+  let achadas: HTMLElement[] = cards;
+
+  function mostrar(rolar = false) {
+    const paginas = Math.max(1, Math.ceil(achadas.length / POR_PAGINA));
+    pagina = Math.min(pagina, paginas);
+    const ini = (pagina - 1) * POR_PAGINA;
+    const visiveis = new Set(achadas.slice(ini, ini + POR_PAGINA));
+    cards.forEach((c) => {
+      const v = visiveis.has(c);
+      c.hidden = !v;
+      c.classList.toggle('is-new', v && !reduzido);
+    });
+    pager.replaceChildren();
+    if (paginas > 1) {
+      const botao = (rotulo: string, alvo: number, opts: { atual?: boolean; off?: boolean; aria?: string } = {}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cb-pg';
+        b.textContent = rotulo;
+        if (opts.aria) b.setAttribute('aria-label', opts.aria);
+        if (opts.atual) b.setAttribute('aria-current', 'page');
+        b.disabled = !!opts.off;
+        b.addEventListener('click', () => {
+          pagina = alvo;
+          mostrar(true);
+        });
+        pager.append(b);
+      };
+      botao('‹', pagina - 1, { off: pagina === 1, aria: 'Página anterior' });
+      for (let i = 1; i <= paginas; i++) {
+        if (i === 1 || i === paginas || Math.abs(i - pagina) <= 1) {
+          botao(String(i), i, { atual: i === pagina, aria: `Página ${i}` });
+        } else if (Math.abs(i - pagina) === 2) {
+          const r = document.createElement('span');
+          r.className = 'cb-pg-gap';
+          r.textContent = '…';
+          pager.append(r);
+        }
+      }
+      botao('›', pagina + 1, { off: pagina === paginas, aria: 'Próxima página' });
+    }
+    if (rolar) document.getElementById('todas-title')?.scrollIntoView({ behavior: reduzido ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  function filtrar() {
+    const q = semAcento(estado.q.trim());
+    achadas = cards.filter(
+      (c) =>
+        (!estado.tipo || c.dataset.tipo === estado.tipo) &&
+        (!estado.uf || c.dataset.uf === estado.uf) &&
+        (!q || q.split(/\s+/).every((p) => semAcento(c.dataset.texto ?? '').includes(p))),
+    );
+    const n = achadas.length;
+    pagina = 1;
+    contagem.textContent = `${n} ${n === 1 ? 'base' : 'bases'}`;
+    filtroUf.hidden = !estado.uf;
+    filtroUf.textContent = estado.uf ? `Estado: ${estado.uf} ✕` : '';
+    filtroUf.setAttribute('aria-label', estado.uf ? `Tirar o filtro do estado ${estado.uf} e mostrar todas as bases` : '');
+    vazio.hidden = n > 0;
+    mostrar();
+  }
+  filtrar();
+  function escolherTipo(tipo: string) {
+    estado.tipo = tipo;
+    chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.tipo === tipo)));
+    filtrar();
+  }
+  chips.forEach((c) =>
+    c.addEventListener('click', () => {
+      if (!c.dataset.tipo) estado.uf = '';
+      escolherTipo(c.dataset.tipo ?? '');
+    }),
+  );
+  filtroUf.addEventListener('click', () => {
+    estado.uf = '';
+    limparMapa();
+    filtrar();
+  });
+
+  // Cartões: clique (ou Enter) abre e fecha os detalhes da base.
+  cards.forEach((c) => {
+    const alternar = () => {
+      const abre = c.getAttribute('aria-expanded') !== 'true';
+      c.setAttribute('aria-expanded', String(abre));
+      c.querySelector<HTMLElement>('.cb-card-mais')!.hidden = !abre;
+      const rot = c.querySelector<HTMLElement>('.cb-card-abrir');
+      if (rot) rot.textContent = abre ? 'Fechar detalhes' : 'Ver detalhes';
+    };
+    c.addEventListener('click', alternar);
+    c.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        alternar();
+      }
+    });
+  });
+  busca.addEventListener('input', () => {
+    estado.q = busca.value;
+    filtrar();
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-pick-tipo]').forEach((b) =>
+    b.addEventListener('click', () => {
+      estado.uf = '';
+      escolherTipo(b.dataset.pickTipo ?? '');
+      document.getElementById('todas')?.scrollIntoView({ behavior: reduzido ? 'auto' : 'smooth' });
+    }),
+  );
+
+  // Mapa: o painel lista as bases do estado e um botão filtra a lista completa.
+  const painel = document.querySelector<HTMLElement>('[data-uf-painel]')!;
+  const ufs = Array.from(document.querySelectorAll<SVGPathElement>('.cb-uf'));
+  const mapa = document.querySelector<HTMLElement>('.cb-mapa')!;
+  new IntersectionObserver((es, io) => {
+    if (es.some((e) => e.isIntersecting)) {
+      mapa.classList.add('is-in');
+      io.disconnect();
+    }
+  }, { threshold: 0.3 }).observe(mapa);
+  const svg = mapa.querySelector('svg')!;
+  const tip = mapa.querySelector<HTMLElement>('[data-tip]')!;
+  const doEstado = (uf: string) => cards.filter((c) => c.dataset.uf === uf);
+  const fmtN = (n: number) => n.toLocaleString('pt-BR');
+  const docs = (lista: HTMLElement[]) =>
+    lista.reduce((s, c) => s + Number((c.querySelector('.cb-card-n strong')?.textContent ?? '0').replace(/\./g, '')), 0);
+  let fixo: SVGPathElement | null = null;
+
+  // Sigla no hover (e no foco do teclado): a etiqueta fica no centro do estado.
+  // No estado escolhido, a etiqueta mostra a sigla e o total, um pouco acima dele.
+  function etiqueta(b: SVGPathElement, detalhe = false) {
+    const r = b.getBoundingClientRect();
+    const m = mapa.getBoundingClientRect();
+    const uf = b.dataset.uf!;
+    const lista = doEstado(uf);
+    tip.textContent = detalhe && lista.length ? `${uf} · ${fmtN(docs(lista))} documentos` : uf;
+    tip.style.left = `${r.left - m.left + r.width / 2}px`;
+    tip.style.top = `${r.top - m.top + r.height / 2}px`;
+    tip.classList.toggle('is-fixo', detalhe);
+    tip.hidden = false;
+  }
+  const soltar = () => {
+    if (fixo) etiqueta(fixo, true);
+    else tip.hidden = true;
+  };
+
+  const vazioPainel = painel.innerHTML;
+  // Volta o mapa ao início: nenhum estado escolhido, painel com a instrução.
+  function limparMapa() {
+    fixo = null;
+    ufs.forEach((x) => x.classList.remove('is-on'));
+    tip.hidden = true;
+    painel.innerHTML = vazioPainel;
+  }
+
+  const abrir = (b: SVGPathElement) => {
+    const uf = b.dataset.uf!;
+    if (fixo === b) {
+      // Clicar no estado já escolhido desmarca e, se a lista estava filtrada por ele, volta a mostrar tudo.
+      limparMapa();
+      if (estado.uf === uf) {
+        estado.uf = '';
+        filtrar();
+      }
+      return;
+    }
+    fixo = b;
+    ufs.forEach((x) => x.classList.toggle('is-on', x === b));
+    svg.append(b); // o escolhido vai para a frente e sobe por cima dos vizinhos
+    etiqueta(b, true);
+    setTimeout(() => fixo === b && etiqueta(b, true), 450); // reposiciona depois que o estado termina de subir
+    const doUf = doEstado(uf);
+    painel.replaceChildren();
+    painel.classList.remove('is-novo');
+    void painel.offsetWidth;
+    painel.classList.add('is-novo');
+
+    const h = document.createElement('h3');
+    h.className = 'title';
+    h.textContent = b.dataset.nome ?? uf;
+    painel.append(h);
+    if (!doUf.length) {
+      const p = document.createElement('p');
+      p.className = 'mute';
+      p.textContent = 'Ainda sem base própria deste estado. As causas daqui chegam ao STF, ao STJ e ao TRF da região, que a Órbita cobre.';
+      painel.append(p);
+      return;
+    }
+
+    // Resumo do estado: documentos, bases e o maior acervo.
+    const resumo = document.createElement('div');
+    resumo.className = 'cb-uf-resumo';
+    const item = (n: string, k: string) => {
+      const d = document.createElement('div');
+      const st = document.createElement('strong');
+      st.textContent = n;
+      const sp = document.createElement('span');
+      sp.textContent = k;
+      d.append(st, sp);
+      return d;
+    };
+    resumo.append(item(fmtN(docs(doUf)), 'documentos'), item(String(doUf.length), doUf.length === 1 ? 'base' : 'bases'));
+    const maior = document.createElement('p');
+    maior.className = 'small cb-uf-maior';
+    maior.textContent = `Maior acervo: ${doUf[0]?.querySelector('.cb-card-t')?.textContent ?? ''}`;
+    painel.append(resumo, maior);
+
+    // Cada base do estado: hover com destaque e, no clique, mais sobre a documentação.
+    const ul = document.createElement('ul');
+    ul.className = 'cb-uf-lista';
+    doUf.forEach((c, k) => {
+      const li = document.createElement('li');
+      li.style.setProperty('--k', String(k));
+      const bt = document.createElement('button');
+      bt.type = 'button';
+      bt.className = 'cb-uf-item';
+      bt.setAttribute('aria-expanded', 'false');
+      const t = document.createElement('span');
+      t.textContent = c.querySelector('.cb-card-t')?.textContent ?? '';
+      const n = document.createElement('strong');
+      n.textContent = c.querySelector('.cb-card-n strong')?.textContent ?? 'a confirmar';
+      bt.append(t, n);
+      const mais = document.createElement('div');
+      mais.className = 'cb-uf-mais';
+      mais.hidden = true;
+      const dl = document.createElement('dl');
+      const linhas: [string, string | undefined][] = [
+        ['O que é', c.dataset.fonte],
+        ['Tipo', `${c.dataset.tipoNome} · ${c.dataset.area}`],
+        ['Período', c.dataset.periodo],
+        ['Atualizada em', c.dataset.carga],
+      ];
+      linhas
+        .filter(([, v]) => v)
+        .forEach(([rot, v]) => {
+          const dt = document.createElement('dt');
+          dt.textContent = rot;
+          const dd = document.createElement('dd');
+          dd.textContent = v!;
+          dl.append(dt, dd);
+        });
+      mais.append(dl);
+      bt.addEventListener('click', () => {
+        const abre = bt.getAttribute('aria-expanded') !== 'true';
+        bt.setAttribute('aria-expanded', String(abre));
+        mais.hidden = !abre;
+        li.classList.toggle('is-aberto', abre);
+      });
+      li.append(bt, mais);
+      ul.append(li);
+    });
+    const ver = document.createElement('button');
+    ver.type = 'button';
+    ver.className = 'link-btn';
+    ver.textContent = `Ver as ${doUf.length} bases de ${uf} na lista`;
+    ver.addEventListener('click', () => {
+      estado.uf = uf;
+      escolherTipo('');
+      document.getElementById('todas')?.scrollIntoView({ behavior: reduzido ? 'auto' : 'smooth' });
+    });
+    painel.append(ul, ver);
+  };
+  ufs.forEach((b) => {
+    b.addEventListener('pointerenter', () => etiqueta(b, b === fixo));
+    b.addEventListener('pointerleave', soltar);
+    b.addEventListener('focus', () => etiqueta(b, b === fixo));
+    b.addEventListener('blur', soltar);
+  });
+  ufs.forEach((b) => {
+    b.addEventListener('click', () => abrir(b));
+    b.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        abrir(b);
+      }
+    });
+  });
+</script>
+
+<style>
+  .cb-top {
+    padding-top: var(--space-8);
+  }
+  .cb-h1 {
+    max-width: 16ch;
+    margin: var(--space-3) 0 var(--space-4);
+    font-variant-numeric: tabular-nums;
+  }
+  .cb-h1 span {
+    color: var(--brand);
+  }
+  .cb-lead {
+    max-width: 58ch;
+  }
+  .cb-stats {
+    list-style: none;
+    margin: var(--space-6) 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+  }
+  .cb-stats li {
+    display: grid;
+    gap: 2px;
+  }
+  .cb-stats strong {
+    font: var(--text-display-md);
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .cb-stats span {
+    color: var(--mute);
+    font-size: 0.9375rem;
+  }
+  .cb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .cb-tipos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-3);
+  }
+  .cb-tipo {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      transform 200ms var(--ease-out, ease),
+      border-color 200ms;
+  }
+  .cb-tipo:hover {
+    transform: translateY(-2px);
+    border-color: var(--brand);
+  }
+  .cb-tipo strong {
+    font: var(--text-display-md);
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .cb-tipo-n {
+    font-weight: 600;
+  }
+
+  .cb-mapa-grid {
+    display: grid;
+    gap: var(--space-7);
+    align-items: start;
+  }
+  /* Celular: título, mapa e o painel embaixo do mapa (o toque mostra o resultado logo abaixo).
+     Computador: título e painel à esquerda, mapa à direita. */
+  .cb-uf-painel {
+    order: 3;
+  }
+  @media (min-width: 900px) {
+    .cb-mapa-grid {
+      grid-template-columns: 1fr minmax(320px, 420px);
+      grid-template-rows: auto 1fr;
+    }
+    .cb-mapa {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+    .cb-uf-painel {
+      order: 0;
+      grid-column: 1;
+      grid-row: 2;
+      margin-top: 0;
+      align-self: start;
+    }
+  }
+  .cb-mapa {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    justify-self: center;
+  }
+  /* Etiqueta com a sigla (hover e foco); no estado escolhido, sigla e total, um pouco acima. */
+  .cb-tip {
+    position: absolute;
+    z-index: 2;
+    transform: translate(-50%, -50%);
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font: 700 0.75rem/1.2 var(--font-body, inherit);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+    animation: cb-tip 160ms var(--ease-out, ease);
+  }
+  .cb-tip.is-fixo {
+    transform: translate(-50%, calc(-50% - 22px));
+    background: var(--brand);
+    color: var(--on-brand, var(--bg));
+  }
+  @keyframes cb-tip {
+    from {
+      opacity: 0;
+      scale: 0.8;
+    }
+  }
+
+  .cb-mapa svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .cb-uf {
+    fill: color-mix(in srgb, var(--brand) calc(var(--n) * 100%), var(--surface));
+    stroke: var(--bg);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    cursor: pointer;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      fill 200ms,
+      transform 200ms var(--ease-out, ease);
+    outline: none;
+  }
+  .cb-uf.is-vazio {
+    fill: var(--surface);
+  }
+  .cb-uf:hover,
+  .cb-uf:focus-visible {
+    fill: color-mix(in srgb, var(--brand) 70%, var(--ink));
+    transform: scale(1.03);
+  }
+  /* Escolhido: o estado sobe, cresce e ganha sombra, destacado do mapa. */
+  .cb-uf.is-on {
+    fill: var(--brand);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    transform: translateY(-10px) scale(1.08);
+    filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.35));
+    transition:
+      fill 200ms,
+      transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      filter 420ms;
+  }
+
+  /* Entrada: os estados acendem em sequência quando o mapa aparece (scripts abaixo põem .is-in). */
+  :global(.anim) .cb-mapa:not(.is-in) .cb-uf {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  :global(.anim) .cb-mapa.is-in .cb-uf {
+    animation: cb-acende 600ms var(--ease-out, ease) both;
+    animation-delay: calc(var(--k) * 35ms);
+  }
+  @keyframes cb-acende {
+    from {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+  }
+  .cb-legenda {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+  }
+  .cb-leg-bar {
+    width: 80px;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--surface), var(--brand));
+    border: 1px solid var(--line);
+  }
+  .cb-uf-painel {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .cb-uf-painel :global(ul) {
+    list-style: none;
+    margin: var(--space-3) 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .cb-uf-painel.is-novo {
+    animation: cb-painel 360ms var(--ease-out, ease);
+  }
+  @keyframes cb-painel {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  .cb-uf-painel :global(.cb-uf-resumo) {
+    display: flex;
+    gap: var(--space-6);
+    margin: var(--space-2) 0;
+  }
+  .cb-uf-painel :global(.cb-uf-resumo div) {
+    display: grid;
+  }
+  .cb-uf-painel :global(.cb-uf-resumo strong) {
+    font: var(--text-display-md);
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .cb-uf-painel :global(.cb-uf-resumo span),
+  .cb-uf-painel :global(.cb-uf-maior) {
+    color: var(--mute);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+  .cb-uf-painel :global(.cb-uf-lista li) {
+    display: block;
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+    animation: cb-painel 320ms var(--ease-out, ease) both;
+    animation-delay: calc(var(--k) * 50ms);
+  }
+  .cb-uf-painel :global(.cb-uf-item) {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9375rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 180ms,
+      transform 180ms var(--ease-out, ease);
+  }
+  .cb-uf-painel :global(.cb-uf-item:hover),
+  .cb-uf-painel :global(.cb-uf-item:focus-visible) {
+    background: color-mix(in srgb, var(--brand) 14%, transparent);
+    transform: translateX(4px);
+  }
+  .cb-uf-painel :global(.cb-uf-item span) {
+    flex: 1;
+  }
+  .cb-uf-painel :global(.cb-uf-item strong) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .cb-uf-painel :global(.cb-uf-item::after) {
+    content: '+';
+    color: var(--brand);
+    font-weight: 700;
+    transition: transform 200ms;
+  }
+  .cb-uf-painel :global(.is-aberto .cb-uf-item::after) {
+    transform: rotate(45deg);
+  }
+  .cb-uf-painel :global(.cb-uf-mais) {
+    padding: 0 var(--space-2) var(--space-3);
+    animation: cb-painel 260ms var(--ease-out, ease);
+  }
+  .cb-uf-painel :global(.cb-uf-mais dl) {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px var(--space-3);
+    font-size: 0.875rem;
+  }
+  .cb-uf-painel :global(.cb-uf-mais dt) {
+    color: var(--mute);
+  }
+  .cb-uf-painel :global(.cb-uf-mais dd) {
+    margin: 0;
+  }
+  .cb-uf-painel :global(.link-btn) {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--brand);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .cb-faixa-in {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+  .cb-faixa-in p {
+    margin: 0;
+    max-width: 30ch;
+  }
+
+  .cb-ctrl {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .cb-busca input {
+    width: 100%;
+    max-width: 480px;
+    min-height: 48px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--line-strong, var(--line));
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .cb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cb-chip {
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong, var(--line));
+    background: transparent;
+    color: var(--ink);
+    font: 500 0.875rem/1 var(--font-body, inherit);
+    cursor: pointer;
+  }
+  .cb-chip[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .cb-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+  .cb-card {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    transition:
+      transform 200ms,
+      border-color 200ms;
+  }
+  .cb-card {
+    cursor: pointer;
+  }
+  .cb-card:hover,
+  .cb-card:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--brand);
+    box-shadow: 0 10px 24px rgb(0 0 0 / 0.18);
+  }
+  .cb-card[aria-expanded='true'] {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 8%, var(--surface));
+  }
+  .cb-card-abrir {
+    color: var(--brand);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .cb-card-abrir::after {
+    content: ' +';
+  }
+  .cb-card[aria-expanded='true'] .cb-card-abrir::after {
+    content: ' −';
+  }
+  .cb-card-mais {
+    margin: var(--space-2) 0 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px var(--space-3);
+    font-size: 0.875rem;
+    animation: cb-painel 260ms var(--ease-out, ease);
+  }
+  .cb-card-mais[hidden] {
+    display: none;
+  }
+  .cb-card-mais dt {
+    color: var(--mute);
+  }
+  .cb-card-mais dd {
+    margin: 0;
+  }
+  .cb-filtro-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .cb-filtro-linha p {
+    margin: 0;
+  }
+  .cb-uf-filtro {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--brand);
+    background: color-mix(in srgb, var(--brand) 16%, transparent);
+    color: var(--ink);
+    font: 600 0.8125rem/1 var(--font-body, inherit);
+    cursor: pointer;
+    animation: cb-painel 240ms var(--ease-out, ease);
+  }
+  .cb-uf-filtro:hover {
+    background: color-mix(in srgb, var(--brand) 28%, transparent);
+  }
+  .cb-card p {
+    margin: 0;
+  }
+  .cb-card-k {
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .cb-card-t {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.3;
+  }
+  .cb-card-n strong {
+    font-size: 1.375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .cb-card.is-new {
+    animation: cb-painel 300ms var(--ease-out, ease);
+  }
+  .cb-pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-6);
+  }
+  .cb-pager :global(.cb-pg) {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong, var(--line));
+    background: transparent;
+    color: var(--ink);
+    font: 600 0.9375rem/1 var(--font-body, inherit);
+    cursor: pointer;
+    transition:
+      background-color 160ms,
+      transform 160ms;
+  }
+  .cb-pager :global(.cb-pg:hover:not(:disabled)) {
+    transform: translateY(-2px);
+    border-color: var(--brand);
+  }
+  .cb-pager :global(.cb-pg[aria-current='page']) {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .cb-pager :global(.cb-pg:disabled) {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .cb-pager :global(.cb-pg-gap) {
+    color: var(--mute);
+    padding: 0 4px;
+  }
+  .cb-vazio {
+    margin-top: var(--space-5);
+  }
+  .cb-final {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+  .cb-final h2,
+  .cb-final p {
+    margin: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cb-tipo,
+    .cb-card,
+    .cb-uf {
+      transition: none;
+    }
+  }
+</style>

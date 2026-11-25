@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · rodada de testes, itens 19, 21 e 22 · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · rodada de testes, itens 19 a 22 · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -169,6 +169,7 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Na seção "Feito para quem assina o que entrega", a foto do Congresso perdeu os cartões de norma e súmula: ela agora sai do desfoque devagar e depois respira num zoom lento.</p>
       <p>Etapa 10f-4: o formulário de contato fica em <a href="http://localhost:4321/ajuda#contato">/ajuda#contato</a>; na página inicial, o bloco "Ficou alguma dúvida?" leva até ele. Todos os links "Fale com a equipe" apontam para a Ajuda. O átomo gira mais devagar, e o hover na logo acelera de leve.</p>
       <p>Rodada de testes (itens 19, 21 e 22): o topo ficou sem o átomo, com as órbitas do fundo paradas; saíram a linha "Menos tempo caçando lei…" e a seção "Feito para quem assina o que entrega". O plano completo da rodada está em docs/rodada-de-testes.md.</p>
+      <p>Item 20: nova página <a href="http://localhost:4321/bases">/bases</a>, "O que a Órbita cobre": 10.374.017 documentos em 108 bases, com o mapa real do Brasil por estado, que acende em sequência: passe o mouse para ver a sigla; clique (ou Enter) para o estado subir e mostrar total, número de bases e maior acervo, e clique em cada base do painel para ver o que ela é, o tipo, o período e a atualização. Clicar de novo no estado escolhido desmarca e zera o mapa. "Ver as bases do estado na lista" filtra a lista e mostra o filtro "Estado: UF ✕", que volta a mostrar todas (o "Todas" também limpa). Cada cartão da lista se ergue no hover e abre os detalhes no clique. A lista "Todas as bases" vem em páginas de 12 ( mapa @svg-maps/brazil, CC BY 4.0, creditado em "Créditos" no rodapé), grupos por tipo, busca (tribunal, órgão ou estado) e filtros. Na página inicial, a seção "O que a Órbita consulta" mostra os totais e leva a ela. Para atualizar os números: <code>python scripts/cobertura/levantar.py &lt;pastas dos plugins&gt;</code> e depois <code>python scripts/cobertura/montar.py</code>.</p>
       <p>Falta só a animação de explosão do átomo.</p>
       <p>O que falta fora do código está em tópicos no <a href="https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm">painel de progresso</a>.</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>

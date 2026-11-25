@@ -118,7 +118,7 @@ const credits = Object.values(photos);
         <span class="f-sep" aria-hidden="true">·</span>
         <span>CNPJ<Pending kind="definir" /></span>
         <span class="f-sep" aria-hidden="true">·</span>
-        <button type="button" class="f-link" data-open="dlg-creditos">Créditos das fotos</button>
+        <button type="button" class="f-link" data-open="dlg-creditos">Créditos</button>
       </div>
 
       <div class="f-settings" role="group" aria-label="Configurações">
@@ -195,7 +195,7 @@ const credits = Object.values(photos);
   <dialog id="dlg-creditos" class="dlg" aria-labelledby="dlg-creditos-t" data-lenis-prevent>
     <form method="dialog" class="dlg-in">
       <div class="dlg-head">
-        <h2 id="dlg-creditos-t" class="display-md">Créditos das fotos</h2>
+        <h2 id="dlg-creditos-t" class="display-md">Créditos</h2>
         <button class="dlg-x" value="close" aria-label="Fechar"><Icon name="solar:close-circle-linear" size={24} /></button>
       </div>
       <p class="small mute">Fotos sob a Licença Unsplash. Obrigado a quem fotografou.</p>
@@ -211,6 +211,11 @@ const credits = Object.values(photos);
           ))
         }
       </ul>
+      <p class="small mute">
+        Mapa do Brasil da página <a href="/bases">O que a Órbita cobre</a>:
+        <a href="https://github.com/VictorCazanave/svg-maps/tree/master/packages/brazil" target="_blank" rel="noopener">@svg-maps/brazil</a>,
+        de Victor Cazanave, sob a licença <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+      </p>
       <div class="dlg-actions">
         <button class="dlg-btn" value="ok">Fechar</button>
       </div>

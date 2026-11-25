@@ -2,10 +2,13 @@
 /**
  * "O que a Órbita consulta" (etapa 10f-3): substitui a cena da biblioteca (foto com cartões virando).
  * A lista vem dos conjuntos de pesquisa da Órbita (plugins orbita-fiscal e orbita-juridica da organização),
- * agrupados por tipo de fonte. Sem números: quantidade de documentos, período e frequência de atualização
- * continuam a definir e só entram quando confirmados (plano da landing, bloco 4).
+ * agrupados por tipo de fonte. Item 20 (25/11/2026): os totais vêm de src/data/cobertura.json e o botão leva
+ * à página /bases, com a lista completa.
  */
-import Pending from './Pending.astro';
+import Button from './Button.astro';
+import cobertura from '../data/cobertura.json';
+
+const num = (n: number) => n.toLocaleString('pt-BR');
 
 const grupos = [
   {
@@ -42,6 +45,9 @@ const grupos = [
       <p class="lead">
         Leis, súmulas e julgados de onde sai cada resposta, para você conferir antes de usar.
       </p>
+      <p class="base-total">
+        <strong>{num(cobertura.total_documentos)}</strong> documentos em <strong>{cobertura.total_bases}</strong> bases
+      </p>
     </div>
     <ul class="base-grid" data-reveal>
       {
@@ -57,9 +63,10 @@ const grupos = [
         ))
       }
     </ul>
-    <p class="small mute base-note">
-      A lista completa de fontes, o período coberto e a frequência de atualização serão publicados com data<Pending kind="definir" />.
-    </p>
+    <div class="base-cta" data-reveal>
+      <Button href="/bases">Ver tudo o que a Órbita cobre</Button>
+      <p class="small mute">Mapa por estado, cada base com quantidade e período.</p>
+    </div>
   </div>
 </section>
 
@@ -93,8 +100,23 @@ const grupos = [
     gap: var(--space-2);
     font-size: 0.9375rem;
   }
-  .base-note {
-    margin: var(--space-5) 0 0;
+  .base-total {
+    margin: var(--space-3) 0 0;
+    font-size: 1.125rem;
+  }
+  .base-total strong {
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .base-cta {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .base-cta p {
+    margin: 0;
   }
   @media (max-width: 900px) {
     .base-grid {

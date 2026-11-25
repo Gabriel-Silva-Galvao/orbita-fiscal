@@ -159,7 +159,12 @@ navegador sem causar salto de layout. Coluna "com a Órbita" com o símbolo gira
 **Dúvidas.** Sortear entre as 11 ou só entre as 6 que não estão no comparativo? Há mais perguntas além
 dessas 11?
 
-### 20. Página "O que a Órbita cobre" — Fechado na teoria (decisões de 25/11/2026)
+### 20. Página "O que a Órbita cobre" — Executado e testado (25/11/2026)
+
+**Feito.** Levantamento em `scripts/cobertura/` (108 bases, 10.374.017 documentos; tabela em
+`docs/cobertura-levantamento.md`, conferida pelo Gabriel); página `/bases` com contadores, grupos por tipo,
+mapa real do Brasil por estado (pacote @svg-maps/brazil 2.0.0, CC BY 4.0, autorizado pelo Gabriel em 25/11/2026; crédito no rodapé) com sigla no hover, estado que sobe ao ser escolhido com total e maior acervo, e painel com cada base abrindo seus detalhes; lista paginada (12 por página); faixa de venda, busca (aceita nome do estado), filtros e CTA final;
+na landing, a seção ganhou os totais e o botão "Ver tudo o que a Órbita cobre". Testado no computador e no celular.
 
 **Pedido.** A seção "O que a Órbita consulta" fica na landing (mais completa) e ganha um botão de venda para
 uma página nova, totalmente detalhada e interativa: quantidade de documentos, bases, tudo.
