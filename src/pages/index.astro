@@ -12,6 +12,7 @@ import Footer from '../components/Footer.astro';
 import Story from '../components/Story.astro';
 import Contact from '../components/Contact.astro';
 import AiConnections from '../components/AiConnections.astro';
+import StructuredData from '../components/StructuredData.astro';
 
 const steps = [
   {
@@ -54,6 +55,7 @@ const trust = [
   description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças. A partir de R$ 50 por mês."
 >
   <div class="page-sheet">
+  <StructuredData />
   <Nav
     links={[
       { href: '#exemplo', label: 'Exemplo' },

@@ -1,5 +1,7 @@
 /**
- * Gera public/og.png (1200x630) a partir de scripts/og/og.html, com o Edge ou o Chrome sem janela.
+ * Gera, com o Edge ou o Chrome sem janela:
+ *   public/og.png   (1200x630) de scripts/og/og.html   (imagem de compartilhamento, etapa 8b)
+ *   public/logo.png (512x512)  de scripts/og/logo.html (logo dos dados estruturados, etapa 8c)
  * Uso: npm run og
  */
 import { execFileSync } from 'node:child_process';
@@ -8,8 +10,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
-const html = pathToFileURL(path.join(aqui, 'og.html')).href;
-const saida = path.resolve(aqui, '../../public/og.png');
 
 const candidatos = [
   process.env.BROWSER,
@@ -26,15 +26,23 @@ if (!navegador) {
   process.exit(1);
 }
 
-execFileSync(navegador, [
-  '--headless=new',
-  '--disable-gpu',
-  '--hide-scrollbars',
-  '--allow-file-access-from-files',
-  '--force-device-scale-factor=1',
-  '--virtual-time-budget=3000', // dá tempo de as fontes carregarem
-  '--window-size=1200,630',
-  `--screenshot=${saida}`,
-  html,
-]);
-console.log(`Gerado ${path.relative(process.cwd(), saida)} (${Math.round(statSync(saida).size / 1024)} KB)`);
+const imagens = [
+  { html: 'og.html', png: 'og.png', w: 1200, h: 630 },
+  { html: 'logo.html', png: 'logo.png', w: 512, h: 512 },
+];
+for (const img of imagens) {
+  const html = pathToFileURL(path.join(aqui, img.html)).href;
+  const saida = path.resolve(aqui, '../../public', img.png);
+  execFileSync(navegador, [
+    '--headless=new',
+    '--disable-gpu',
+    '--hide-scrollbars',
+    '--allow-file-access-from-files',
+    '--force-device-scale-factor=1',
+    '--virtual-time-budget=3000', // dá tempo de as fontes carregarem
+    `--window-size=${img.w},${img.h}`,
+    `--screenshot=${saida}`,
+    html,
+  ]);
+  console.log(`Gerado public/${img.png} (${Math.round(statSync(saida).size / 1024)} KB)`);
+}

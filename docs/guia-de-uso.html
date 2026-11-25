@@ -115,7 +115,7 @@ td:first-child{font-weight:700;white-space:nowrap}
 
 <div class="shell">
   <nav class="toc" aria-label="Seções">
-    <div class="brand">Órbita<small>Guia de uso · SEO 8b · 25/11/2026</small></div>
+    <div class="brand">Órbita<small>Guia de uso · SEO 8c · 25/11/2026</small></div>
     <a href="#rodar">Como rodar</a>
     <a href="#jornada">Jornada do assinante</a>
     <a href="#codigo">Login com código</a>
@@ -146,7 +146,7 @@ td:first-child{font-weight:700;white-space:nowrap}
       <div class="cmd"><pre>$env:API_URL="http://localhost:8000"; $env:PUBLIC_AUTH_ENDPOINT="http://localhost:8000/auth"; $env:PUBLIC_BILLING_ENDPOINT="http://localhost:8000/billing"; npm run dev</pre><button class="btn" data-copy>Copiar</button></div>
       <p>Com isso, <code>/conta</code>, <code>/instalar</code> e <code>/assinar</code> só abrem com sessão; sem ela, levam ao Entrar.</p>
       <h3>SEO no ar</h3>
-      <p>O site gera <code>/sitemap-index.xml</code>, serve <code>/robots.txt</code> e a imagem de compartilhamento <code>/og.png</code>. Para mudar a imagem, edite <code>scripts/og/og.html</code> e rode <code>npm run og</code>. No dia da publicação: verificar o domínio no Google Search Console (registro TXT no DNS), enviar o sitemap e importar no Bing Webmaster Tools.</p>
+      <p>O site gera <code>/sitemap-index.xml</code>, serve <code>/robots.txt</code> e a imagem de compartilhamento <code>/og.png</code>. Para mudar a imagem ou o logo, edite <code>scripts/og/og.html</code> ou <code>scripts/og/logo.html</code> e rode <code>npm run og</code>. Razão social e CNPJ entram nos dados estruturados sozinhos quando forem preenchidos em <code>src/data/site.ts</code>. No dia da publicação: verificar o domínio no Google Search Console (registro TXT no DNS), enviar o sitemap e importar no Bing Webmaster Tools.</p>
       <h3>Testes</h3>
       <div class="cmd"><pre>.venv\Scripts\python.exe -m pytest -q</pre><button class="btn" data-copy>Copiar</button></div>
     </section>
@@ -392,6 +392,8 @@ const testes=[
  ['SEO','Canonical, og:url e og:site_name na página inicial'],
  ['SEO','Imagem de compartilhamento 1200x630 (public/og.png) em todas as páginas, com cartão grande no X'],
  ['SEO','Imagem sem sobreposição de texto e sem o disco verde do átomo'],
+ ['SEO','Dados estruturados na página inicial: Organization (com logo 512x512), WebSite e SoftwareApplication com Pro R$ 50,00 e Max R$ 75,90'],
+ ['SEO','Validar no Rich Results Test do Google depois da publicação (por endereço)'],
  ['Site','Build do site passa'],
  ['Site','11 páginas respondem; endereço inexistente dá 404'],
  ['Navegador','Criar conta com código e seguir para o checkout'],

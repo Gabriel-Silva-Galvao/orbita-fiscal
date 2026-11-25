@@ -1,0 +1,76 @@
+---
+/**
+ * Dados estruturados da página inicial (SEO, etapa 8c), em JSON-LD (schema.org).
+ * - Organization: nome, site, logo (public/logo.png, 512x512) e e-mail de contato.
+ *   Razão social e CNPJ entram sozinhos quando forem preenchidos em src/data/site.ts.
+ *   Redes sociais (sameAs) ficam de fora enquanto os perfis forem provisórios.
+ * - WebSite: o nome do site que o Google mostra nos resultados.
+ * - SoftwareApplication: a Órbita como software, com os dois planos em reais (src/data/plans.ts).
+ * Fora de propósito: FAQPage (desde 2023 o Google só mostra para sites de governo e saúde) e HowTo (descontinuado).
+ */
+import { plans } from '../data/plans';
+import { company, contact } from '../data/site';
+
+const site = Astro.site!.href.replace(/\/$/, '');
+const org = `${site}/#organizacao`;
+
+const organization: Record<string, unknown> = {
+  '@type': 'Organization',
+  '@id': org,
+  name: company.name,
+  url: `${site}/`,
+  logo: { '@type': 'ImageObject', url: `${site}/logo.png`, width: 512, height: 512 },
+  email: contact.email,
+};
+if (company.legalName) organization.legalName = company.legalName;
+if (company.cnpj) organization.taxID = company.cnpj;
+
+const data = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    organization,
+    {
+      '@type': 'WebSite',
+      '@id': `${site}/#site`,
+      name: company.name,
+      url: `${site}/`,
+      inLanguage: 'pt-BR',
+      publisher: { '@id': org },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${site}/#plugin`,
+      name: `${company.name}: plugin de pesquisa jurídica para IA`,
+      description:
+        'Plugin que liga a base de legislação e jurisprudência brasileira à IA que você já usa, com a fonte de cada resultado. Disponível para o Claude.',
+      applicationCategory: 'BusinessApplication',
+      applicationSubCategory: 'Pesquisa jurídica',
+      operatingSystem: 'Web, Windows, macOS, Android, iOS',
+      inLanguage: 'pt-BR',
+      url: `${site}/`,
+      image: `${site}/og.png`,
+      publisher: { '@id': org },
+      offers: Object.values(plans).map((p) => ({
+        '@type': 'Offer',
+        name: `Plano ${p.name}`,
+        price: (p.cents / 100).toFixed(2),
+        priceCurrency: 'BRL',
+        url: `${site}/assinar/${p.slug}`,
+        availability: 'https://schema.org/InStock',
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: (p.cents / 100).toFixed(2),
+          priceCurrency: 'BRL',
+          billingDuration: 1,
+          billingIncrement: 1,
+          unitCode: 'MON',
+        },
+      })),
+    },
+  ],
+};
+// "<" escapado para o JSON não fechar a tag <script> por acidente.
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<script type="application/ld+json" set:html={json} />
