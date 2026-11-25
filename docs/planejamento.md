@@ -90,7 +90,22 @@ Páginas que mudam: Checkout (nova opção Boleto, com linha digitável, PDF e v
 
 _Ver a seção "Pesquisa: SEO" no fim._
 
-## 6. Animação da explosão do átomo
+## 6. Reformular a landing para vender (pedido de 25/11/2026)
+
+Objetivo: a landing passa a ser uma página de vendas. Toda decisão de design responde a uma pergunta: isso ajuda a vender a assinatura? Menos efeito e mais argumento. Etapas, uma por vez, cada uma testada e aprovada antes da próxima:
+
+| Etapa | O que é |
+| --- | --- |
+| 10a | **Pesquisa aprofundada:** o que é uma landing page de vendas e o que ela precisa ter para converter. Estrutura, ordem das seções, título, prova, preço, garantia, chamadas para ação, objeções e o que atrapalha. Com fontes. Sai num relatório. |
+| 10b | **Plano da nova landing,** a partir da pesquisa: ordem das seções e o papel de cada uma. É aprovado antes de mexer no código. |
+| 10c | **Tirar os efeitos visuais desnecessários do site inteiro,** inclusive os da parte principal (topo). Menos "vida": movimento só onde ajuda a entender ou a vender. |
+| 10d | **Tirar o carrossel vertical e resumir tudo numa linha só.** |
+| 10e | **Exemplos como respostas reais do Claude Opus 5.5,** tiradas do artefato de exemplos, com a **comparação com e sem o plugin**, igual ao artefato. |
+| 10f | **Reformular o visual** para vender o máximo: chamadas para ação, prova, preço e garantia em destaque, seguindo o plano da 10b. |
+
+A animação da explosão continua sendo a última etapa do projeto, depois da 10f.
+
+## 7. Animação da explosão do átomo
 
 Quando o pagamento é confirmado, o átomo da marca cresce no centro da tela, o núcleo pulsa, os anéis se rompem e os elétrons saem em órbitas largas. Cada elétron vira o cartão de uma página nova (Status do plugin, Novidades, Tutoriais, Assinatura, Suporte e, no Max, Alertas e Resumo semanal), que voa até o lugar dela no Portal. Toca uma vez, com Pular, e respeita movimento reduzido (sem explosão: o Portal aparece com um destaque nas abas novas).
 

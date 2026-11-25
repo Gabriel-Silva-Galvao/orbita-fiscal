@@ -181,6 +181,14 @@
     ["Search Console, Bing Webmaster e IndexNow na publicação", false],
     ["Página Sobre com autores e conteúdo revisado", false]
   ]},
+  {"id": "e21", "titulo": "Landing de vendas (reformulação)", "itens": [
+    ["Pesquisa aprofundada: o que uma landing de vendas precisa ter", false],
+    ["Plano da nova landing (ordem e papel das seções), aprovado", false],
+    ["Tirar efeitos visuais desnecessários, inclusive no topo", false],
+    ["Tirar o carrossel vertical e resumir numa linha", false],
+    ["Exemplos como respostas do Claude Opus 5.5, com e sem o plugin", false],
+    ["Reformular o visual para vender o máximo", false]
+  ]},
   {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
     ["Definir quando toca: uma vez, na confirmação do pagamento", true],
     ["Explosão do átomo e elétrons virando as abas novas", false],
