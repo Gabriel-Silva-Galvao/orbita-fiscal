@@ -4,7 +4,6 @@ import Button from './Button.astro';
 import { citacoes } from '../data/citacoes';
 
 const title = 'Pesquise o direito brasileiro e prepare suas peças na IA que você já usa.';
-const words = title.split(' ');
 
 // Citações que orbitam o símbolo. Abrem com as quatro do exemplo; depois se revezam entre
 // as mais de cem de src/data/citacoes.ts (motor em scripts/hero-chips.ts).
@@ -38,18 +37,9 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <p class="overline" data-hero-in>Plugin para Claude</p>
+      <!-- SEO (etapa 8d): o título é o maior elemento da primeira tela (LCP). Aparece já pintado, sem entrada animada. -->
       <h1 id="hero-title" class="display-xl hero-title">
-        <span class="sr-only">{title}</span>
-        <span aria-hidden="true">{
-          words.map((w, i) => (
-            <>
-              <span class="hw">
-                <span>{w}</span>
-              </span>
-              {i < words.length - 1 && ' '}
-            </>
-          ))
-        }</span>
+        {title}
       </h1>
       <p class="lead" data-hero-in="copy">
         O plugin da Órbita conecta a base jurídica ao seu Claude. Você pergunta como sempre perguntou e
@@ -128,20 +118,6 @@ const chips = slots.map((s, i) => ({ ...s, ...citacoes[i], i }));
   .hero-title {
     max-width: 620px;
     text-wrap: balance;
-  }
-  /* Cada palavra sobe de dentro de uma máscara. */
-  .hw {
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: top;
-    padding-bottom: 0.08em;
-    margin-bottom: -0.08em;
-  }
-  .hw > span {
-    display: inline-block;
-  }
-  :global(.anim) .hw > span {
-    visibility: hidden;
   }
   .hero-copy .lead {
     max-width: 540px;

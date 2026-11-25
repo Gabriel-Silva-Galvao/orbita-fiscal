@@ -75,12 +75,7 @@ function heroIntro() {
   const q = gsap.utils.selector(hero);
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
   tl.fromTo(q('.overline'), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5 })
-    .fromTo(
-      q('.hw > span'),
-      { yPercent: 110, autoAlpha: 0 },
-      { yPercent: 0, autoAlpha: 1, duration: 0.9, stagger: 0.045, ease: 'expo.out' },
-      0.1,
-    )
+    // O título (h1) não entra animado: é o LCP e precisa aparecer sem esperar este script (SEO, etapa 8d).
     .fromTo(q('[data-hero-in="copy"]'), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1 }, 0.55)
     .fromTo(
       q('.hero-disc'),
