@@ -331,7 +331,7 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
     const q = semAcento(estado.q.trim());
     achadas = cards.filter(
       (c) =>
-        (!estado.tipo || c.dataset.tipo === estado.tipo) &&
+        (!estado.tipo || estado.tipo.split(',').includes(c.dataset.tipo ?? '')) &&
         (!estado.uf || c.dataset.uf === estado.uf) &&
         (!q || q.split(/\s+/).every((p) => semAcento(c.dataset.texto ?? '').includes(p))),
     );
@@ -343,6 +343,14 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
     filtroUf.setAttribute('aria-label', estado.uf ? `Tirar o filtro do estado ${estado.uf} e mostrar todas as bases` : '');
     vazio.hidden = n > 0;
     mostrar();
+  }
+  // Item 15: os cards da landing chegam com ?tipo=... (um ou mais tipos, separados por vírgula).
+  {
+    const pedido = new URLSearchParams(location.search).get('tipo');
+    if (pedido) {
+      estado.tipo = pedido;
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.tipo === pedido)));
+    }
   }
   filtrar();
   function escolherTipo(tipo: string) {

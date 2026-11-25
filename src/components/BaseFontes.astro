@@ -10,38 +10,53 @@ import cobertura from '../data/cobertura.json';
 
 const num = (n: number) => n.toLocaleString('pt-BR');
 
+// Item 15: cada card mostra quantos documentos e bases o grupo tem e leva à lista do grupo em /bases.
 const grupos = [
   {
-    titulo: 'Legislação',
-    itens: ['Legislação federal (Planalto)', 'Normas da Receita Federal', 'Convênios do CONFAZ', 'Legislação tributária de estados do Nordeste e de Minas Gerais'],
-  },
-  {
     titulo: 'Tribunais superiores',
+    tipos: ['superiores'],
     itens: ['STF', 'STJ'],
   },
   {
     titulo: 'Justiça Federal e estadual',
+    tipos: ['federal', 'estadual'],
     itens: ['TRF1 a TRF6 e turmas recursais', 'Tribunais de Justiça dos estados'],
   },
   {
     titulo: 'Contencioso administrativo',
-    itens: ['CARF', 'TIT-SP, CCMG e conselhos e tribunais administrativos estaduais'],
+    tipos: ['adm-federal', 'adm-estadual'],
+    itens: ['CARF', 'TIT-SP, CCMG e conselhos estaduais'],
+  },
+  {
+    titulo: 'Legislação e normas',
+    tipos: ['legislacao'],
+    itens: ['Planalto', 'Normas da Receita Federal', 'CONFAZ', 'Legislação tributária estadual'],
   },
   {
     titulo: 'Consultas e pareceres',
-    itens: ['Soluções de consulta da Receita Federal', 'Pareceres da PGFN', 'Consultas e pareceres das Secretarias de Fazenda'],
+    tipos: ['consultas'],
+    itens: ['Soluções de consulta da Receita', 'Pareceres da PGFN', 'Consultas das Fazendas estaduais'],
   },
   {
-    titulo: 'Controle externo',
-    itens: ['TCU', 'TCE-MG'],
+    titulo: 'Controle externo e liminares',
+    tipos: ['contas', 'liminares'],
+    itens: ['TCU', 'TCE-MG', 'Liminares tributárias'],
   },
-];
+].map((g) => {
+  const bases = cobertura.bases.filter((b) => g.tipos.includes(b.tipo));
+  return { ...g, docs: bases.reduce((t, b) => t + (b.total ?? 0), 0), n: bases.length };
+});
+// Número curto para o card: 2,9 milhões, 475 mil.
+const curto = (n: number) =>
+  n >= 1e6
+    ? `${(n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${n < 2e6 ? 'milhão' : 'milhões'}`
+    : `${Math.round(n / 1e3).toLocaleString('pt-BR')} mil`;
 ---
 
 <section id="a-base" class="section base" aria-labelledby="base-title">
   <div class="wrap">
     <div class="section-head" data-reveal>
-      <h2 id="base-title" class="display-lg" data-split>O que a Órbita consulta.</h2>
+      <h2 id="base-title" class="display-lg" data-split>O que a Órbita consulta</h2>
       <p class="lead">
         Leis, súmulas e julgados de onde sai cada resposta, para você conferir antes de usar.
       </p>
@@ -52,13 +67,18 @@ const grupos = [
     <ul class="base-grid" data-reveal>
       {
         grupos.map((g) => (
-          <li class="base-group">
-            <h3 class="title">{g.titulo}</h3>
-            <ul>
-              {g.itens.map((t) => (
-                <li>{t}</li>
-              ))}
-            </ul>
+          <li>
+            <a class="base-group" href={`/bases?tipo=${g.tipos.join(',')}#todas`}>
+              <span class="base-num">{curto(g.docs)}</span>
+              <span class="base-sub small">de documentos em {g.n} {g.n === 1 ? 'base' : 'bases'}</span>
+              <h3 class="title">{g.titulo}</h3>
+              <ul class="base-chips">
+                {g.itens.map((t) => (
+                  <li>{t}</li>
+                ))}
+              </ul>
+              <span class="base-ver small">Ver as bases <span aria-hidden="true">→</span></span>
+            </a>
           </li>
         ))
       }
@@ -82,23 +102,92 @@ const grupos = [
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-4);
   }
+  .base-grid > li {
+    min-width: 0;
+  }
+  /* Item 15: card com o número em destaque, as fontes em etiquetas e o caminho para a lista. */
   .base-group {
+    height: 100%;
+    display: grid;
+    align-content: start;
+    gap: 6px;
     padding: var(--space-5);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--surface);
-    min-width: 0;
+    color: var(--ink);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 240ms,
+      box-shadow 240ms;
+  }
+  .base-group::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--brand);
+    transform: scaleX(0.18);
+    transform-origin: left;
+    transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .base-group:hover,
+  .base-group:focus-visible {
+    transform: translateY(-4px);
+    border-color: var(--brand);
+    box-shadow: 0 14px 30px rgb(0 0 0 / 0.18);
+  }
+  .base-group:hover::before,
+  .base-group:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .base-num {
+    font: var(--text-display-md);
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .base-sub {
+    color: var(--mute);
   }
   .base-group .title {
-    margin: 0 0 var(--space-3);
-    color: var(--brand);
+    margin: var(--space-3) 0 var(--space-2);
   }
-  .base-group ul {
+  .base-chips {
+    list-style: none;
     margin: 0;
-    padding-left: 1.1em;
-    display: grid;
-    gap: var(--space-2);
-    font-size: 0.9375rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .base-chips li {
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 0.8125rem;
+  }
+  .base-ver {
+    margin-top: var(--space-3);
+    color: var(--brand);
+    font-weight: 600;
+  }
+  .base-ver span {
+    display: inline-block;
+    transition: transform 240ms;
+  }
+  .base-group:hover .base-ver span {
+    transform: translateX(4px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .base-group,
+    .base-group::before,
+    .base-ver span {
+      transition: none;
+    }
   }
   .base-total {
     margin: var(--space-3) 0 0;

@@ -92,12 +92,18 @@ real depende do servidor MCP e do formato da loja do Claude.
 Hover com leve aumento (scale 1.01 a 1.02), sombra e borda acendendo; transição curta e nada para quem pede
 movimento reduzido.
 
-### 15. Títulos sem ponto final e cards da segunda seção — Proposto
+### 15. Títulos sem ponto final e cards da segunda seção — Executado e testado (25/11/2026)
 
-Tirar o ponto final de todos os títulos de seção e revisar o texto de cada um. Cards da segunda seção
-(comparativo/bases) com hierarquia mais clara, ícone ou número em destaque e espaçamento melhor.
-
-**Dúvidas.** "Segunda seção" é o comparativo com e sem a Órbita ou "O que a Órbita consulta"?
+**Decisão.** "Segunda seção" = "O que a Órbita consulta", que hoje vem logo depois do topo.
+**Feito.**
+- Sem ponto final nos títulos: topo, O que a Órbita consulta, comparativo ("A mesma pergunta, com e sem a Órbita"),
+  Como funciona, IAs, Planos ("Dois planos: escolha pelo trabalho que você faz"), Antes de assinar, Comece hoje,
+  Contato e 404.
+- Cards de "O que a Órbita consulta": cada um mostra o total de documentos do grupo em destaque (ex.: 7,1 milhões,
+  em 36 bases), o nome do grupo, as fontes em etiquetas e "Ver as bases →". No hover, o card sobe, ganha sombra e
+  a faixa verde do topo se completa. O card leva a `/bases?tipo=...#todas`, com a lista já filtrada pelo grupo.
+- `/bases` aceita `?tipo=` com um ou mais tipos.
+**Pendência.** A imagem de compartilhamento (og.png) ainda tem o título com ponto: regerar com `npm run og`.
 
 ### 16. Átomo sempre atrás do texto no celular — Substituído pelo item 19
 
