@@ -14,6 +14,8 @@ import { contact } from '../data/site';
 const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
 // Com a API ligada, o middleware já conferiu a sessão e deixou o usuário aqui.
 const usuario = Astro.locals.usuario;
+// Etapa 7d: com PUBLIC_BILLING_ENDPOINT, o Portal lê e altera a assinatura pela API.
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 const dataBr = (iso: string) => iso.split('-').reverse().join('/');
 
 // Rota do assinante: roda no servidor, atrás do middleware de sessão (src/middleware.ts).
@@ -36,15 +38,15 @@ const tabs = [
 ---
 
 <Focus title="Minha conta · Órbita" description="Baixe o plugin, veja seu plano, notas fiscais, cancele ou peça reembolso.">
-  <div class="wrap portal" data-portal data-plans={planData} data-auth-endpoint={authEndpoint}>
+  <div class="wrap portal" data-portal data-plans={planData} data-auth-endpoint={authEndpoint} data-billing={billing} data-user-email={usuario?.email ?? ''} data-user-name={usuario?.nome ?? ''}>
     <p class="demo"><strong>Modo de demonstração.</strong> Os dados abaixo existem só neste navegador. Nada é cobrado nem devolvido de verdade.</p>
 
     <section class="empty-state" data-no-sub hidden>
       <h1 class="display-md">Você ainda não tem um plano ativo</h1>
-      <p class="mute">Escolha o Pro ou o Max para começar.</p>
+      <p class="mute" data-no-sub-text>Escolha o Pro ou o Max para começar.</p>
       {usuario && <p class="mute small">Você entrou como <strong>{usuario.email}</strong>.</p>}
       <div class="row-actions">
-        <a class="btn-main" href="/#planos">Ver planos</a>
+        <a class="btn-main" href="/#planos" data-no-sub-cta>Ver planos</a>
         {usuario
           ? <button type="button" class="btn-alt" data-logout>Sair</button>
           : <a class="btn-alt" href="/entrar">Já assinei: entrar</a>}
@@ -303,12 +305,13 @@ const tabs = [
         </div>
         <article class="action-card danger">
           <h2 class="title">Excluir conta</h2>
-          <p class="small">Apaga sua conta e seus dados, menos o que a lei manda guardar (como dados fiscais). Não dá para desfazer. Se houver assinatura ativa, ela é cancelada.</p>
+          <p class="small">Apaga sua conta e seus dados, menos o que a lei manda guardar (como dados fiscais). Não dá para desfazer. Se houver assinatura ativa, cancele antes na aba Cancelar ou reembolso, para não haver nova cobrança.</p>
           <div class="field">
             <label for="p-confirm">Para confirmar, digite EXCLUIR</label>
             <input id="p-confirm" autocomplete="off" />
           </div>
           <button type="button" class="btn-alt" data-delete disabled>Excluir minha conta</button>
+          <p class="small" data-delete-msg role="alert"></p>
         </article>
       </section>
     </div>
@@ -751,7 +754,58 @@ const tabs = [
   const root = document.querySelector<HTMLElement>('[data-portal]')!;
   const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, { name: string; price: string }>;
-  let sub = getSub();
+  const billing = root.dataset.billing ?? '';
+  const authEndpoint = root.dataset.authEndpoint ?? '';
+  let sub: DemoSub | null = billing ? null : getSub();
+  // Com a API: status_acesso (ativo, pendente, suspenso, cancelado, reembolsado) e o resumo bruto.
+  let status = '';
+  let apiPlano = '';
+  type Resumo = {
+    plano: 'pro' | 'max'; forma: DemoSub['metodo']; final_cartao: string | null; status_acesso: string;
+    criada_em: string | null; primeira_paga_em: string | null; cancelada_em: string | null; reembolso_em: string | null;
+  };
+  const call = (base: string, path: string, method = 'GET', body?: unknown) =>
+    fetch(`${base}${path}`, {
+      method,
+      credentials: 'include',
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  async function carregar() {
+    const r = await call(billing, '/assinatura');
+    if (r.status === 401) return location.replace('/entrar?next=/conta');
+    if (r.status === 404) {
+      sub = null;
+      status = '';
+      return;
+    }
+    if (!r.ok) throw new Error(String(r.status));
+    const a = (await r.json()) as Resumo;
+    status = a.status_acesso;
+    apiPlano = a.plano;
+    // Pendente (Pix ou boleto sem pagar) e cancelado sem acesso não têm Portal: mostram a tela sem plano.
+    if (status === 'pendente' || status === 'cancelado') {
+      sub = null;
+      return;
+    }
+    sub = {
+      plano: a.plano,
+      email: root.dataset.userEmail ?? '',
+      nome: root.dataset.userName || undefined,
+      desde: (a.primeira_paga_em ?? a.criada_em ?? new Date().toISOString().slice(0, 10)) + 'T12:00:00',
+      metodo: a.forma,
+      final: a.final_cartao ?? undefined,
+      cancelada: a.cancelada_em ? a.cancelada_em + 'T12:00:00' : undefined,
+      reembolso: a.reembolso_em ? a.reembolso_em + 'T12:00:00' : undefined,
+    };
+  }
+  const apiFalhou = (msg: string) => {
+    const banner = $('[data-banner]');
+    banner.className = 'notice is-error';
+    banner.textContent = msg;
+    banner.hidden = false;
+    banner.scrollIntoView({ block: 'nearest' });
+  };
 
   const btn = (text: string, cls: string, onClick: () => void) => {
     const b = document.createElement('button');
@@ -761,9 +815,30 @@ const tabs = [
     b.addEventListener('click', onClick);
     return b;
   };
-  const update = (patch: Partial<DemoSub>) => {
-    sub = { ...(sub as DemoSub), ...patch };
-    saveSub(sub);
+  const update = async (patch: Partial<DemoSub>) => {
+    if (!billing) {
+      sub = { ...(sub as DemoSub), ...patch };
+      saveSub(sub);
+      return render();
+    }
+    // Com a API: cada ação vira a rota correspondente, e o Portal se redesenha com o que a API devolver.
+    let r: Response;
+    try {
+      if ('cancelada' in patch) r = patch.cancelada ? await call(billing, '/assinatura', 'DELETE') : await call(billing, '/assinatura/reativar', 'POST');
+      else if (patch.reembolso) r = await call(billing, '/assinatura/reembolso', 'POST');
+      else if ('nome' in patch) {
+        r = await call(authEndpoint, '/conta', 'PUT', { nome: patch.nome ?? '' });
+        if (r.ok) root.dataset.userName = patch.nome ?? '';
+      } else return;
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        render();
+        return apiFalhou(d.detail?.mensagem ?? d.descricao ?? 'Não conseguimos concluir agora. Tente de novo em instantes.');
+      }
+      await carregar();
+    } catch {
+      return apiFalhou('Não conseguimos falar com o servidor. Confira sua conexão e tente de novo.');
+    }
     render();
   };
 
@@ -943,7 +1018,19 @@ const tabs = [
   function render() {
     $('[data-no-sub]').hidden = !!sub;
     $('[data-has-sub]').hidden = !sub;
-    if (!sub) return;
+    if (!sub) {
+      const cta = $<HTMLAnchorElement>('[data-no-sub-cta]');
+      if (status === 'pendente') {
+        $('[data-no-sub] h1').textContent = 'Seu pagamento ainda não foi confirmado';
+        $('[data-no-sub-text]').textContent = 'O acesso começa quando o Pix ou o boleto for confirmado. Se ainda não pagou, gere o pagamento de novo.';
+        cta.textContent = 'Ir para o pagamento';
+        cta.href = `/assinar/${apiPlano || 'pro'}`;
+      } else if (status === 'cancelado') {
+        $('[data-no-sub] h1').textContent = 'Sua assinatura terminou';
+        $('[data-no-sub-text]').textContent = 'Para voltar a usar a Órbita, escolha um plano.';
+      }
+      return;
+    }
     const plan = plans[sub.plano];
     const other = sub.plano === 'max' ? 'pro' : 'max';
     const since = new Date(sub.desde);
@@ -975,10 +1062,12 @@ const tabs = [
     $('[data-onboarding-pro]').hidden = isMax;
 
     // Status do plugin. Consultas e última consulta virão da API; na demonstração, ainda não há nenhuma.
-    $('[data-access]').textContent = sub.reembolso ? 'Encerrado' : 'Ativo';
+    $('[data-access]').textContent = sub.reembolso ? 'Encerrado' : status === 'suspenso' ? 'Suspenso' : 'Ativo';
     $('[data-access-note]').textContent = sub.reembolso
       ? 'O reembolso encerrou a assinatura.'
-      : sub.cancelada
+      : status === 'suspenso'
+        ? 'Pagamento em atraso. O acesso volta assim que o pagamento for confirmado.'
+        : sub.cancelada
         ? `Cancelada: o acesso segue até ${fmtDate(next)}.`
         : `Renova em ${fmtDate(next)}.`;
     let passos: string[] = [];
@@ -1003,6 +1092,10 @@ const tabs = [
     } else if (sub.cancelada) {
       banner.className = 'notice';
       banner.textContent = `Assinatura cancelada. Seu acesso segue até ${fmtDate(next)}.`;
+      banner.hidden = false;
+    } else if (status === 'suspenso') {
+      banner.className = 'notice is-error';
+      banner.textContent = 'Pagamento em atraso: o acesso está suspenso até o pagamento ser confirmado.';
       banner.hidden = false;
     }
 
@@ -1055,8 +1148,10 @@ const tabs = [
   // Conta
   $<HTMLFormElement>('[data-name-form]').addEventListener('submit', (e) => {
     e.preventDefault();
-    update({ nome: $<HTMLInputElement>('#p-nome').value.trim() });
-    $('[data-name-msg]').textContent = 'Nome salvo.';
+    update({ nome: $<HTMLInputElement>('#p-nome').value.trim() }).then(() => {
+      if ($('[data-banner]').classList.contains('is-error')) return;
+      $('[data-name-msg]').textContent = 'Nome salvo.';
+    });
   });
   const logout = async () => {
     // Com a API ligada, encerra a sessão no servidor (apaga o cookie); sem ela, só a demonstração.
@@ -1075,7 +1170,21 @@ const tabs = [
   const confirmInput = $<HTMLInputElement>('#p-confirm');
   const del = $<HTMLButtonElement>('[data-delete]');
   confirmInput.addEventListener('input', () => (del.disabled = confirmInput.value.trim().toUpperCase() !== 'EXCLUIR'));
-  del.addEventListener('click', () => {
+  del.addEventListener('click', async () => {
+    $('[data-delete-msg]').textContent = '';
+    if (billing) {
+      try {
+        const r = await call(authEndpoint, '/conta', 'DELETE');
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          $('[data-delete-msg]').textContent = d.descricao ?? 'Não conseguimos excluir agora. Tente de novo em instantes.';
+          return;
+        }
+      } catch {
+        $('[data-delete-msg]').textContent = 'Não conseguimos falar com o servidor. Tente de novo em instantes.';
+        return;
+      }
+    }
     saveSub(null);
     try {
       sessionStorage.removeItem('of-demo-email');
@@ -1084,9 +1193,17 @@ const tabs = [
     sub = null;
     render();
     $('[data-no-sub] h1').textContent = 'Sua conta foi excluída';
+    $('[data-no-sub-text]').textContent = 'Seus dados de acesso foram apagados.';
+    root.querySelectorAll<HTMLElement>('[data-no-sub] .row-actions [data-logout], [data-no-sub] .small').forEach((e) => (e.hidden = true));
   });
 
-  render();
+  if (billing) {
+    // Até a API responder, nada aparece (evita mostrar "sem plano" por um instante).
+    $('[data-no-sub]').hidden = true;
+    carregar()
+      .catch(() => apiFalhou('Não conseguimos carregar sua assinatura. Atualize a página em instantes.'))
+      .finally(render);
+  } else render();
   paintNewsBadge();
   selectTab(location.hash.slice(1) || 'plugin');
 </script>

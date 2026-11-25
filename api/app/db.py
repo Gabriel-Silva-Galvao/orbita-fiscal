@@ -19,6 +19,11 @@ CREATE TABLE IF NOT EXISTS assinaturas (
     forma             TEXT NOT NULL,
     status_acesso     TEXT NOT NULL,
     primeira_paga_em  TEXT,
+    criada_em         TEXT,
+    final_cartao      TEXT,
+    cancelada_em      TEXT,   -- cancelamento pedido: não renova, acesso segue até acesso_ate
+    acesso_ate        TEXT,
+    reembolso_em      TEXT,
     atualizado_em     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 -- Idempotência: cada evento do Asaas é processado uma vez só (entrega "pelo menos uma vez").
@@ -37,6 +42,12 @@ class Banco:
         self.trava = threading.RLock()
         with self.trava:
             self.con.executescript(ESQUEMA)
+            # Bancos criados antes da etapa 7d: acrescenta as colunas que faltam.
+            existentes = {r[1] for r in self.con.execute("PRAGMA table_info(assinaturas)")}
+            for col in ("criada_em", "final_cartao", "cancelada_em", "acesso_ate", "reembolso_em"):
+                if col not in existentes:
+                    self.con.execute(f"ALTER TABLE assinaturas ADD COLUMN {col} TEXT")
+            self.con.commit()
 
     def um(self, sql: str, *args) -> dict | None:
         with self.trava:

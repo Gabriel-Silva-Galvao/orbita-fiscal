@@ -544,8 +544,8 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   };
 
   function showDone() {
-    // Demonstração: lembra a assinatura neste navegador para Instalar e Portal.
-    try {
+    // Demonstração: lembra a assinatura neste navegador para Instalar e Portal. Com a API, ela é a fonte.
+    if (!billing) try {
       const email = accountEmail;
       sessionStorage.setItem('of-demo-email', email);
       localStorage.setItem(

@@ -9,6 +9,8 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   POST /auth/senha/esqueci    {email}                      -> 202 sempre (não revela se a conta existe)
   GET  /auth/google                                         -> 303 de volta ao site (?erro=google-indisponivel), por ora
   GET  /auth/sessao                                        -> 200 {id, email, nome} | 401
+  PUT  /auth/conta            {nome}                       -> 200 | 422
+  DELETE /auth/conta                                       -> 204 | 409 assinatura_ativa (cancele antes)
   POST /auth/sair                                          -> 204
 
 Segurança: senha com scrypt (biblioteca padrão), código e tokens guardados só como SHA-256,
@@ -125,6 +127,10 @@ class Codigo(BaseModel):
 
 class Esqueci(BaseModel):
     email: str
+
+
+class Nome(BaseModel):
+    nome: str
 
 
 def _erro(status: int, codigo: str, descricao: str, **extra) -> JSONResponse:
@@ -253,6 +259,30 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
         s.pop("expira")
         return s
+
+    @r.put("/conta")
+    def trocar_nome(dados: Nome, req: Request, orbita_sessao: str | None = Cookie(None)):
+        u = usuario_logado(req, orbita_sessao)
+        nome = dados.nome.strip()
+        if not 2 <= len(nome) <= 120:
+            return _erro(422, "nome_invalido", "Escreva um nome entre 2 e 120 caracteres.")
+        banco(req).executar("UPDATE usuarios SET nome = ? WHERE id = ?", nome, u["id"])
+        return {**u, "nome": nome}
+
+    @r.delete("/conta", status_code=204)
+    def excluir(req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
+        u = usuario_logado(req, orbita_sessao)
+        b = banco(req)
+        a = b.um("SELECT status_acesso, cancelada_em FROM assinaturas WHERE usuario_id = ?", u["id"])
+        if a and a["status_acesso"] not in ("cancelado", "reembolsado") and not a["cancelada_em"]:
+            return _erro(409, "assinatura_ativa", "Cancele a assinatura antes de excluir a conta, para não haver nova cobrança.")
+        # Dados de cobrança (assinantes, assinaturas) ficam pelo prazo legal de guarda fiscal; a conta e o login saem.
+        b.executar("DELETE FROM sessoes WHERE usuario_id = ?", u["id"])
+        b.executar("DELETE FROM desafios WHERE email = ?", u["email"])
+        b.executar("DELETE FROM usuarios WHERE id = ?", u["id"])
+        resp.delete_cookie(COOKIE_SESSAO, path="/")
+        resp.status_code = 204
+        return resp
 
     @r.post("/sair", status_code=204)
     def sair(req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):

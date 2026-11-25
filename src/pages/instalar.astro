@@ -13,12 +13,14 @@ import { plans, brl } from '../data/plans';
 export const prerender = false;
 
 const planData = JSON.stringify(Object.fromEntries(Object.values(plans).map((p) => [p.slug, `${p.name}, ${brl(p.cents)} por mês`])));
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
+const userEmail = Astro.locals.usuario?.email ?? '';
 const testQuestion =
   'Execução fiscal parada sem bens localizados. Quando começa a correr a prescrição intercorrente? Traga o fundamento.';
 ---
 
 <Focus title="Instalar o plugin · Órbita" description="Instale o plugin da Órbita no Claude, conecte sua conta e faça a primeira pergunta.">
-  <div class="wrap install" data-install data-plans={planData}>
+  <div class="wrap install" data-install data-plans={planData} data-billing={billing} data-user-email={userEmail}>
     <header class="install-head">
       <h1 class="display-lg">Seu plugin está pronto</h1>
       <p class="lead" data-plan-line>Quatro passos, poucos minutos. Marque cada um quando terminar.</p>
@@ -267,10 +269,20 @@ const testQuestion =
   const root = document.querySelector<HTMLElement>('[data-install]')!;
   const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, string>;
-  const sub = getSub();
-  if (sub) {
-    $('[data-plan-line]').textContent = `Plano ${plans[sub.plano]}. Quatro passos, poucos minutos. Marque cada um quando terminar.`;
-    $('[data-email-hint]').textContent = ` (${sub.email})`;
+  const showPlan = (plano: string, email: string) => {
+    $('[data-plan-line]').textContent = `Plano ${plans[plano]}. Quatro passos, poucos minutos. Marque cada um quando terminar.`;
+    if (email) $('[data-email-hint]').textContent = ` (${email})`;
+  };
+  const billing = root.dataset.billing ?? '';
+  if (billing) {
+    // Etapa 7d: com a API, o plano vem da assinatura real.
+    fetch(`${billing}/assinatura`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((a) => a?.tem_acesso && showPlan(a.plano, root.dataset.userEmail ?? ''))
+      .catch(() => {});
+  } else {
+    const sub = getSub();
+    if (sub) showPlan(sub.plano, sub.email);
   }
 
   // Passos marcados, lembrados neste navegador.

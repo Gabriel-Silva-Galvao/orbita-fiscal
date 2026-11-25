@@ -148,3 +148,29 @@ def test_google_ainda_indisponivel_volta_ao_site(api):
     http, _, _ = api
     r = http.get("/auth/google?modo=entrar&next=/conta", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].endswith("/entrar?erro=google-indisponivel")
+
+
+def test_trocar_nome(api, caixa):
+    http, _, _ = api
+    cadastrar(http, caixa)
+    assert http.put("/auth/conta", json={"nome": "Ana Souza"}).json()["nome"] == "Ana Souza"
+    assert http.get("/auth/sessao").json()["nome"] == "Ana Souza"
+    assert http.put("/auth/conta", json={"nome": " "}).status_code == 422
+
+
+def test_excluir_conta_exige_cancelar_antes(api, caixa):
+    http, _, banco = api
+    cadastrar(http, caixa)
+    http.post("/billing/assinatura", json={"nome": "Ana", "cpf_cnpj": "52998224725", "plano": "pro", "forma": "pix"})
+    r = http.delete("/auth/conta")
+    assert r.status_code == 409 and r.json()["codigo"] == "assinatura_ativa"
+    http.delete("/billing/assinatura")  # nunca pago: encerra na hora
+    assert http.delete("/auth/conta").status_code == 204
+    assert http.get("/auth/sessao").status_code == 401
+    assert banco.um("SELECT 1 FROM usuarios WHERE email = 'ana@exemplo.test'") is None
+
+
+def test_rotas_da_conta_exigem_sessao(api):
+    http, _, _ = api
+    assert http.put("/auth/conta", json={"nome": "X Y"}).status_code == 401
+    assert http.delete("/auth/conta").status_code == 401

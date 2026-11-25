@@ -115,7 +115,7 @@ def test_trocar_forma_de_pagamento(api):
     assert r.json()["cobrancas"][0]["forma"] == "boleto" and "boleto" in r.json()["cobrancas"][0]
 
 
-def test_cancelar(api):
+def test_cancelar_sem_pagar_encerra_na_hora(api):
     http, *_ = api
     entrar(http, api[2])
     assinar(http, "pix")
@@ -194,3 +194,55 @@ def test_simular_pagamento_libera_pelo_webhook(api):
     r = http.post("/billing/assinatura/simular-pagamento")
     assert r.status_code == 200 and r.json()["status_acesso"] == "ativo"
     assert any(e["event"] == "PAYMENT_RECEIVED" for e in store.eventos)
+
+
+def test_cancelar_depois_de_pagar_mantem_acesso_ate_o_fim_do_periodo(api):
+    http, store, banco = api
+    entrar(http, banco)
+    dados = assinar(http, "cartao", cartao=CARTAO).json()
+    r = http.delete("/billing/assinatura")
+    assert r.status_code == 200
+    a = r.json()
+    assert a["status_acesso"] == "ativo" and a["tem_acesso"] is True
+    assert a["cancelada_em"] == date.today().isoformat() and a["acesso_ate"] > date.today().isoformat()
+    assert a["proxima_cobranca"] is None
+    # No Asaas, a assinatura ganha data de fim e não é apagada.
+    sub = store.assinaturas[dados["assinatura_id"]]
+    assert sub["endDate"] and not sub["deleted"]
+    assert http.delete("/billing/assinatura").status_code == 409  # não cancela duas vezes
+    assert assinar(http, "pix").status_code == 409  # ainda é assinante; o caminho é reativar
+
+
+def test_reativar_desfaz_o_cancelamento(api):
+    http, store, banco = api
+    entrar(http, banco)
+    dados = assinar(http, "cartao", cartao=CARTAO).json()
+    http.delete("/billing/assinatura")
+    r = http.post("/billing/assinatura/reativar")
+    assert r.status_code == 200 and r.json()["cancelada_em"] is None and r.json()["proxima_cobranca"]
+    assert store.assinaturas[dados["assinatura_id"]]["endDate"] is None
+    assert http.post("/billing/assinatura/reativar").status_code == 409
+
+
+def test_acesso_acaba_no_fim_do_periodo_cancelado(api):
+    from app.billing import tem_acesso
+
+    a = {"status_acesso": "ativo", "acesso_ate": "2026-12-24"}
+    assert tem_acesso(a, date(2026, 12, 24)) and not tem_acesso(a, date(2026, 12, 25))
+
+
+def test_proxima_cobranca_no_mesmo_dia_do_mes():
+    from app.billing import proxima_cobranca
+
+    assert proxima_cobranca("2026-11-24", date(2026, 11, 24)) == date(2026, 12, 24)
+    assert proxima_cobranca("2026-01-31", date(2026, 2, 1)) == date(2026, 2, 28)
+    assert proxima_cobranca("2026-11-24", date(2027, 3, 1)) == date(2027, 3, 24)
+
+
+def test_resumo_traz_final_do_cartao_e_reembolso(api):
+    http, _, banco = api
+    entrar(http, banco)
+    assert assinar(http, "cartao", cartao=CARTAO).json()["final_cartao"] == "4444"
+    r = http.post("/billing/assinatura/reembolso")
+    a = http.get("/billing/assinatura").json()
+    assert a["reembolso_em"] == date.today().isoformat() and a["tem_acesso"] is False

@@ -43,7 +43,8 @@ Hoje o usuário vem no corpo da requisição; quando houver login, virá da sess
 | `POST /billing/assinatura` | Cria o cliente no Asaas (se ainda não existir) e a assinatura mensal da conta logada. Corpo: `nome` e `cpf_cnpj` da nota, `plano` (`pro` ou `max`), `forma` (`cartao`, `pix` ou `boleto`) e `cartao` (só no cartão: `titular`, `numero`, `mes`, `ano`, `cvv`). E-mail e IP vêm da sessão e da conexão. Responde 201 com o resumo, 409 se já houver assinatura, 400 com a mensagem do Asaas se o cartão for recusado. |
 | `GET /billing/assinatura` | Resumo: plano, valor, forma, `status_acesso` e cobranças. No Pix vem o copia e cola e a imagem do QR; no boleto, a linha digitável, o código de barras e o PDF. |
 | `PUT /billing/assinatura/forma` | Troca para `pix` ou `boleto` (as cobranças pendentes também mudam). O cartão espera a decisão entre a página segura do Asaas e o formulário próprio. |
-| `DELETE /billing/assinatura` | Cancela a assinatura. Depois disso, a pessoa pode assinar de novo. |
+| `DELETE /billing/assinatura` | Cancela. Se já foi paga, segue os Termos: no Asaas a assinatura ganha `endDate`, não há nova cobrança e o acesso continua até `acesso_ate` (próxima data de cobrança). Se nunca foi paga, encerra na hora e a pessoa pode assinar de novo. 409 `ja_cancelada` se já foi pedido. |
+| `POST /billing/assinatura/reativar` | Desfaz o cancelamento enquanto o acesso ainda vale (apaga o `endDate`). 409 `nao_reativavel` fora disso. |
 | `POST /billing/assinatura/reembolso` | Estorna tudo o que foi pago e encerra, só até 7 dias do primeiro pagamento (CDC, art. 49). Fora do prazo: 400 `fora_do_prazo`. |
 | `POST /billing/assinatura/simular-pagamento` | Só com a simulação ligada: confirma as cobranças pendentes de Pix ou boleto, como o banco faria. A liberação segue pelo webhook. |
 
@@ -93,6 +94,8 @@ E-mail e senha, sempre com código de 6 dígitos por e-mail. A conta só nasce d
 | `POST /auth/codigo/reenviar` | 202, 429 `{espere_segundos}` antes de 60 s, 410 sem código pendente |
 | `POST /auth/senha/esqueci` `{email}` | 202 sempre, para não revelar se a conta existe |
 | `GET /auth/sessao` | 200 `{id, email, nome}` ou 401. É a rota que o middleware do site consulta |
+| `PUT /auth/conta` `{nome}` | 200 com a conta atualizada, 422 nome inválido |
+| `DELETE /auth/conta` | 204: apaga a conta, o login e as sessões (dados de cobrança ficam pelo prazo legal). 409 `assinatura_ativa` se ainda houver assinatura que renova |
 | `POST /auth/sair` | 204, e a sessão é apagada no servidor |
 
 - Senha guardada com scrypt; código e tokens só como SHA-256; cookies HttpOnly e SameSite=Lax (`COOKIE_SECURE=true` em produção).
