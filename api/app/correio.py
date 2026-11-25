@@ -43,12 +43,11 @@ def montar(destino: str, codigo: str) -> EmailMessage:
     return m
 
 
-def enviar_codigo(destino: str, codigo: str) -> None:
+def enviar(msg: EmailMessage) -> bool:
+    """Envia pelo SMTP configurado. Devolve False sem SMTP (desenvolvimento) ou se o envio falhar (fica no log)."""
     s = get_settings()
     if not s.smtp_host:
-        log.warning("Código de verificação para %s: %s (SMTP_HOST vazio: e-mail não enviado)", destino, codigo)
-        return
-    msg = montar(destino, codigo)
+        return False
     ctx = ssl.create_default_context()
     try:
         if s.smtp_ssl:
@@ -62,6 +61,26 @@ def enviar_codigo(destino: str, codigo: str) -> None:
                 if s.smtp_user:
                     c.login(s.smtp_user, s.smtp_password)
                 c.send_message(msg)
+        return True
     except (smtplib.SMTPException, OSError):
-        # Não derruba o login: a pessoa pode pedir o reenvio. O erro fica no log, sem o código.
-        log.exception("Falha ao enviar o código para %s pelo SMTP", destino)
+        log.exception("Falha ao enviar e-mail para %s pelo SMTP", msg["To"])
+        return False
+
+
+def texto_simples(destino: str, assunto: str, texto: str, responder_para: str | None = None) -> EmailMessage:
+    m = EmailMessage()
+    m["Subject"] = assunto
+    m["From"] = get_settings().smtp_from
+    m["To"] = destino
+    if responder_para:
+        m["Reply-To"] = responder_para
+    m.set_content(texto)
+    return m
+
+
+def enviar_codigo(destino: str, codigo: str) -> None:
+    if not get_settings().smtp_host:
+        log.warning("Código de verificação para %s: %s (SMTP_HOST vazio: e-mail não enviado)", destino, codigo)
+        return
+    # Se o envio falhar, não derruba o login: a pessoa pode pedir o reenvio. O erro fica no log, sem o código.
+    enviar(montar(destino, codigo))

@@ -7,6 +7,8 @@ import Pending from '../components/Pending.astro';
 import Comparativo from '../components/Comparativo.astro';
 import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
+import EmpresasFaixa from '../components/EmpresasFaixa.astro';
+import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
 import { planList, aPartirDe } from '../data/plans';
 import Faq from '../components/Faq.astro';
 import Footer from '../components/Footer.astro';
@@ -164,6 +166,7 @@ const steps = [
         <div class="plans" data-reveal>
           {planList.map((p) => <PlanCard plan={p} badge="Mais escolhido" />)}
         </div>
+        <div data-reveal><EmpresasFaixa /></div>
         <ul class="plans-foot small mute" data-reveal>
           <li>Cobrança mensal</li>
           <li>Cartão, Pix ou boleto</li>
@@ -273,6 +276,7 @@ const steps = [
   </div>
 
   <Footer />
+  <ContatoEmpresarial />
 </Base>
 
 <style>

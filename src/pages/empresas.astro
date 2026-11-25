@@ -1,0 +1,146 @@
+---
+/**
+ * Planos empresariais (item 26 da rodada de testes, 25/11/2026): para escritórios, contabilidades e empresas.
+ * Negociação por contato: o botão abre a janela de e-mail animada (ContatoEmpresarial.astro).
+ */
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import EmpresasFaixa from '../components/EmpresasFaixa.astro';
+import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
+import cobertura from '../data/cobertura.json';
+
+const num = (n: number) => n.toLocaleString('pt-BR');
+
+const passos = [
+  { t: 'Conte o que vocês precisam', d: 'Quantas pessoas, que áreas pesquisam e com que frequência.' },
+  { t: 'Recebam uma proposta', d: 'Valores e condições pensados para o tamanho da equipe.' },
+  { t: 'Implantação com a equipe', d: 'Uma conversa para configurar a Órbita e mostrar as pesquisas que mais rendem.' },
+];
+
+const publicos = [
+  { quem: 'Escritórios de advocacia', texto: 'A equipe inteira fundamenta peças com a mesma base, com a fonte de cada citação.' },
+  { quem: 'Contabilidades', texto: 'Crédito, regime e obrigação acessória conferidos na norma e no que o CARF e a Receita decidiram.' },
+  { quem: 'Empresas', texto: 'Jurídico, fiscal e diretoria entendem o risco antes de decidir, com a lei e o julgado certos.' },
+];
+---
+
+<Base
+  title="Planos empresariais · Órbita"
+  description="Órbita para escritórios de advocacia, contabilidades e empresas: vários usuários, uma cobrança e condições sob medida. Fale com a equipe."
+>
+  <div class="page-sheet">
+    <Nav signIn="/entrar" cta={{ href: '/#planos', label: 'Assinar' }} />
+    <main id="conteudo">
+      <section class="section emp-topo">
+        <div class="wrap">
+          <p class="overline">Planos empresariais</p>
+          <h1 class="display-xl emp-h1">A Órbita para a sua equipe inteira</h1>
+          <p class="lead">
+            Para escritórios de advocacia, contabilidades e empresas que pesquisam legislação e jurisprudência todos os
+            dias. {num(cobertura.total_documentos)} documentos em {cobertura.total_bases} bases, com a fonte em cada resposta.
+          </p>
+          <EmpresasFaixa saibaMais={false} />
+        </div>
+      </section>
+
+      <section class="section section-alt">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 class="display-lg">Para quem é</h2>
+          </div>
+          <ul class="emp-cards">
+            {
+              publicos.map((p) => (
+                <li>
+                  <h3 class="title">{p.quem}</h3>
+                  <p>{p.texto}</p>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="wrap">
+          <div class="section-head">
+            <h2 class="display-lg">Como funciona a negociação</h2>
+          </div>
+          <ol class="emp-passos">
+            {
+              passos.map((p, i) => (
+                <li>
+                  <span class="emp-n">{i + 1}</span>
+                  <h3 class="title">{p.t}</h3>
+                  <p class="small mute">{p.d}</p>
+                </li>
+              ))
+            }
+          </ol>
+          <p class="small mute emp-nota">
+            Prefere um plano individual? Veja os <a href="/#planos">planos Bronze, Prata e Ouro</a>.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <Footer />
+  <ContatoEmpresarial />
+</Base>
+
+<style>
+  .emp-topo {
+    padding-top: var(--space-8);
+  }
+  .emp-h1 {
+    max-width: 18ch;
+    margin: var(--space-3) 0 var(--space-4);
+  }
+  .emp-topo .lead {
+    max-width: 60ch;
+  }
+  .emp-cards,
+  .emp-passos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  @media (min-width: 900px) {
+    .emp-cards,
+    .emp-passos {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .emp-cards li,
+  .emp-passos li {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .emp-cards p,
+  .emp-cards h3,
+  .emp-passos p,
+  .emp-passos h3 {
+    margin: 0;
+  }
+  .emp-n {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--on-brand, var(--bg));
+    font-weight: 700;
+  }
+  .emp-nota {
+    margin-top: var(--space-5);
+  }
+</style>

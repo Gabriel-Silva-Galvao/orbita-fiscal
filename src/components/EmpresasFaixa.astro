@@ -1,0 +1,125 @@
+---
+/**
+ * Faixa de planos empresariais (item 26), abaixo dos três planos e na página /empresas.
+ * O botão abre o contato animado (ContatoEmpresarial.astro, que precisa estar na mesma página).
+ */
+interface Props {
+  /** Na página /empresas, o link "Saiba mais" não aparece (já estamos nela). */
+  saibaMais?: boolean;
+}
+const { saibaMais = true } = Astro.props;
+
+const vantagens = [
+  'Vários usuários numa só conta',
+  'Uma cobrança e nota fiscal para a empresa',
+  'Condições sob medida para o tamanho da equipe',
+  'Conversa com a equipe para a implantação',
+];
+---
+
+<div class="emp">
+  <div class="emp-txt">
+    <p class="emp-k">Planos empresariais</p>
+    <h3 class="emp-t">Para escritórios, contabilidades e empresas</h3>
+    <ul class="emp-lista">
+      {vantagens.map((v) => <li>{v}</li>)}
+    </ul>
+  </div>
+  <div class="emp-acoes">
+    <button type="button" class="emp-btn" data-contato-empresarial>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z M3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+      Entrar em contato
+    </button>
+    {saibaMais && <a class="emp-link" href="/empresas">Saiba mais sobre os planos empresariais</a>}
+  </div>
+</div>
+
+<style>
+  .emp {
+    display: grid;
+    gap: var(--space-5);
+    align-items: center;
+    margin-top: var(--space-6);
+    padding: var(--space-6);
+    border-radius: 20px;
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+  }
+  @media (min-width: 900px) {
+    .emp {
+      grid-template-columns: 1fr auto;
+    }
+  }
+  .emp-k {
+    margin: 0;
+    color: #10634f;
+    font: 600 0.8125rem/1.4 var(--font-body, inherit);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .emp-t {
+    margin: 4px 0 var(--space-3);
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    line-height: 1.2;
+    color: #111827;
+  }
+  .emp-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 6px var(--space-5);
+    color: #374151;
+    font-size: 0.9375rem;
+  }
+  .emp-lista li::before {
+    content: '✓';
+    margin-right: 8px;
+    color: #10634f;
+    font-weight: 700;
+  }
+  .emp-acoes {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+  }
+  .emp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 50px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: 12px;
+    background: #111827;
+    color: #ffffff;
+    font: 600 1rem/1 var(--font-body, inherit);
+    cursor: pointer;
+    transition:
+      transform 200ms,
+      background-color 200ms;
+  }
+  .emp-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .emp-btn:hover {
+    background: #10634f;
+    transform: translateY(-2px);
+  }
+  .emp-btn:hover svg {
+    transform: rotate(-12deg) scale(1.15);
+  }
+  .emp-btn:focus-visible {
+    outline: 3px solid #10634f;
+    outline-offset: 3px;
+  }
+  .emp-link {
+    color: #374151;
+    font-size: 0.875rem;
+  }
+</style>

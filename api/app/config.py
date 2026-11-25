@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from: str = "Órbita <nao-responda@orbitafiscal.com.br>"
+    # Item 26: para onde vão as mensagens de planos empresariais (e-mail da Órbita, a confirmar).
+    contato_email: str = "contato@orbitafiscal.com.br"
 
 
 # Valores de exemplo que estão no repositório: em produção, nenhum deles pode ser usado.

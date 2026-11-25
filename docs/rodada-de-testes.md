@@ -356,7 +356,16 @@ planos da API; o resto lê dali.
   textos do bloco C e o guia.
 - Contas de teste locais com Pro/Max: migrar para Prata/Ouro no banco de desenvolvimento (não há clientes reais).
 
-### 26. Área de planos empresariais com contato animado — Fechado na teoria (25/11/2026)
+### 26. Área de planos empresariais com contato animado — Executado e testado (25/11/2026)
+
+**Feito.** API `app/contato.py` (`POST /contato/empresarial`: validação, isca contra robôs, 5 mensagens por IP por hora,
+registro na tabela `contatos`, envio por SMTP para `CONTATO_EMAIL` com resposta para quem escreveu e confirmação para
+a pessoa; 4 testes, 76 no total), envio de e-mail genérico em `app/correio.py`; `ContatoEmpresarial.astro` (envelope
+sobe, aba abre, carta sai e vira a janela de e-mail já endereçada e preenchida com a conta; ao enviar, a carta volta, a
+aba fecha e o envelope voa; Esc, X, Cancelar ou clique fora fazem o caminho inverso; direto, sem envelope, com movimento
+reduzido); `EmpresasFaixa.astro` abaixo dos planos; página `/empresas`; rodapé e `/bases` apontando para ela.
+**Testes.** Fases da animação na ordem, foco na mensagem, envio registrado no banco, confirmação, fechar por Esc, celular
+sem rolagem lateral. Sem SMTP, a tela avisa que é demonstração.
 
 **Pedido.** Área de planos empresariais; "Entrar em contato" com o e-mail da Órbita para negociar; animação de abrir uma
 caixa de e-mail ao clicar (explorar a ideia).

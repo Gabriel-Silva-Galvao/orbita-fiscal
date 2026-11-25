@@ -105,6 +105,12 @@ de risco; encerra com reembolso ou exclusão da assinatura. Cancelado e reembols
 | POST `/plugin/link` | Link de 15 min (exige assinatura com acesso; senão 403). |
 | GET `/plugin/baixar/{token}` | Zip de demonstração como anexo · 410 expirado · 404 desconhecido. |
 
+### Contato (`/contato`)
+
+| Método e rota | O que faz |
+|---|---|
+| POST `/contato/empresarial` | Mensagem de plano empresarial: isca contra robôs, 5 por IP por hora, registro em `contatos`, envio para `CONTATO_EMAIL`. |
+
 ### Outras
 
 `GET /saude` (estado), `/docs` e `/openapi.json` (documentação automática do FastAPI) e, com a simulação ligada,
