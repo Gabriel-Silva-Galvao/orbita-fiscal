@@ -11,7 +11,7 @@ import Pending from './Pending.astro';
 import { contact } from '../data/site';
 
 const endpoint = import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? '';
-const subjects = ['Dúvida sobre os planos', 'Instalação e suporte', 'Cobrança e reembolso', 'Privacidade e dados', 'Escritórios e equipes', 'Imprensa e parcerias', 'Outro assunto'];
+const subjects = ['Dúvida sobre os planos', 'Instalação e suporte', 'Cobrança e reembolso', 'Privacidade e dados', 'Escritórios, contabilidades e empresas', 'Imprensa e parcerias', 'Outro assunto'];
 ---
 
 <section id="contato" class="section contact" aria-labelledby="contato-title">
@@ -19,7 +19,7 @@ const subjects = ['Dúvida sobre os planos', 'Instalação e suporte', 'Cobranç
     <div class="contact-side">
       <div class="section-head" data-reveal>
         <h2 id="contato-title" class="display-lg" data-split>Fale com a equipe da Órbita</h2>
-        <p class="lead">Dúvida sobre planos, instalação, dados ou uso no seu escritório? Escreva para nós. Uma pessoa da equipe responde.</p>
+        <p class="lead">Dúvida sobre planos, instalação, dados ou uso no seu escritório, na sua contabilidade ou na sua empresa? Escreva para nós. Uma pessoa da equipe responde.</p>
       </div>
 
       <ul class="channels" data-reveal>
@@ -48,8 +48,8 @@ const subjects = ['Dúvida sobre os planos', 'Instalação e suporte', 'Cobranç
         </li>
         <li>
           <div>
-            <span class="ch-k">Escritórios e equipes</span>
-            <span class="ch-v">Escolha “Escritórios e equipes” no assunto e conte quantas pessoas usariam.</span>
+            <span class="ch-k">Escritórios, contabilidades e empresas</span>
+            <span class="ch-v">Escolha “Escritórios, contabilidades e empresas” no assunto e conte quantas pessoas usariam.</span>
           </div>
         </li>
       </ul>

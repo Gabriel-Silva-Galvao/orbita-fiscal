@@ -47,7 +47,7 @@ export const tutoriais: Tutorial[] = [
     id: 'copilot',
     nome: 'Microsoft Copilot',
     disponivel: false,
-    quem: 'Normalmente o TI do escritório configura uma vez para todos.',
+    quem: 'Normalmente o TI da empresa ou do escritório configura uma vez para todos.',
     requisitos: 'Licença do Microsoft 365 Copilot, ou Copilot Chat com cobrança por uso no Copilot Studio.',
     passos: [
       'O TI cria um agente no Copilot Studio e adiciona a Órbita como ferramenta MCP.',

@@ -381,7 +381,15 @@ caixa de e-mail ao clicar (explorar a ideia).
   para quem escreveu. Sem SMTP configurado (desenvolvimento), a mensagem fica registrada e a tela mostra que é
   demonstração. O e-mail de destino continua "a confirmar" (`src/data/site.ts`).
 
-### 27. Público: advogados, contadores e empresários em todo o site — Fechado na teoria (25/11/2026)
+### 27. Público: advogados, contadores e empresários em todo o site — Executado e testado (25/11/2026)
+
+**Feito.** Topo com "Para advogados, contadores e empresários" no lugar de "Plugin para Claude"; nova seção "Para
+advogados, contadores e empresários" (`#para-quem`, também na barra de seções) com um card por público, nessa ordem,
+cada um com o que a Órbita resolve e uma pergunta de exemplo; descrição da página para o Google e do rodapé sem
+"suas peças"; Contato com "Escritórios, contabilidades e empresas"; tutoriais e IAs com "TI da empresa ou do
+escritório"; Termos e Reembolso falando em peças, pareceres, laudos e documentos, não só em peças; link do rodapé
+"Para escritórios e empresas" (vai para o contato até a página `/empresas` do item 26).
+**Pendência.** A imagem de compartilhamento (og.png) ainda não cita o público: regerar com `npm run og`.
 
 **Pedido.** Deixar claro que a Órbita é para **advogados, contadores e empresários**, nessa ordem, e nunca limitar o
 público a advogados, no site inteiro.

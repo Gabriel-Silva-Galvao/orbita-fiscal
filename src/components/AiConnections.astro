@@ -14,7 +14,7 @@ import { tutoriais } from '../data/tutoriais';
 const como: Record<string, string> = {
   claude: 'Você mesmo instala o plugin, em poucos minutos. Funciona na web, no computador e no celular.',
   chatgpt: 'Entra como servidor MCP, adicionado no ChatGPT pela web.',
-  copilot: 'O TI do escritório configura uma vez, no Copilot Studio, para todos.',
+  copilot: 'O TI da empresa ou do escritório configura uma vez, no Copilot Studio, para todos.',
   gemini: 'O administrador configura no Gemini Enterprise para a empresa.',
 };
 const ias = tutoriais.map((t) => ({ id: t.id, nome: t.nome, disponivel: t.disponivel, texto: como[t.id] }));

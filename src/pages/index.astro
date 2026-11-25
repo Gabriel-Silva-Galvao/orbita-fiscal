@@ -13,6 +13,25 @@ import Footer from '../components/Footer.astro';
 import AiConnections from '../components/AiConnections.astro';
 import StructuredData from '../components/StructuredData.astro';
 
+// Item 27: exemplos de uso por público.
+const publicos = [
+  {
+    quem: 'Advogados',
+    texto: 'Fundamente a peça com a lei, a súmula e o julgado certos, e confira cada um na fonte antes de assinar.',
+    pergunta: 'Qual é a tese do STJ sobre a prescrição intercorrente na execução fiscal?',
+  },
+  {
+    quem: 'Contadores',
+    texto: 'Confira crédito, regime e obrigação acessória na norma, na solução de consulta e no que o CARF decidiu.',
+    pergunta: 'O frete entre filiais dá crédito de PIS/Cofins no lucro real?',
+  },
+  {
+    quem: 'Empresários',
+    texto: 'Entenda o risco antes de decidir: o que diz a lei e como os tribunais e a Receita vêm tratando o seu caso.',
+    pergunta: 'O que a empresa arrisca se tomar um crédito que a Receita costuma glosar?',
+  },
+];
+
 const steps = [
   {
     n: '1',
@@ -35,13 +54,14 @@ const steps = [
 
 <Base
   title="Órbita: pesquise o direito brasileiro na IA que você já usa"
-  description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças. A partir de R$ 19,90 por mês."
+  description="Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à pesquisa de advogados, contadores e empresários. A partir de R$ 19,90 por mês."
 >
   <div class="page-sheet">
   <StructuredData />
   <Nav
     links={[
       { href: '#a-base', label: 'O que consulta' },
+      { href: '#para-quem', label: 'Para quem é' },
       { href: '#exemplo', label: 'Com e sem a Órbita' },
       { href: '#como-funciona', label: 'Como funciona' },
       { href: '#ias', label: 'Funciona com' },
@@ -56,6 +76,30 @@ const steps = [
     <Hero />
 
     <BaseFontes />
+
+    <!-- Item 27: para quem é a Órbita, sempre nesta ordem: advogados, contadores e empresários. -->
+    <section id="para-quem" class="section section-alt" aria-labelledby="para-quem-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <h2 id="para-quem-title" class="display-lg" data-split>Para advogados, contadores e empresários</h2>
+          <p class="lead">A mesma base, com a fonte em cada resposta, para quem precisa decidir com a lei e o julgado certos.</p>
+        </div>
+        <ul class="publicos" data-reveal>
+          {
+            publicos.map((p) => (
+              <li class="publico">
+                <h3 class="title">{p.quem}</h3>
+                <p>{p.texto}</p>
+                <p class="publico-q small">
+                  <span class="publico-k">Pergunte, por exemplo</span>
+                  {p.pergunta}
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
 
     <!-- Exemplo -->
     <section id="exemplo" class="section" aria-labelledby="exemplo-title">
@@ -379,6 +423,44 @@ const steps = [
   }
   .step.is-lit {
     border-color: var(--brand);
+  }
+
+  /* Item 27: para quem é. */
+  .publicos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+  }
+  @media (min-width: 900px) {
+    .publicos {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .publico {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .publico .title,
+  .publico p {
+    margin: 0;
+  }
+  .publico-q {
+    display: grid;
+    gap: 4px;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+  }
+  .publico-k {
+    color: var(--brand);
+    font-weight: 600;
   }
 
   /* Planos */

@@ -40,7 +40,7 @@ const columns = [
     links: [
       { href: '/ajuda', label: 'Central de ajuda' },
       { href: '/ajuda#contato', label: 'Fale com a equipe' },
-      { href: '/equipes', label: 'Para escritórios' },
+      { href: '/ajuda#contato', label: 'Para escritórios e empresas' },
     ],
   },
   { title: 'Legal', links: legalLinks },
@@ -62,7 +62,7 @@ const credits = Object.values(photos);
       <div class="f-brand">
         <Logo size="lg" />
         <p class="small f-pitch">
-          Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à sua pesquisa e às suas peças.
+          Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à pesquisa de advogados, contadores e empresários.
         </p>
         <div class="f-social">
           <a class="f-ico" href={contact.instagram} target="_blank" rel="noopener" aria-label={`Instagram ${contact.instagramHandle}, abre em nova aba`}>
