@@ -371,7 +371,9 @@ Só com clientes reais e autorização por escrito (uso de nome, foto e texto). 
 publicidade enganosa (CDC, art. 37, e Código do CONAR). Plano: deixar o espaço pronto e pedir depoimentos
 aos primeiros clientes do período de teste.
 
-### 17. Documentação completa do backend e da segurança — Proposto (executar no bloco A ou B)
+### 17. Documentação completa do backend e da segurança — Executado (25/11/2026)
+
+**Feito.** `docs/backend-e-seguranca.md`: arquitetura, arquivos, tabelas, todas as rotas, configuração de desenvolvimento e produção, o que já está seguro, 16 pontos de risco classificados (2 críticos: simulação do Asaas ligada por padrão e token do webhook de exemplo; 3 altos: cartão passando pela API, código do 2FA no log/resposta e limite de tentativas só na memória e só no login), LGPD, lista do dia da publicação e cobertura dos testes. Nenhum código foi mudado neste item; as correções ficam como próximos passos.
 
 Documento com: arquitetura, cada rota e contrato, banco e tabelas, fluxo de login e 2FA, sessão, cobrança
 e webhooks do Asaas, configuração (`.env`), testes, e uma análise de segurança por ponto crítico:
