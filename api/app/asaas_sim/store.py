@@ -236,10 +236,10 @@ class Store:
         cob = self.cobranca(pid)
         if cob["billingType"] not in ("PIX", "UNDEFINED"):
             raise SimError(400, "invalid_billingType", "Esta cobrança não é Pix.")
-        payload = f"00020126580014BR.GOV.BCB.PIX0136simulacao-orbita-{pid}5204000053039865406{cob['value']:.2f}5802BR6304ABCD"
-        # PNG de 1x1 pixel: a simulação não desenha um QR de verdade.
-        png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-        return {"encodedImage": png, "payload": payload, "expirationDate": f"{cob['dueDate']} 23:59:59"}
+        # Item 4 da rodada de testes: código no formato oficial do Pix (BR Code/EMV, com CRC16) e QR de verdade,
+        # como o Asaas devolve. A chave é de simulação: um app de banco lê o código, mas não acha o recebedor.
+        payload = br_code(chave=f"simulacao-orbita-{pid}"[:77], valor=cob["value"], nome="ORBITA SIMULACAO", cidade="SAO PAULO", txid=pid)
+        return {"encodedImage": qr_png_base64(payload), "payload": payload, "expirationDate": f"{cob['dueDate']} 23:59:59"}
 
     def linha_digitavel(self, pid: str) -> dict:
         cob = self.cobranca(pid)
@@ -378,3 +378,48 @@ class Store:
     def cobrancas_da_assinatura(self, sid: str) -> list[dict]:
         self.assinatura(sid)
         return [c for c in self.cobrancas.values() if c["subscription"] == sid and not c["deleted"]]
+
+
+def _campo(id_: str, valor: str) -> str:
+    return f"{id_}{len(valor):02d}{valor}"
+
+
+def _crc16(dados: str) -> str:
+    """CRC16-CCITT (polinômio 0x1021, início 0xFFFF), exigido no fim do BR Code do Pix."""
+    crc = 0xFFFF
+    for byte in dados.encode("utf-8"):
+        crc ^= byte << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) if crc & 0x8000 else (crc << 1)
+            crc &= 0xFFFF
+    return f"{crc:04X}"
+
+
+def br_code(chave: str, valor: float, nome: str, cidade: str, txid: str) -> str:
+    """Pix copia e cola no padrão EMV do Banco Central (Manual do BR Code)."""
+    conta = _campo("00", "br.gov.bcb.pix") + _campo("01", chave)
+    txid = "".join(c for c in txid if c.isalnum())[:25] or "***"
+    corpo = (
+        _campo("00", "01")
+        + _campo("26", conta)
+        + _campo("52", "0000")
+        + _campo("53", "986")
+        + _campo("54", f"{valor:.2f}")
+        + _campo("58", "BR")
+        + _campo("59", nome[:25])
+        + _campo("60", cidade[:15])
+        + _campo("62", _campo("05", txid))
+        + "6304"
+    )
+    return corpo + _crc16(corpo)
+
+
+def qr_png_base64(texto: str) -> str:
+    import base64
+    import io
+
+    import segno
+
+    buf = io.BytesIO()
+    segno.make(texto, error="m").save(buf, kind="png", scale=8, border=2)
+    return base64.b64encode(buf.getvalue()).decode()

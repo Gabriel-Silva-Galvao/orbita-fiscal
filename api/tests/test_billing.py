@@ -246,3 +246,21 @@ def test_resumo_traz_final_do_cartao_e_reembolso(api):
     r = http.post("/billing/assinatura/reembolso")
     a = http.get("/billing/assinatura").json()
     assert a["reembolso_em"] == date.today().isoformat() and a["tem_acesso"] is False
+
+
+def test_pix_tem_codigo_oficial_e_qr_de_verdade(api):
+    """Item 4: o copia e cola segue o BR Code (CRC16 confere) e a imagem é um QR em PNG, não um pixel."""
+    import base64
+
+    from app.asaas_sim.store import _crc16
+
+    http, *_ = api
+    entrar(http, api[2])
+    r = assinar(http, "pix")
+    assert r.status_code == 201, r.text
+    [cob] = r.json()["cobrancas"]
+    codigo = cob["pix"]["copia_e_cola"]
+    assert codigo.startswith("000201") and "br.gov.bcb.pix" in codigo
+    assert codigo[-4:] == _crc16(codigo[:-4])
+    png = base64.b64decode(cob["pix"]["imagem_base64"])
+    assert png[:8] == b"\x89PNG\r\n\x1a\n" and len(png) > 300

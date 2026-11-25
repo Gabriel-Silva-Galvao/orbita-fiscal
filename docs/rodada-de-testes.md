@@ -66,7 +66,9 @@ testes da API.
 
 **Dúvidas.** Razão social, CNPJ, endereço e redes continuam "a definir": entram como marcadores até haver CNPJ?
 
-### 4. QR Code do Pix não aparece — Diagnosticado
+### 4. QR Code do Pix não aparece — Executado e testado (25/11/2026)
+
+**Feito.** A simulação do Asaas gera o copia e cola no padrão oficial (BR Code/EMV, com CRC16 conferido pelo valor de referência 29B1) e um QR de verdade em PNG (biblioteca `segno` 1.6.6, em `api/requirements.txt`). Teste novo na API (62 testes). No Checkout, o QR aparece e um app de banco consegue ler o código; a chave é de simulação, então o pagamento não é encontrado.
 
 **O que se sabe.** O copia e cola funciona. A simulação do Asaas devolve como QR um PNG de 1×1 pixel
 (`api/app/asaas_sim/store.py`, `pix_qrcode`).
