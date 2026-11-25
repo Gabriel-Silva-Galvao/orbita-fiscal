@@ -285,6 +285,30 @@ const fontes = [
       display: flex;
     }
   }
+  /* Item 14: no hover, o cartão da resposta e a pergunta crescem um pouco e ganham profundidade. */
+  .ha-q,
+  .ha-a {
+    transition:
+      transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 320ms;
+  }
+  .hero-answer:hover .ha-a {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.22), 0 0 0 1px var(--brand);
+  }
+  .hero-answer:hover .ha-q {
+    transform: translateY(-2px) scale(1.02);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ha-q,
+    .ha-a {
+      transition: none;
+    }
+    .hero-answer:hover .ha-a,
+    .hero-answer:hover .ha-q {
+      transform: none;
+    }
+  }
 </style>
 
 <script>

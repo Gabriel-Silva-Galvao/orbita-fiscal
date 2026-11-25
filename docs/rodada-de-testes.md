@@ -87,10 +87,11 @@ testes da API.
 e as instruções), servido pela API com link que expira, como será o real. Registrar no planejamento que o
 real depende do servidor MCP e do formato da loja do Claude.
 
-### 14. Cards de geração mais vivos — Proposto
+### 14. Cards de geração mais vivos — Executado e testado (25/11/2026)
 
-Hover com leve aumento (scale 1.01 a 1.02), sombra e borda acendendo; transição curta e nada para quem pede
-movimento reduzido.
+**Feito.** No topo, ao passar o mouse, a resposta sobe 4 px e cresce 2% com sombra e contorno verde, e a pergunta
+acompanha (2 px). No comparativo, cada coluna sobe 4 px e cresce 1,5% com sombra; a coluna com a Órbita ganha também
+um brilho verde. Transição de 320 ms; com movimento reduzido, nada se mexe. Testado com o mouse nas duas áreas.
 
 ### 15. Títulos sem ponto final e cards da segunda seção — Executado e testado (25/11/2026)
 

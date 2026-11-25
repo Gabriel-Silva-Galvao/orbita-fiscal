@@ -303,6 +303,28 @@ const lista = comparacoes.map((c) => ({ ...c, semBlocos: blocos(c.sem.texto), co
       grid-template-columns: minmax(0, 1fr);
     }
   }
+  /* Item 14: no hover, cada coluna cresce um pouco e ganha sombra; a da Órbita brilha em verde. */
+  .cmp-col {
+    transition:
+      transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 320ms,
+      border-color 320ms;
+  }
+  .cmp-col:hover {
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.2);
+  }
+  .cmp-col.com:hover {
+    box-shadow: 0 18px 40px rgb(0 0 0 / 0.2), 0 0 0 2px color-mix(in srgb, var(--brand) 55%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cmp-col {
+      transition: none;
+    }
+    .cmp-col:hover {
+      transform: none;
+    }
+  }
 </style>
 
 <script>
