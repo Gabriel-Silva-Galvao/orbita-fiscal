@@ -3,7 +3,7 @@
 Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base em /auth:
   POST /auth/cadastro         {nome, email, senha, plano?} -> 202 código enviado | 409 e-mail já tem conta
   POST /auth/login            {email, senha}               -> 202 código enviado | 401 não confere
-  POST /auth/codigo           {codigo}                     -> 200 sessão criada (cookie)
+  POST /auth/codigo           {codigo, manter?}            -> 200 sessão criada (cookie)
                                                               | 400 {tentativas_restantes} | 410 expirado | 429 sem tentativas
   POST /auth/codigo/reenviar  {}                           -> 202 | 429 espere 60 s | 410 sem desafio
   POST /auth/senha/esqueci    {email}                      -> 202 sempre (não revela se a conta existe)
@@ -11,6 +11,14 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   PUT  /auth/conta            {nome}                       -> 200 | 422
   DELETE /auth/conta                                       -> 204 | 409 assinatura_ativa (cancele antes)
   POST /auth/sair                                          -> 204
+  GET  /auth/sessoes                                       -> 200 [{id, aparelho, criada, ultimo_uso, atual}]
+  DELETE /auth/sessoes/{id}                                -> 204 (sai daquele aparelho) | 404
+  POST /auth/sair-de-todos                                 -> 204 (encerra todas, inclusive esta)
+
+Sessão (item 1 da rodada de testes, 25/11/2026): no máximo 30 dias a partir do login, sem renovar.
+Com "manter conectado" (padrão), o cookie dura 30 dias; sem ele, o cookie some ao fechar o navegador e a
+sessão no servidor vale 12 horas. Cada sessão guarda o aparelho (do User-Agent), quando foi criada e o último
+uso; excluir a conta encerra todas.
 
 Segurança: senha com scrypt (biblioteca padrão), código e tokens guardados só como SHA-256,
 cookies HttpOnly. A conta só nasce depois do código confirmado. Só e-mail e senha: o login
@@ -45,6 +53,8 @@ CODIGO_VALIDADE = 10 * 60
 CODIGO_TENTATIVAS = 5
 REENVIO_ESPERA = 60
 SESSAO_VALIDADE = 30 * 24 * 3600
+SESSAO_CURTA = 12 * 3600  # sem "manter conectado"
+ULTIMO_USO_PASSO = 60  # grava o último uso no máximo uma vez por minuto
 LOGIN_JANELA, LOGIN_MAX_FALHAS = 15 * 60, 10
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -74,6 +84,28 @@ CREATE TABLE IF NOT EXISTS sessoes (
 );
 """
 
+# Colunas da sessão acrescentadas no item 1 (bancos antigos ganham as colunas sem perder as sessões).
+COLUNAS_SESSAO = {"id": "TEXT", "criada": "REAL", "ultimo_uso": "REAL", "aparelho": "TEXT", "manter": "INTEGER"}
+
+
+def migrar(con) -> None:
+    existentes = {r[1] for r in con.execute("PRAGMA table_info(sessoes)")}
+    for col, tipo in COLUNAS_SESSAO.items():
+        if col not in existentes:
+            con.execute(f"ALTER TABLE sessoes ADD COLUMN {col} {tipo}")
+    con.execute("UPDATE sessoes SET id = lower(hex(randomblob(8))) WHERE id IS NULL")
+    con.commit()
+
+
+def aparelho(user_agent: str) -> str:
+    """Nome curto do aparelho, para a lista de sessões: navegador e sistema."""
+    ua = user_agent or ""
+    nav = next((n for k, n in (("Edg/", "Edge"), ("OPR/", "Opera"), ("Firefox/", "Firefox"), ("Chrome/", "Chrome"),
+                               ("Safari/", "Safari")) if k in ua), "Navegador")
+    so = next((n for k, n in (("Windows", "Windows"), ("Android", "Android"), ("iPhone", "iPhone"), ("iPad", "iPad"),
+                              ("Mac OS", "macOS"), ("Linux", "Linux")) if k in ua), "")
+    return f"{nav} no {so}" if so else nav
+
 
 def _sha(v: str) -> str:
     return hashlib.sha256(v.encode()).hexdigest()
@@ -94,15 +126,29 @@ def confere_senha(senha: str, guardado: str) -> bool:
     return hmac.compare_digest(novo.hex(), dk)
 
 
+def sessao_valida(banco, token: str | None) -> dict | None:
+    """Sessão do cookie, se existe e não expirou; marca o último uso (no máximo uma vez por minuto)."""
+    if not token:
+        return None
+    s = banco.um(
+        "SELECT u.id, u.email, u.nome, s.expira, s.ultimo_uso, s.id AS sessao_id FROM sessoes s "
+        "JOIN usuarios u ON u.id=s.usuario_id WHERE s.token_hash=?",
+        _sha(token),
+    )
+    agora = time.time()
+    if not s or s["expira"] < agora:
+        return None
+    if not s["ultimo_uso"] or agora - s["ultimo_uso"] > ULTIMO_USO_PASSO:
+        banco.executar("UPDATE sessoes SET ultimo_uso=? WHERE token_hash=?", agora, _sha(token))
+    return {"id": s["id"], "email": s["email"], "nome": s["nome"], "sessao_id": s["sessao_id"]}
+
+
 def usuario_logado(req: Request, orbita_sessao: str | None = Cookie(None)) -> dict:
     """Dependência das rotas do assinante: devolve {id, email, nome} da sessão ou responde 401."""
-    s = req.app.state.banco.um(
-        "SELECT u.id, u.email, u.nome, s.expira FROM sessoes s JOIN usuarios u ON u.id=s.usuario_id WHERE s.token_hash=?",
-        _sha(orbita_sessao) if orbita_sessao else "",
-    )
-    if not s or s["expira"] < time.time():
+    s = sessao_valida(req.app.state.banco, orbita_sessao)
+    if not s:
         raise HTTPException(401, detail={"codigo": "sem_sessao", "mensagem": "Entre na sua conta."})
-    s.pop("expira")
+    s.pop("sessao_id")
     return s
 
 
@@ -120,6 +166,7 @@ class Login(BaseModel):
 
 class Codigo(BaseModel):
     codigo: str
+    manter: bool = True
 
 
 class Esqueci(BaseModel):
@@ -141,7 +188,8 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     def banco(req: Request):
         return req.app.state.banco
 
-    def cookie(resp: Response, nome: str, valor: str, max_age: int) -> None:
+    def cookie(resp: Response, nome: str, valor: str, max_age: int | None) -> None:
+        # max_age None: cookie de sessão do navegador (some ao fechar).
         s = get_settings()
         resp.set_cookie(nome, valor, max_age=max_age, httponly=True, samesite="lax", secure=s.cookie_secure, path="/")
 
@@ -215,9 +263,18 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             uid = b.um("SELECT id FROM usuarios WHERE email=?", d["email"])["id"]
         b.executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
 
-        token = secrets.token_urlsafe(32)
-        b.executar("INSERT INTO sessoes VALUES (?,?,?)", _sha(token), uid, time.time() + SESSAO_VALIDADE)
-        cookie(resp, COOKIE_SESSAO, token, SESSAO_VALIDADE)
+        # Token novo a cada login; o token velho deste navegador, se houver, é encerrado.
+        token, agora = secrets.token_urlsafe(32), time.time()
+        velho = req.cookies.get(COOKIE_SESSAO)
+        if velho:
+            b.executar("DELETE FROM sessoes WHERE token_hash=?", _sha(velho))
+        validade = SESSAO_VALIDADE if dados.manter else SESSAO_CURTA
+        b.executar(
+            "INSERT INTO sessoes (token_hash, usuario_id, expira, id, criada, ultimo_uso, aparelho, manter) VALUES (?,?,?,?,?,?,?,?)",
+            _sha(token), uid, agora + validade, secrets.token_hex(8), agora, agora,
+            aparelho(req.headers.get("user-agent", "")), int(dados.manter),
+        )
+        cookie(resp, COOKIE_SESSAO, token, SESSAO_VALIDADE if dados.manter else None)
         resp.delete_cookie(COOKIE_DESAFIO, path="/")
         u = b.um("SELECT id, email, nome FROM usuarios WHERE id=?", uid)
         return {"usuario": u}
@@ -243,14 +300,45 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
 
     @r.get("/sessao")
     def sessao(req: Request, orbita_sessao: str | None = Cookie(None)):
-        s = banco(req).um(
-            "SELECT u.id, u.email, u.nome, s.expira FROM sessoes s JOIN usuarios u ON u.id=s.usuario_id WHERE s.token_hash=?",
-            _sha(orbita_sessao) if orbita_sessao else "",
-        )
-        if not s or s["expira"] < time.time():
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
-        s.pop("expira")
+        s.pop("sessao_id")
         return s
+
+    @r.get("/sessoes")
+    def sessoes(req: Request, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        linhas = banco(req).todos(
+            "SELECT id, aparelho, criada, ultimo_uso, manter FROM sessoes WHERE usuario_id=? AND expira>? ORDER BY ultimo_uso DESC",
+            s["id"], time.time(),
+        )
+        return [{**l, "manter": bool(l["manter"]), "atual": l["id"] == s["sessao_id"]} for l in linhas]
+
+    @r.delete("/sessoes/{sid}", status_code=204)
+    def encerrar(sid: str, req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        # Só encerra sessão da própria conta: o id de outra pessoa não é achado.
+        if not banco(req).executar("DELETE FROM sessoes WHERE id=? AND usuario_id=?", sid, s["id"]):
+            return _erro(404, "nao_achada", "Essa sessão já foi encerrada.")
+        if sid == s["sessao_id"]:
+            resp.delete_cookie(COOKIE_SESSAO, path="/")
+        resp.status_code = 204
+        return resp
+
+    @r.post("/sair-de-todos", status_code=204)
+    def sair_de_todos(req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        banco(req).executar("DELETE FROM sessoes WHERE usuario_id=?", s["id"])
+        resp.delete_cookie(COOKIE_SESSAO, path="/")
+        resp.status_code = 204
+        return resp
 
     @r.put("/conta")
     def trocar_nome(dados: Nome, req: Request, orbita_sessao: str | None = Cookie(None)):

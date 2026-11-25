@@ -202,3 +202,90 @@ def test_rotas_da_conta_exigem_sessao(api):
     http, _, _ = api
     assert http.put("/auth/conta", json={"nome": "X Y"}).status_code == 401
     assert http.delete("/auth/conta").status_code == 401
+
+
+# ---------- Item 1 da rodada de testes: sessão de 30 dias, "manter conectado" e aparelhos ----------
+
+def entrar_em(http, caixa, email="ana@exemplo.test", manter=True, ua="Mozilla/5.0 (Windows NT 10.0) Chrome/130"):
+    r = http.post("/auth/login", json={"email": email, "senha": "senha-forte-1"}, headers={"user-agent": ua})
+    assert r.status_code == 202
+    r = http.post("/auth/codigo", json={"codigo": caixa[email], "manter": manter}, headers={"user-agent": ua})
+    assert r.status_code == 200
+    return r
+
+
+def test_manter_conectado_define_o_cookie_e_a_validade(api, caixa):
+    http, _, banco = api
+    cadastrar(http, caixa)
+    http.post("/auth/sair")
+    r = entrar_em(http, caixa, manter=True)
+    assert "Max-Age=2592000" in r.headers["set-cookie"]  # 30 dias
+    s = banco.um("SELECT expira, criada, manter FROM sessoes ORDER BY criada DESC")
+    assert s["manter"] == 1 and 29.9 * 86400 < s["expira"] - s["criada"] <= 30 * 86400
+    http.post("/auth/sair")
+    r = entrar_em(http, caixa, manter=False)
+    cab = next(c for c in r.headers.get_list("set-cookie") if c.startswith("orbita_sessao="))
+    assert "Max-Age" not in cab and "expires" not in cab.lower()  # cookie some ao fechar o navegador
+    s = banco.um("SELECT expira, criada, manter FROM sessoes ORDER BY criada DESC")
+    assert s["manter"] == 0 and s["expira"] - s["criada"] <= 12 * 3600
+
+
+def test_sessao_expirada_pede_login(api, caixa):
+    http, _, banco = api
+    cadastrar(http, caixa)
+    banco.executar("UPDATE sessoes SET expira = ?", time.time() - 1)
+    assert http.get("/auth/sessao").status_code == 401
+
+
+def test_novo_login_troca_o_token_deste_navegador(api, caixa):
+    http, _, banco = api
+    cadastrar(http, caixa)
+    entrar_em(http, caixa)
+    assert banco.um("SELECT count(*) AS n FROM sessoes")["n"] == 1
+
+
+def test_aparelhos_conectados_e_sair_de_um(api, caixa):
+    from fastapi.testclient import TestClient
+
+    http, _, _ = api
+    cadastrar(http, caixa)
+    celular = TestClient(http.app)
+    entrar_em(celular, caixa, ua="Mozilla/5.0 (Linux; Android 14) Chrome/130 Mobile")
+    lista = http.get("/auth/sessoes").json()
+    assert len(lista) == 2 and sum(s["atual"] for s in lista) == 1
+    outro = next(s for s in lista if not s["atual"])
+    assert outro["aparelho"] == "Chrome no Android"
+    assert http.delete(f"/auth/sessoes/{outro['id']}").status_code == 204
+    assert celular.get("/auth/sessao").status_code == 401
+    assert http.get("/auth/sessao").status_code == 200
+    assert http.delete(f"/auth/sessoes/{outro['id']}").status_code == 404
+
+
+def test_nao_encerra_sessao_de_outra_conta(api, caixa):
+    from fastapi.testclient import TestClient
+
+    http, _, _ = api
+    cadastrar(http, caixa)
+    bia = TestClient(http.app)
+    cadastrar(bia, caixa, email="bia@exemplo.test")
+    id_bia = bia.get("/auth/sessoes").json()[0]["id"]
+    assert http.delete(f"/auth/sessoes/{id_bia}").status_code == 404
+    assert bia.get("/auth/sessao").status_code == 200
+
+
+def test_sair_de_todos(api, caixa):
+    from fastapi.testclient import TestClient
+
+    http, _, _ = api
+    cadastrar(http, caixa)
+    outro = TestClient(http.app)
+    entrar_em(outro, caixa)
+    assert http.post("/auth/sair-de-todos").status_code == 204
+    assert http.get("/auth/sessao").status_code == 401
+    assert outro.get("/auth/sessao").status_code == 401
+
+
+def test_aparelho_pelo_user_agent():
+    assert auth.aparelho("Mozilla/5.0 (Windows NT 10.0; Win64) AppleWebKit Chrome/130 Safari/537 Edg/130") == "Edge no Windows"
+    assert auth.aparelho("Mozilla/5.0 (iPhone; CPU iPhone OS 18) AppleWebKit Version/18 Safari/604") == "Safari no iPhone"
+    assert auth.aparelho("") == "Navegador"

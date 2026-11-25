@@ -18,6 +18,9 @@
  * 429 em qualquer rota = muitas tentativas. Sem PUBLIC_AUTH_ENDPOINT, roda em demonstração.
  */
 import Focus from '../layouts/Focus.astro';
+
+// Item 1: roda no servidor para o middleware mandar quem já está logado direto para a conta (sem piscar).
+export const prerender = false;
 import { plans, brl } from '../data/plans';
 
 const endpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
@@ -76,6 +79,10 @@ const planData = JSON.stringify(
               <p class="hint small mute" id="a-senha-hint" data-pass-hint hidden>Pelo menos 8 caracteres, com letras e números.</p>
               <p class="msg" id="a-senha-msg" aria-live="polite"></p>
             </div>
+            <label class="manter">
+              <input type="checkbox" checked data-manter />
+              <span>Manter conectado neste aparelho <span class="small mute">(por até 30 dias)</span></span>
+            </label>
             <button type="submit" class="btn-main" data-submit>Continuar</button>
           </form>
 
@@ -270,6 +277,20 @@ const planData = JSON.stringify(
     border-radius: var(--radius-sm);
     font-size: 0.8125rem;
     color: var(--brand);
+  }
+  /* Item 1: manter conectado. */
+  .manter {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .manter input {
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--brand);
   }
 </style>
 
@@ -517,7 +538,8 @@ const planData = JSON.stringify(
     codeSubmit.textContent = 'Conferindo…';
     try {
       if (endpoint) {
-        const r = await api('/codigo', { codigo });
+        const manter = $<HTMLInputElement>('[data-manter]').checked;
+        const r = await api('/codigo', { codigo, manter });
         if (r.status === 410) return showCodeError('Esse código expirou. Peça outro abaixo.');
         if (r.status === 429) return showCodeError('Muitas tentativas. Peça um código novo e tente de novo.');
         if (r.status === 400) {

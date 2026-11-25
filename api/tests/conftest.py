@@ -42,5 +42,5 @@ def entrar(http, banco, uid: str = "u1", email: str = "teste@exemplo.com") -> No
     if not banco.um("SELECT 1 FROM usuarios WHERE id = ?", uid):
         banco.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?, ?, 'Teste Silva', 'x')", uid, email)
     token = secrets.token_urlsafe(16)
-    banco.executar("INSERT INTO sessoes VALUES (?, ?, ?)", auth._sha(token), uid, time.time() + 3600)
+    banco.executar("INSERT INTO sessoes (token_hash, usuario_id, expira, id) VALUES (?, ?, ?, ?)", auth._sha(token), uid, time.time() + 3600, uid[:16])
     http.cookies.set(auth.COOKIE_SESSAO, token)

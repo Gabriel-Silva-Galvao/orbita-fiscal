@@ -11,32 +11,47 @@ Legenda de status: **Diagnosticado** (causa achada), **Proposto** (caminho defin
 
 ## Bloco A: correções e remoções
 
-### 1 e 10. Login "que não salva" e sessão mais forte — Diagnosticado
+### 1 e 10. Login "que não salva" e sessão mais forte — Executado e testado (25/11/2026)
+
+**Feito.** API com "manter conectado", aparelho, criação e último uso por sessão, `GET /auth/sessoes`, `DELETE /auth/sessoes/{id}` e `POST /auth/sair-de-todos` (61 testes). Cabeçalho com avatar e menu em todas as páginas com `Nav`; `/entrar` agora roda no servidor e manda quem já está logado para o `next` seguro, o Checkout do plano ou `/conta`. A lista de aparelhos ainda não aparece no Portal: entra no item 9. Não existe rota de troca de senha ainda; quando existir, deve chamar o encerramento de todas as sessões.
 
 **Pedido.** A pessoa precisa entrar várias vezes; depois da compra, a landing não mostra que ela está logada.
 Sessão com token melhorado e salva no navegador.
 
-**O que se sabe.**
-- A sessão já é salva: cookie `orbita_sessao` HttpOnly, 30 dias, token guardado só como SHA-256 no banco.
-  Teste de 25/11: depois de entrar, `GET /auth/sessao` responde 200 e `/conta` abre sem pedir login.
-- A causa real é visual: a landing é estática (gerada no build), então o cabeçalho sempre mostra "Entrar".
-  A tela `/entrar` também não redireciona quem já está logado. A pessoa vê "Entrar", clica e entra de novo.
+**Diagnóstico (testado em 25/11).** A sessão já é salva: cookie `orbita_sessao` HttpOnly, 30 dias, token guardado
+só como SHA-256 no banco; `GET /auth/sessao` responde 200 e `/conta` abre sem novo login. A causa é visual:
+a landing é gerada no build, então o cabeçalho sempre mostra "Entrar", e `/entrar` não redireciona quem já está
+logado. A pessoa vê "Entrar", clica e entra de novo.
 
-**Proposta.**
-1. Cabeçalho ciente da sessão em todas as páginas: o script consulta `/auth/sessao` e troca "Entrar" pelo
-   avatar com iniciais e um menu (Minha conta, Instalar, Sair). Sem sessão, continua "Entrar" e "Assinar".
-2. `/entrar` com sessão válida vai direto para `/conta` (ou para o `next`).
-3. Sessão reforçada na API:
-   - renovação deslizante: cada uso perto do fim estende a validade (até um teto, ex.: 90 dias);
-   - rotação do token na renovação e no login (evita fixação de sessão);
-   - tabela de sessões com aparelho, IP aproximado e último uso; no Portal, "Aparelhos conectados" com
-     "Sair deste aparelho" e "Sair de todos";
-   - troca de senha e exclusão de conta derrubam todas as sessões;
-   - opção "Manter conectado" (30 a 90 dias) ou sessão curta (fecha com o navegador).
-4. Em produção: `COOKIE_SECURE=true`, site e API no mesmo domínio (ex.: `api.orbita…`) para o cookie
-   continuar first-party.
+**Decisões.**
+- **Teto da sessão: 30 dias** a partir do login, mesmo usando sempre. Depois disso, entra de novo (com o código).
+- **"Manter conectado": marcado por padrão** na tela de entrar. Desmarcado, o cookie é de sessão do navegador
+  (some ao fechar) e a sessão no servidor vale 12 horas.
+- **Cabeçalho de quem está logado: avatar com as iniciais e menu** (Minha conta, Instalar o plugin, Ajuda, Sair).
 
-**Dúvidas.** Teto da sessão: 30, 60 ou 90 dias? "Manter conectado" marcado por padrão?
+**Como vai ser feito.**
+1. API (`api/app/auth.py`):
+   - `POST /auth/codigo` aceita `manter` (padrão `true`): cookie persistente de 30 dias ou cookie de sessão + 12 h.
+   - Tabela `sessoes` ganha `criada`, `ultimo_uso`, `aparelho` (navegador e sistema, do User-Agent) e `manter`
+     (migração em `db.py`). `GET /auth/sessao` atualiza `ultimo_uso` no máximo uma vez por minuto.
+   - Token novo a cada login (já é assim) e **todas as sessões caem** ao trocar a senha ou excluir a conta.
+   - Rotas novas para o item 9/10: `GET /auth/sessoes` (aparelhos conectados, marcando o atual),
+     `DELETE /auth/sessoes/{id}` (sair de um aparelho) e `POST /auth/sair-de-todos`.
+   - Testes de tudo isso.
+2. Site:
+   - Componente de cabeçalho ciente da sessão em todas as páginas: um script pequeno consulta `/auth/sessao`
+     (com cookie) e troca "Entrar" + "Assinar" pelo avatar com menu. Sem sessão, nada muda. Sem salto de layout
+     (o espaço do botão é reservado).
+   - Menu do avatar acessível: abre com clique e Enter, fecha com Esc e clique fora; no celular, mesmo menu.
+   - `/entrar` com sessão válida vai direto para `/conta` (ou para o `next`), no servidor (middleware), sem piscar.
+   - Checkbox "Manter conectado" (marcada) na tela de entrar, enviada no `POST /auth/codigo`.
+   - Depois da compra, a volta para a landing já mostra o avatar.
+3. Produção (anotado): `COOKIE_SECURE=true` e site e API no mesmo domínio (ex.: `api.` do domínio do site),
+   para o cookie continuar first-party.
+
+**Teste.** Entrar com e sem "Manter conectado"; fechar e reabrir o navegador; landing, /bases e Ajuda mostrando o
+avatar; menu no computador e no celular; `/entrar` logado indo para `/conta`; Sair; sessão expirada pedindo login;
+testes da API.
 
 ### 2. Rodapé flutuando e incompleto — Proposto
 

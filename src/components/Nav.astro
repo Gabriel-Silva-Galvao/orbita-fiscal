@@ -8,6 +8,9 @@ interface Props {
   signIn?: string;
 }
 const { links = [], cta, signIn } = Astro.props;
+// Item 1 da rodada de testes: com a API ligada, o cabeçalho descobre se há sessão e troca "Entrar" e "Assinar"
+// pelo avatar com as iniciais e um menu. Sem API (demonstração), fica como sempre.
+const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
 ---
 
 <header class="nav">
@@ -24,14 +27,226 @@ const { links = [], cta, signIn } = Astro.props;
         </nav>
       )
     }
-    <div class="nav-actions">
-      {signIn && <a class="nav-signin" href={signIn}>Entrar</a>}
-      {cta && <Button href={cta.href}>{cta.label}</Button>}
+    <div class="nav-actions" data-nav-actions data-auth={authEndpoint}>
+      {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
+      {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}
+      <div class="nav-user" data-nav-user hidden>
+        <button
+          type="button"
+          class="nav-avatar"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+          data-nav-avatar
+        >
+          <span data-nav-iniciais aria-hidden="true"></span>
+          <span class="sr-only" data-nav-rotulo>Menu da conta</span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="menu" hidden data-nav-menu>
+          <p class="nav-menu-quem">
+            <strong data-nav-nome></strong>
+            <span data-nav-email></span>
+          </p>
+          <a role="menuitem" href="/conta">Minha conta</a>
+          <a role="menuitem" href="/instalar">Instalar o plugin</a>
+          <a role="menuitem" href="/ajuda">Ajuda</a>
+          <button type="button" role="menuitem" data-nav-sair>Sair</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
+<script>
+  const CHAVE = 'orbita:sessao'; // cópia do nome e e-mail, só para o avatar aparecer sem piscar na próxima página
+  const box = document.querySelector<HTMLElement>('[data-nav-actions]');
+  const ep = box?.dataset.auth ?? '';
+  const user = box?.querySelector<HTMLElement>('[data-nav-user]');
+  const avatar = box?.querySelector<HTMLButtonElement>('[data-nav-avatar]');
+  const menu = box?.querySelector<HTMLElement>('[data-nav-menu]');
+
+  const iniciais = (nome: string) =>
+    nome
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '?';
+
+  function mostrar(u: { nome: string; email: string } | null) {
+    if (!box || !user) return;
+    box.querySelectorAll<HTMLElement>('[data-nav-anon]').forEach((el) => (el.hidden = !!u));
+    user.hidden = !u;
+    if (!u) return;
+    box.querySelector('[data-nav-iniciais]')!.textContent = iniciais(u.nome);
+    box.querySelector('[data-nav-rotulo]')!.textContent = `Menu da conta de ${u.nome}`;
+    box.querySelector('[data-nav-nome]')!.textContent = u.nome;
+    box.querySelector('[data-nav-email]')!.textContent = u.email;
+  }
+  const ler = () => {
+    try {
+      return JSON.parse(sessionStorage.getItem(CHAVE) ?? 'null');
+    } catch {
+      return null;
+    }
+  };
+  const gravar = (u: unknown) => {
+    try {
+      if (u) sessionStorage.setItem(CHAVE, JSON.stringify(u));
+      else sessionStorage.removeItem(CHAVE);
+    } catch {
+      /* navegação privada: sem cópia, o avatar só aparece depois da consulta */
+    }
+  };
+
+  if (ep && box) {
+    mostrar(ler());
+    // A fonte da verdade é a API: confirma a sessão a cada página (cookie HttpOnly, invisível ao script).
+    fetch(`${ep}/sessao`, { credentials: 'include', headers: { accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        const dados = u ? { nome: u.nome, email: u.email } : null;
+        gravar(dados);
+        mostrar(dados);
+      })
+      .catch(() => {
+        /* API fora do ar: mantém o que estava na tela */
+      });
+  }
+
+  // Menu: abre no clique ou Enter, fecha com Esc, clique fora ou ao escolher um item.
+  const fechar = (foco = false) => {
+    if (!menu || !avatar) return;
+    menu.hidden = true;
+    avatar.setAttribute('aria-expanded', 'false');
+    if (foco) avatar.focus();
+  };
+  avatar?.addEventListener('click', () => {
+    const abre = menu!.hidden;
+    menu!.hidden = !abre;
+    avatar.setAttribute('aria-expanded', String(abre));
+    if (abre) menu!.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu && !menu.hidden) fechar(true);
+  });
+  document.addEventListener('click', (e) => {
+    if (user && !user.contains(e.target as Node)) fechar();
+  });
+  menu?.addEventListener('keydown', (e) => {
+    const itens = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    const i = itens.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      itens[(i + 1) % itens.length].focus();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      itens[(i - 1 + itens.length) % itens.length].focus();
+    }
+  });
+  box?.querySelector('[data-nav-sair]')?.addEventListener('click', async () => {
+    try {
+      await fetch(`${ep}/sair`, { method: 'POST', credentials: 'include' });
+    } finally {
+      gravar(null);
+      location.href = '/';
+    }
+  });
+</script>
+
 <style>
+  .nav-cta[hidden],
+  .nav-signin[hidden] {
+    display: none !important;
+  }
+  .nav-user {
+    position: relative;
+  }
+  .nav-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--brand);
+    background: color-mix(in srgb, var(--brand) 22%, var(--surface));
+    color: var(--ink);
+    font: 700 0.9375rem/1 var(--font-body, inherit);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      transform 200ms,
+      box-shadow 200ms;
+  }
+  .nav-avatar:hover,
+  .nav-avatar[aria-expanded='true'] {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 25%, transparent);
+  }
+  .nav-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    z-index: 20;
+    min-width: 230px;
+    display: grid;
+    padding: var(--space-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: 0 16px 40px rgb(0 0 0 / 0.25);
+    animation: nav-menu 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .nav-menu[hidden] {
+    display: none;
+  }
+  @keyframes nav-menu {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+  .nav-menu-quem {
+    display: grid;
+    gap: 2px;
+    margin: 0 0 var(--space-2);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+  }
+  .nav-menu-quem span {
+    color: var(--mute);
+    overflow-wrap: anywhere;
+  }
+  .nav-menu a,
+  .nav-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px var(--space-3);
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.9375rem;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .nav-menu a:hover,
+  .nav-menu a:focus-visible,
+  .nav-menu button:hover,
+  .nav-menu button:focus-visible {
+    background: color-mix(in srgb, var(--brand) 14%, transparent);
+    outline: none;
+  }
+  .nav-menu [data-nav-sair] {
+    color: var(--mute);
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 8px 8px;
+    margin-top: var(--space-1, 4px);
+  }
   .nav {
     position: sticky;
     top: 0;

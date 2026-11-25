@@ -34,8 +34,33 @@ export const onRequest = defineMiddleware(async (context, next) => {
   return res;
 });
 
+/** Item 1: quem já tem sessão e abre /entrar vai direto para onde ia (next, Checkout do plano ou a conta). */
+async function jaLogado(context: APIContext): Promise<Response | null> {
+  const cookie = context.request.headers.get('cookie');
+  if (!API_URL || !cookie?.includes('orbita_sessao=')) return null;
+  try {
+    const res = await fetch(new URL('/auth/sessao', API_URL), {
+      headers: { cookie, accept: 'application/json' },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+  } catch {
+    return null; // API fora do ar: mostra a tela de entrar normalmente
+  }
+  const q = context.url.searchParams;
+  const next = q.get('next') ?? '';
+  const plano = q.get('plano');
+  const seguro = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
+  return context.redirect(plano === 'pro' || plano === 'max' ? `/assinar/${plano}` : seguro ? next : '/conta');
+}
+
 async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {
   const { pathname, search } = context.url;
+  if (pathname === '/entrar' && !context.isPrerendered) {
+    const destino = await jaLogado(context);
+    if (destino) return destino;
+    return next();
+  }
   // Páginas estáticas são geradas no build, sem requisição real: não há o que proteger.
   if (context.isPrerendered || !protegida(pathname) || !API_URL) return next();
 

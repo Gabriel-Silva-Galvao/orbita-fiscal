@@ -54,6 +54,10 @@ class Banco:
             linha = self.con.execute(sql, args).fetchone()
         return dict(linha) if linha else None
 
+    def todos(self, sql: str, *args) -> list[dict]:
+        with self.trava:
+            return [dict(r) for r in self.con.execute(sql, args).fetchall()]
+
     def executar(self, sql: str, *args) -> int:
         with self.trava, self.con:
             return self.con.execute(sql, args).rowcount

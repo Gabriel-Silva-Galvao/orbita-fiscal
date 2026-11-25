@@ -40,6 +40,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
     app.state.banco = banco or Banco(settings.database_path)
     with app.state.banco.trava:
         app.state.banco.con.executescript(auth.ESQUEMA)
+        auth.migrar(app.state.banco.con)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.site_url],
