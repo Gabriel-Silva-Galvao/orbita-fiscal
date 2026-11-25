@@ -51,9 +51,9 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
   <div class="page-sheet">
     <Nav
       links={[
+        { href: '#tipos', label: 'Por tipo' },
         { href: '#mapa', label: 'Mapa' },
         { href: '#todas', label: 'Todas as bases' },
-        { href: '/#planos', label: 'Planos' },
       ]}
       signIn="/entrar"
       cta={{ href: '/#planos', label: 'Assinar' }}
@@ -84,7 +84,7 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
       </section>
 
       <!-- Por tipo -->
-      <section class="section section-alt" aria-labelledby="tipos-title">
+      <section id="tipos" class="section section-alt" aria-labelledby="tipos-title">
         <div class="wrap">
           <div class="section-head">
             <h2 id="tipos-title" class="display-lg">Do STF ao conselho do seu estado</h2>

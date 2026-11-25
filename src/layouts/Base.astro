@@ -64,8 +64,23 @@ const ogImage = new URL('/og.png', Astro.site);
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
     <div class="progress" aria-hidden="true"><span class="progress-bar"></span></div>
     <slot />
+    <!-- Item 23: átomo da Órbita enquanto a próxima página carrega (só aparece se demorar). -->
+    <div class="carregando" data-carregando aria-hidden="true">
+      <svg viewBox="6 14 88 72" class="carregando-atomo">
+        <g class="carregando-orbitas" fill="none" stroke="currentColor" stroke-width="2.6">
+          <ellipse cx="50" cy="50" rx="43" ry="28" transform="rotate(-28 50 50)"></ellipse>
+          <ellipse cx="50" cy="50" rx="27" ry="17" transform="rotate(-28 50 50)"></ellipse>
+        </g>
+        <circle class="carregando-eletron" r="4" fill="currentColor">
+          <animateMotion dur="1.4s" repeatCount="indefinite" path="M 93 50 A 43 28 0 1 1 7 50 A 43 28 0 1 1 93 50" rotate="0"></animateMotion>
+        </circle>
+        <circle cx="50" cy="50" r="7" fill="currentColor"></circle>
+      </svg>
+      <span class="sr-only">Carregando</span>
+    </div>
     <script>
       import '../scripts/motion';
+      import '../scripts/carregando';
     </script>
   </body>
 </html>

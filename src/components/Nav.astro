@@ -3,30 +3,39 @@ import Logo from './Logo.astro';
 import Button from './Button.astro';
 
 interface Props {
+  /** Seções desta página: viram a barra da página, que aparece abaixo do header ao rolar (item 23). */
   links?: { href: string; label: string }[];
   cta?: { href: string; label: string };
   signIn?: string;
 }
 const { links = [], cta, signIn } = Astro.props;
+
+// Item 23 da rodada de testes: o header principal é o mesmo em todas as páginas públicas.
+const globais = [
+  { href: '/#como-funciona', label: 'Como funciona' },
+  { href: '/bases', label: 'O que cobre' },
+  { href: '/#planos', label: 'Planos' },
+  { href: '/ajuda', label: 'Ajuda' },
+];
+const atual = Astro.url.pathname.replace(/\/$/, '') || '/';
+const ehAtual = (href: string) => !href.includes('#') && href === atual;
 // Item 1 da rodada de testes: com a API ligada, o cabeçalho descobre se há sessão e troca "Entrar" e "Assinar"
 // pelo avatar com as iniciais e um menu. Sem API (demonstração), fica como sempre.
 const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
 ---
 
-<header class="nav">
+<header class="nav" data-nav>
   <div class="wrap nav-inner">
     <Logo />
-    {
-      links.length > 0 && (
-        <nav class="nav-links" aria-label="Seções da página">
-          {links.map((l) => (
-            <a href={l.href}>
-              <span>{l.label}</span>
-            </a>
-          ))}
-        </nav>
-      )
-    }
+    <nav class="nav-links" aria-label="Principal">
+      {
+        globais.map((l) => (
+          <a href={l.href} aria-current={ehAtual(l.href) ? 'page' : undefined}>
+            <span>{l.label}</span>
+          </a>
+        ))
+      }
+    </nav>
     <div class="nav-actions" data-nav-actions data-auth={authEndpoint}>
       {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
       {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}
@@ -55,9 +64,53 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
       </div>
     </div>
   </div>
+  {
+    links.length > 0 && (
+      <nav class="nav-secoes" aria-label="Seções desta página" data-nav-secoes>
+        <div class="wrap nav-secoes-in">
+          {links.map((l) => (
+            <a href={l.href} data-secao={l.href.startsWith('#') ? l.href.slice(1) : undefined}>
+              {l.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    )
+  }
 </header>
 
 <script>
+  /* Item 23: o header muda ao rolar.
+     - .is-scrolled: passou do topo (o header fica mais baixo);
+     - .is-fundo: passou da primeira tela: a barra da página aparece e o "Assinar" ganha destaque.
+     A seção em que a pessoa está fica acesa na barra. */
+  {
+    const nav = document.querySelector<HTMLElement>('[data-nav]');
+    const barra = nav?.querySelector<HTMLElement>('[data-nav-secoes]');
+    // Só troca duas classes: barato o bastante para rodar direto em cada evento de rolagem.
+    const medir = () => {
+      const y = scrollY;
+      nav?.classList.toggle('is-scrolled', y > 24);
+      nav?.classList.toggle('is-fundo', y > innerHeight * 0.6);
+    };
+    addEventListener('scroll', medir, { passive: true });
+    medir();
+    if (barra) {
+      const links = Array.from(barra.querySelectorAll<HTMLAnchorElement>('[data-secao]'));
+      const alvos = links.map((a) => document.getElementById(a.dataset.secao!)).filter(Boolean) as HTMLElement[];
+      const io = new IntersectionObserver(
+        (es) => {
+          es.forEach((e) => {
+            if (!e.isIntersecting) return;
+            links.forEach((a) => a.toggleAttribute('aria-current', a.dataset.secao === e.target.id));
+          });
+        },
+        { rootMargin: '-45% 0px -50% 0px' },
+      );
+      alvos.forEach((el) => io.observe(el));
+    }
+  }
+
   const CHAVE = 'orbita:sessao'; // cópia do nome e e-mail, só para o avatar aparecer sem piscar na próxima página
   const box = document.querySelector<HTMLElement>('[data-nav-actions]');
   const ep = box?.dataset.auth ?? '';
@@ -158,6 +211,80 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
 </script>
 
 <style>
+  /* Página atual no header global. */
+  .nav-links a[aria-current='page'] {
+    color: var(--ink);
+  }
+  .nav-links a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+  /* "Assinar" discreto no topo e em destaque depois da primeira tela. */
+  .nav-cta :global(.btn) {
+    transition:
+      background-color 300ms,
+      color 300ms,
+      border-color 300ms,
+      box-shadow 300ms;
+  }
+  .nav:not(.is-fundo) .nav-cta :global(.btn-primary) {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1.5px var(--line-strong, var(--line));
+  }
+  .nav.is-fundo .nav-cta :global(.btn-primary) {
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--brand) 35%, transparent);
+  }
+  /* Barra da página: aparece abaixo do header depois da primeira tela. */
+  /* Flutua logo abaixo do header, sobre o conteúdo: aparecer não empurra a página (sem salto de layout). */
+  .nav-secoes {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: var(--bg);
+    display: grid;
+    grid-template-rows: 0fr;
+    border-bottom: 1px solid transparent;
+    transition:
+      grid-template-rows 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 320ms;
+  }
+  .nav.is-fundo .nav-secoes {
+    grid-template-rows: 1fr;
+    border-bottom-color: var(--line);
+  }
+  .nav-secoes-in {
+    overflow: hidden;
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-secoes a {
+    flex: none;
+    margin-block: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--mute);
+    font: var(--text-small);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 200ms,
+      color 200ms;
+  }
+  .nav-secoes a:hover {
+    color: var(--ink);
+  }
+  .nav-secoes a[aria-current] {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--brand) 18%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-secoes {
+      transition: none;
+    }
+  }
   .nav-cta[hidden],
   .nav-signin[hidden] {
     display: none !important;
@@ -319,6 +446,27 @@ const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
   @media (max-width: 480px) {
     .nav-inner {
       min-height: 72px;
+    }
+  }
+  /* Item 23: no celular, os links principais ficam numa linha rolável abaixo do logo (antes sumiam). */
+  @media (max-width: 899px) {
+    .nav-inner {
+      flex-wrap: wrap;
+      row-gap: 0;
+    }
+    .nav-links {
+      display: flex;
+      order: 3;
+      flex-basis: 100%;
+      gap: var(--space-4);
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 6px;
+      margin-top: -8px;
+    }
+    .nav-links a {
+      flex: none;
+      white-space: nowrap;
     }
   }
 </style>

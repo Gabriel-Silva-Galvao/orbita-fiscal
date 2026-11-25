@@ -164,6 +164,40 @@ fotos atualizados, CLS e rolagem iguais.
 
 ---
 
+### 23. Header fixo igual em todo o site, header que muda e transição suave — Executado e testado (25/11/2026)
+
+**Pedido.** Ao abrir as bases, o header mudava por completo; a pessoa sem assinatura precisa de um header fixo
+para andar pelo site, e de um header que muda (pesquisar exemplos). Transição entre páginas mais suave, com um
+carregamento da Órbita.
+
+**Referências.** Padrão de duas camadas (navegação global fixa + barra da página com as seções, que aparece ao
+rolar e acende a seção atual), descrito em sistemas de design como o da Universidade de St Andrews e no
+artigo da LogRocket sobre navegação fixa. Transição entre páginas com as View Transitions entre documentos
+(`@view-transition { navigation: auto }`): Chrome e Edge 126+, Safari 18.2/26.2; no Firefox, parcial; quem
+não suporta só troca de página sem animação.
+
+**Decisões.** Links globais: Como funciona, O que cobre, Planos, Ajuda. Header que muda: barra da página ao rolar
+e "Assinar" em destaque só depois da primeira tela. Transição: esmaecer com o header parado + átomo se demorar.
+
+**Feito.**
+- `Nav.astro`: os mesmos quatro links em todas as páginas públicas, com a página atual marcada; no celular,
+  numa linha rolável abaixo do logo (antes sumiam). O `links` de cada página virou a barra da página.
+- Barra da página: aparece depois de 60% da primeira tela, flutuando abaixo do header (não empurra o conteúdo),
+  e acende a seção visível. Landing: O que consulta, Com e sem a Órbita, Como funciona, Funciona com, Planos,
+  Dúvidas. /bases: Por tipo, Mapa, Todas as bases. Ajuda, textos legais e 404: sem barra.
+- "Assinar" discreto (contorno) no topo e verde com brilho depois da primeira tela. Ajuda, legais e 404 passaram
+  de "Ver planos" para "Assinar".
+- Transição: o conteúdo esmaece (160 ms) e o novo entra subindo (340 ms); o header fica parado
+  (`view-transition-name`). Com movimento reduzido, sem animação.
+- Carregamento: `src/scripts/carregando.ts` mostra o átomo girando no centro se a próxima página demorar mais de
+  250 ms; troca rápida não mostra nada; âncora da mesma página não mostra; volta pelo histórico esconde.
+
+**Testes.** Header global e página atual (landing, /bases, Ajuda); barra e "Assinar" mudando ao rolar; seção
+acesa; troca de página com o header parado; átomo não aparece em âncora; celular sem rolagem lateral; todas as
+páginas respondendo (200, e 404 na inexistente); 62 testes da API; build limpo.
+**Não deu para ver no painel de teste:** a animação da troca e o átomo de verdade, porque o painel estava oculto
+e o navegador pausa as animações nesse estado. Conferir abrindo o site no navegador.
+
 ## Bloco B: landing
 
 ### 13. Exemplos sorteados no topo e logo no "com a Órbita" — Em aberto

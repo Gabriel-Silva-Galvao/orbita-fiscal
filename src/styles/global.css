@@ -395,3 +395,74 @@ html:not(.anim) .progress {
   color: var(--brand);
   background: color-mix(in srgb, var(--brand) 12%, transparent);
 }
+
+/* Item 23: troca de página suave (View Transitions entre documentos) e átomo de carregamento. */
+@view-transition {
+  navigation: auto;
+}
+header.nav {
+  view-transition-name: cabecalho;
+}
+::view-transition-group(cabecalho) {
+  animation: none;
+}
+::view-transition-old(root) {
+  animation: vt-sai 160ms ease-in both;
+}
+::view-transition-new(root) {
+  animation: vt-entra 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes vt-sai {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-entra {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+.carregando {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms,
+    visibility 0s 200ms;
+  pointer-events: none;
+}
+.carregando.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 200ms;
+}
+.carregando-atomo {
+  width: 84px;
+  color: var(--brand);
+}
+.carregando-orbitas {
+  transform-origin: 50px 50px;
+  animation: carregando-gira 2.4s linear infinite;
+}
+@keyframes carregando-gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carregando-orbitas {
+    animation: none;
+  }
+}

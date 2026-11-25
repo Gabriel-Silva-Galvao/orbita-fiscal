@@ -23,13 +23,8 @@ const { title, description, heading, intro, updated, sections } = Astro.props;
 <Base title={title} description={description}>
   <div class="page-sheet">
     <Nav
-      links={[
-        { href: '/#exemplo', label: 'Exemplo' },
-        { href: '/#como-funciona', label: 'Como funciona' },
-        { href: '/#planos', label: 'Planos' },
-      ]}
       signIn="/entrar"
-      cta={{ href: '/#planos', label: 'Ver planos' }}
+      cta={{ href: '/#planos', label: 'Assinar' }}
     />
 
     <main id="conteudo" class="legal">
