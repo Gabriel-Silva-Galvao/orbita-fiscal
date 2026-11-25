@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  Imagem de compartilhamento (Open Graph), 1200x630 (SEO, etapa 8b).
+  É a que aparece quando alguém manda o link da Órbita no WhatsApp, LinkedIn, Slack etc.
+  Para refazer depois de mudar este arquivo: npm run og  (gera public/og.png com o Edge ou o Chrome).
+  Cores e fontes da marca: src/styles/tokens.css (tema claro) e @fontsource.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Newsreader; font-weight: 400; src: url(../../node_modules/@fontsource/newsreader/files/newsreader-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: Hanken; font-weight: 400; src: url(../../node_modules/@fontsource/hanken-grotesk/files/hanken-grotesk-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: Hanken; font-weight: 600; src: url(../../node_modules/@fontsource/hanken-grotesk/files/hanken-grotesk-latin-600-normal.woff2) format("woff2"); }
+  :root { --bg:#f2f6ef; --surface:#fafcf8; --ink:#102f31; --mute:#53665e; --brand:#10634f; --soft:#c5dfa4; --line:#cfd9cb; --nucleus:#213947; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: var(--bg); }
+  .card { position: relative; width: 1200px; height: 630px; padding: 64px 72px; display: flex; flex-direction: column; justify-content: space-between; color: var(--ink); font-family: Hanken, Arial, sans-serif; }
+  .brand { display: flex; align-items: center; gap: 16px; font: 400 44px/1 Newsreader, Georgia, serif; }
+  .brand svg { width: 64px; height: auto; }
+  h1 { font: 400 68px/1.08 Newsreader, Georgia, serif; letter-spacing: -0.01em; max-width: 680px; position: relative; }
+  .foot { position: relative; max-width: 700px; display: flex; gap: 14px; align-items: center; font-size: 26px; color: var(--mute); }
+  .pill { font-weight: 600; font-size: 22px; color: var(--bg); background: var(--brand); padding: 10px 20px; border-radius: 999px; }
+  /* Átomo grande à direita, cortado pela borda, como marca d'água da marca. */
+  .atom { position: absolute; right: -210px; top: 50%; width: 560px; transform: translateY(-50%); opacity: .95; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <svg class="atom" viewBox="6 14 88 72" aria-hidden="true">
+      <g transform="rotate(-28 50 50)">
+        <ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="1.6"/>
+        <ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="1.6"/>
+        <circle cx="23" cy="50" r="3" fill="var(--bg)" stroke="var(--ink)" stroke-width="1.4"/>
+        <circle cx="77" cy="50" r="3" fill="var(--bg)" stroke="var(--ink)" stroke-width="1.4"/>
+        <circle cx="93" cy="50" r="3" fill="var(--bg)" stroke="var(--ink)" stroke-width="1.4"/>
+      </g>
+      <g stroke="var(--bg)" stroke-width=".7">
+        <circle cx="57.2" cy="50" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)"/>
+        <circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)"/>
+        <circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)"/>
+        <circle cx="50" cy="50" r="4.4" fill="var(--nucleus)"/>
+      </g>
+    </svg>
+
+    <div class="brand">
+      <svg viewBox="6 14 88 72" aria-hidden="true">
+        <g transform="rotate(-28 50 50)">
+          <ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="3.2"/>
+          <ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="3.2"/>
+          <circle cx="77" cy="50" r="4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2.4"/>
+          <circle cx="23" cy="50" r="4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2.4"/>
+        </g>
+        <g stroke="var(--bg)" stroke-width=".7">
+          <circle cx="57.2" cy="50" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)"/>
+          <circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)"/>
+          <circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)"/>
+          <circle cx="50" cy="50" r="4.4" fill="var(--nucleus)"/>
+        </g>
+      </svg>
+      Órbita
+    </div>
+
+    <h1>Pesquise o direito brasileiro na IA que você já usa.</h1>
+
+    <div class="foot">
+      <span class="pill">Plugin para o Claude</span>
+      <span>Leis e julgados com a fonte ao lado</span>
+    </div>
+  </div>
+</body>
+</html>
