@@ -926,6 +926,93 @@ reais). Título, texto, botões e a linha de garantias ficaram centralizados, e 
 o sorteio do exemplo e a função `gerarNoTopo` de `src/scripts/gerar.ts`; o `topo.json` continua, porque a boas-vindas usa.
 Testado no desktop e a 375 px, sem rolagem lateral.
 
+## Bloco I: pedidos de 26/11/2026 (tarde) — A lapidar
+
+Regra deste bloco: lapidar primeiro, depois executar um item por vez, testado, com commit e push em cada etapa. Os itens 51 e 52
+(suporte com login de admin e página de administração) ficam por último, juntos.
+
+### 40. Status do plugin embaixo da logo — A lapidar
+
+No Portal, no canto superior esquerdo, logo abaixo da logo: o status do plugin, "Ativo" ou "Inativo".
+A lapidar: o que conta como "ativo" (plano pago e plugin já conectado ao menos uma vez, ou só plano pago) e de onde vem o dado
+(a API sabe quando o plugin pergunta; ainda não existe essa marca).
+
+**Decidido:** "Ativo" = plano pago e plugin já conectado (a API passa a registrar a primeira pergunta feita com a conta).
+
+### 41. Instalação pela loja de cada IA, com escolha da IA e vídeo — A lapidar
+
+A instalação passa a ser pela loja de cada IA (a do Claude e a das outras). A página de instalação pergunta primeiro "Em qual IA
+você vai instalar?", só com as 4 já definidas (Claude, ChatGPT, Microsoft Copilot e Gemini, as de `src/data/tutoriais.ts`), e
+mostra o passo a passo e o vídeo tutorial da IA escolhida. Um vídeo por IA (o item 7, do vídeo de instalação, passa a ser um vídeo
+por IA). A lapidar: links das lojas, os passos reais de cada uma (hoje há "a confirmar") e quem grava os vídeos; até lá, espaço
+reservado para o vídeo.
+
+### 42. Navegação: caminho de diretório e revisão de UI/UX — A lapidar
+
+Colocar em todo o site o caminho de onde a pessoa está (breadcrumb, ex.: Início › Conta › Plano) e revisar a navegação inteira do
+ponto de vista do usuário: consegue chegar, voltar e fazer o que precisa? Usar as skills de revisão de design disponíveis
+(design-audit, audit-ai-design-slop) e registrar o que for achado. Inclui a parte do item 49 sobre a navegação da inicial.
+
+### 43. Minha compra: trocar a forma de pagamento e reembolso discreto — A lapidar
+
+Na página do plano (minha compra), permitir trocar a forma de pagamento da cobrança, com os dados guardados de forma segura.
+O botão de pedir reembolso vira uma linha pequena; ao clicar, abre um pop-up de confirmação ("tem certeza?") e depois a confirmação
+final. A lapidar: o pedido fala em "excluir a conta" no pop-up do reembolso; confirmar se o texto é de reembolso ou se o reembolso
+também encerra a conta. Segurança: o cartão não deve passar nem ficar guardado na nossa API (risco S3); o certo é o Asaas guardar
+o cartão (tokenização) e a API guardar só o token e os 4 últimos dígitos.
+
+**Decidido:** reembolso e exclusão da conta são coisas separadas. A linha "Pedir reembolso" abre um pop-up próprio
+("Tem certeza que quer pedir o reembolso?") e depois a confirmação; não mexe na conta. A exclusão continua em Conta e segurança.
+
+### 44. Alertas e resumo mais completos — A lapidar
+
+Explorar mais as áreas de alertas por tema e resumo semanal do Portal. A lapidar: o que falta hoje (temas, frequência, prévia do
+resumo, histórico dos alertas enviados) e o que depende de dados reais.
+
+### 45. Suporte: só "Atendimento" e sem suporte prioritário — A lapidar
+
+Na página de suporte do Portal, tirar o "Prazo de resposta" e deixar só o atendimento. Tirar o "suporte prioritário" do Ouro
+(não vai existir), ficando só o pedido de ajuda. Conferir os outros lugares que citam suporte prioritário (planos, comparação).
+
+### 46. Formulário de ajuda sem imagem e com medidas exatas — A lapidar
+
+Tirar a imagem ao lado do formulário de contato (Ajuda e Portal) e acertar as proporções, para o formulário e o texto ficarem
+com tamanhos alinhados na grade.
+
+### 47. Sessões: mostrar "este aparelho" — A lapidar
+
+Em Conta e segurança, a lista de aparelhos conectados deve indicar com clareza qual é o aparelho que a pessoa está usando agora
+(e, se possível, o navegador e o sistema de cada sessão).
+
+### 48. Conta e segurança: pagamento reforçado e troca da forma de pagamento — A lapidar
+
+Em Conta e segurança, uma área de pagamento mais clara, com a forma atual e a opção de trocar. Junto com o item 43 (mesma troca,
+mesmo cuidado com o cartão).
+
+### 49. Inicial: header só com a barra que aparece ao rolar — A lapidar
+
+Na página inicial, tirar do header os links para as outras páginas (Como funciona, O que cobre, Planos, Ajuda) e deixar só a barra
+de seções que aparece ao rolar; as outras páginas passam a ser abertas pelos links dentro da própria página. Junto com o caminho
+de diretório do item 42. A lapidar: se "Entrar" e "Assinar" continuam no header.
+
+**Decidido:** "Entrar" e "Assinar" continuam no header; saem só os links das páginas.
+
+### 50. Documentação de cibersegurança — A lapidar
+
+Começar um documento próprio de cibersegurança (`docs/ciberseguranca.md`), partindo do `docs/backend-e-seguranca.md`: ameaças,
+controles que existem, riscos abertos (S3 a S5), plano de testes e a revisão do item 37.
+
+### 51. Documentação do suporte com login de admin — A lapidar (por último, com o 52)
+
+Desenhar a área de suporte para a equipe, com login de admin: o que cada tela mostra sobre o usuário (só o necessário para
+atender), quem pode ver o quê, registro de cada acesso e cuidados de segurança e LGPD.
+
+### 52. Documentação da administração — A lapidar (por último, com o 51)
+
+Desenhar a página de administração com as informações necessárias para gerenciar os usuários (conta, plano, cobrança, sessões),
+com verificação de vulnerabilidades mais forte que em qualquer outra página: login separado com 2FA obrigatório, permissões por
+papel, registro de auditoria, limites de acesso e revisão de segurança dedicada.
+
 ## Ordem proposta de execução
 
 1. ~~Bloco A~~ feito: 1 e 10, 2, 4, 6, 14, 15, 19, 21 a 24.
@@ -937,5 +1024,6 @@ Testado no desktop e a 375 px, sem rolagem lateral.
 6. **Bloco F**: 30 → 31 → 32 → 33 → 29 (com a conta Sandbox do Asaas) → 28 (com a boas-vindas).
    **Bloco G** (ideias da revisão do Portal): conforme o que for decidido.
 7. Riscos altos de segurança (S3 a S5) antes de publicar.
-8. **Bloco H**: 36 → 35 → 34 → 38 → 39; o 37 depois do 29.
+8. ~~**Bloco H**: 36 → 35 → 34 → 38 → 39~~ feito; o 37 depois do 29.
+   **Bloco I** (rápidos primeiro): 45 → 46 → 47 → 49 → 42 → 40 → 41 → 43 com 48 → 44 → 50 → 51 e 52 por último.
 9. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
