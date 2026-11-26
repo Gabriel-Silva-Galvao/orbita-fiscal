@@ -50,3 +50,28 @@ def test_webhook_recusa_token_errado(api):
     assert http.post("/webhooks/asaas", json={"id": "e1", "event": "PAYMENT_RECEIVED"}).status_code == 401
     r = http.post("/webhooks/asaas", json={"id": "e1", "event": "PAYMENT_RECEIVED"}, headers={"asaas-access-token": "errado"})
     assert r.status_code == 401
+
+
+def test_simulacao_em_producao_e_recusada_mesmo_sem_cookie_secure():
+    """Regressão ARES-SEC-006: com COOKIE_SECURE=false, a simulação (que libera acesso sem pagar e aceita o token
+    público do webhook) subia sem erro num servidor de produção. Agora produção é declarada por ORBITA_ENV."""
+    erros = problemas_de_producao(conf(orbita_env="production", asaas_sim_enabled=True, cookie_secure=False))
+    assert any("ASAAS_SIM_ENABLED=true em produção" in e for e in erros)
+    assert any("COOKIE_SECURE=false em produção" in e for e in erros)
+
+
+def test_producao_e_o_padrao():
+    import os
+
+    antes = os.environ.pop("ORBITA_ENV", None)
+    try:
+        assert Settings(_env_file=None).orbita_env == "production"
+    finally:
+        if antes is not None:
+            os.environ["ORBITA_ENV"] = antes
+
+
+def test_simulacao_so_roda_em_localhost():
+    base = dict(orbita_env="development", asaas_sim_enabled=True, cookie_secure=False)
+    assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, site_url="https://orbitafiscal.com.br")))
+    assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, api_public_url="https://api.orbitafiscal.com.br")))

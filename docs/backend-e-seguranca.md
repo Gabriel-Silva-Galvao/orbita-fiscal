@@ -120,6 +120,7 @@ de risco; encerra com reembolso ou exclusão da assinatura. Cancelado e reembols
 
 | Variável | Desenvolvimento | Produção |
 |---|---|---|
+| `ORBITA_ENV` | `development` | `production` (o padrão) |
 | `ASAAS_BASE_URL` | simulação local | `https://api.asaas.com/v3` |
 | `ASAAS_API_KEY` | chave fixa da simulação | chave `$aact_prod_...` (segredo) |
 | `ASAAS_SIM_ENABLED` | `true` | **`false`** |
