@@ -85,7 +85,7 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
         </p>
       )}
 
-      <form class="pay-form" novalidate data-form>
+      <form method="post" class="pay-form" novalidate data-form>
         <fieldset class="group">
           <legend class="group-title">Sua conta</legend>
           <p class="account small" data-account>

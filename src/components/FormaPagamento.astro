@@ -26,7 +26,7 @@ const { titulo = 'Forma de pagamento', id = 'forma-pagamento' } = Astro.props;
 
   <button type="button" class="btn-alt fp-abrir" data-fp-abrir aria-expanded="false">Trocar a forma de pagamento</button>
 
-  <form class="fp-form" data-fp-form hidden>
+  <form method="post" class="fp-form" data-fp-form hidden>
     <fieldset>
       <legend class="small mute">Escolha a nova forma. Vale a partir da próxima cobrança, e a cobrança em aberto também muda.</legend>
       <label class="fp-op">
