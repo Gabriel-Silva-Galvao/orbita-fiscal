@@ -125,7 +125,9 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         )
         app.include_router(criar_router(app.state.asaas_sim))
 
-    app.include_router(auth.criar_router())
+    rotas_auth = auth.criar_router()
+    app.state.limitador_login = rotas_auth.limitador
+    app.include_router(rotas_auth)
     app.include_router(billing.criar_router())
     app.include_router(plugin.criar_router())
     app.include_router(contato.criar_router())

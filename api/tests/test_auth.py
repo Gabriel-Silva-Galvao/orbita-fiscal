@@ -335,3 +335,31 @@ def test_codigo_tem_teto_por_conta_somando_os_logins(api, caixa):
     assert http.post("/auth/codigo", json={"codigo": caixa["ana@exemplo.test"]}).status_code == 429
     r = http.post("/auth/login", json=login)
     assert r.status_code == 429 and r.json()["codigo"] == "muitas_tentativas"
+
+
+def test_limitador_de_login_nao_cresce_sem_limite(api, monkeypatch):
+    """Regressão ARES-SEC-016: cada login com um e-mail inventado criava uma chave que nunca saía (a leitura também
+    criava). Agora só falha cria chave, a chave sai quando a janela passa e ler não cria nada."""
+    import time as _time
+
+    http, *_ = api
+    lim = http.app.state.limitador_login
+    for i in range(300):  # e-mails que não existem: falham sem scrypt, como no ataque de volume
+        assert http.post("/auth/login", json={"email": f"x{i}@exemplo.test", "senha": "qualquer-1"}).status_code == 401
+    assert len(lim.filas) == 300
+    assert all(len(q) <= auth.LOGIN_MAX_FALHAS for q in lim.filas.values())
+    assert all("@" not in k for k in lim.filas)  # a chave é um hash, não o e-mail
+    # Passada a janela, a varredura esvazia tudo; e consultar uma chave não a cria.
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.LOGIN_JANELA + 1)
+    lim.varrer()
+    assert lim.filas == {}
+    assert lim.bloqueado("ninguem@exemplo.test", auth.LOGIN_MAX_FALHAS) is False and lim.filas == {}
+
+
+def test_limitador_guarda_no_maximo_o_teto_por_chave():
+    lim = auth.Limitador(60)
+    for _ in range(1000):
+        lim.falhou("alvo@exemplo.test", 10)
+    assert lim.bloqueado("alvo@exemplo.test", 10) and len(lim.filas) == 1
+    assert len(next(iter(lim.filas.values()))) == 10

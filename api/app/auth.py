@@ -40,7 +40,7 @@ import re
 import secrets
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import deque
 from typing import Callable
 
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
@@ -227,13 +227,68 @@ class Preferencias(BaseModel):
     resumo_semanal: bool
 
 
+class Limitador:
+    """Contador de falhas por chave numa janela de tempo, na memória do processo.
+
+    ARES-SEC-016: a versão anterior era um defaultdict que criava uma chave a cada e-mail digitado (até numa leitura)
+    e só apagava no login certo; um anônimo fazia a memória crescer sem limite mandando logins com e-mails inventados.
+    Agora: ler não cria chave; fila vazia é apagada; a chave é um hash curto (não o e-mail); cada fila guarda no máximo
+    o teto daquele limite; e a cada 1.000 falhas (ou acima de TETO_CHAVES) as chaves vencidas são varridas. Assim a
+    memória fica proporcional às falhas dos últimos 15 minutos, com no máximo ~10 registros por chave."""
+
+    TETO_CHAVES = 50_000
+    VARRER_A_CADA = 1_000
+
+    def __init__(self, janela: float):
+        self.janela = janela
+        self.filas: dict[str, deque] = {}
+        self._escritas = 0
+
+    @staticmethod
+    def _k(chave: str) -> str:
+        return hashlib.sha256(chave.encode()).hexdigest()[:24]
+
+    def _podar(self, k: str, agora: float) -> int:
+        q = self.filas.get(k)
+        if q is None:
+            return 0
+        while q and agora - q[0] > self.janela:
+            q.popleft()
+        if not q:
+            del self.filas[k]
+            return 0
+        return len(q)
+
+    def bloqueado(self, chave: str, maximo: int) -> bool:
+        return self._podar(self._k(chave), time.time()) >= maximo
+
+    def falhou(self, chave: str, maximo: int) -> None:
+        k, agora = self._k(chave), time.time()
+        self._podar(k, agora)
+        self.filas.setdefault(k, deque(maxlen=maximo)).append(agora)
+        self._escritas += 1
+        if self._escritas % self.VARRER_A_CADA == 0 or len(self.filas) > self.TETO_CHAVES:
+            self.varrer()
+
+    def zerar(self, chave: str) -> None:
+        self.filas.pop(self._k(chave), None)
+
+    def varrer(self) -> None:
+        agora = time.time()
+        for k in list(self.filas):
+            self._podar(k, agora)
+        if len(self.filas) > self.TETO_CHAVES:
+            log.warning("Limitador de login com %d chaves ativas (acima de %d): possível ataque de volume", len(self.filas), self.TETO_CHAVES)
+
+
 def _erro(status: int, codigo: str, descricao: str, **extra) -> JSONResponse:
     return JSONResponse({"codigo": codigo, "descricao": descricao, **extra}, status_code=status)
 
 
 def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     r = APIRouter(prefix="/auth", tags=["Conta e login"])
-    falhas: dict[str, deque] = defaultdict(deque)
+    falhas = Limitador(LOGIN_JANELA)
+    r.limitador = falhas  # main.py guarda em app.state.limitador_login (observação e testes)
 
     def banco(req: Request):
         return req.app.state.banco
@@ -261,11 +316,8 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     def desafio_atual(req: Request, token: str | None) -> dict | None:
         return banco(req).um("SELECT * FROM desafios WHERE token_hash=?", _sha(token)) if token else None
 
-    def limite_login(email: str, maximo: int = LOGIN_MAX_FALHAS) -> bool:
-        q, agora = falhas[email], time.time()
-        while q and agora - q[0] > LOGIN_JANELA:
-            q.popleft()
-        return len(q) >= maximo
+    def limite_login(chave: str, maximo: int = LOGIN_MAX_FALHAS) -> bool:
+        return falhas.bloqueado(chave, maximo)
 
     def senha_atual_confere(req: Request, usuario_id: str, senha: str) -> JSONResponse | None:
         """ARES-SEC-018: a troca de senha (e a de e-mail) conferia a senha atual sem limite, o que permitia adivinhá-la
@@ -276,9 +328,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(429, "muitas_tentativas", "Muitas tentativas com a senha atual. Espere alguns minutos.")
         u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", usuario_id)
         if not confere_senha(senha, u["senha_hash"]):
-            falhas[chave].append(time.time())
+            falhas.falhou(chave, SENHA_ATUAL_MAX_FALHAS)
             return _erro(401, "senha_atual", "A senha atual não confere.")
-        falhas.pop(chave, None)
+        falhas.zerar(chave)
         return None
 
     @r.post("/cadastro", status_code=202)
@@ -299,9 +351,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(429, "muitas_tentativas", "Muitas tentativas. Espere alguns minutos.")
         u = banco(req).um("SELECT * FROM usuarios WHERE email=?", email)
         if not u or not confere_senha(dados.senha, u["senha_hash"]):
-            falhas[email].append(time.time())
+            falhas.falhou(email, LOGIN_MAX_FALHAS)
             return _erro(401, "credenciais", "E-mail ou senha não conferem.")
-        falhas.pop(email, None)
+        falhas.zerar(email)
         if limite_login(f"codigo:{email}", CODIGO_MAX_FALHAS_CONTA):
             # ARES-SEC-002: conta com códigos errados demais na janela não ganha desafio novo (nem mais 5 chutes).
             return _erro(429, "muitas_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
@@ -319,13 +371,13 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if limite_login(conta, CODIGO_MAX_FALHAS_CONTA):
             return _erro(429, "sem_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
         if not hmac.compare_digest(_sha(codigo.strip()), d["codigo_hash"]):
-            falhas[conta].append(time.time())
+            falhas.falhou(conta, CODIGO_MAX_FALHAS_CONTA)
             restantes = d["tentativas"] - 1
             banco(req).executar("UPDATE desafios SET tentativas=? WHERE token_hash=?", restantes, d["token_hash"])
             if restantes <= 0:
                 return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
             return _erro(400, "codigo_errado", "Código incorreto.", tentativas_restantes=restantes)
-        falhas.pop(conta, None)
+        falhas.zerar(conta)
         return None
 
     @r.post("/codigo")
