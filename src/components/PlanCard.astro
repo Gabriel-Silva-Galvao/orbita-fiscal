@@ -14,9 +14,11 @@ interface Props {
 const { plan, badge } = Astro.props;
 const preco = brl(plan.cents);
 const [inteiro, centavos] = preco.replace('R$ ', '').split(',');
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 ---
 
-<article class:list={['plan', { 'plan-featured': plan.featured }]} aria-labelledby={`plan-${plan.slug}`}>
+<article class:list={['plan', { 'plan-featured': plan.featured }]} aria-labelledby={`plan-${plan.slug}`} data-plan={plan.slug} data-billing={billing}>
+  <span class="plan-seu" data-plan-seu hidden>Seu plano</span>
   {plan.featured && badge && <span class="plan-badge">{badge}</span>}
   <h3 class="plan-name" id={`plan-${plan.slug}`}>{plan.name}</h3>
   <p class="plan-tag">{plan.tagline}</p>
@@ -26,7 +28,7 @@ const [inteiro, centavos] = preco.replace('R$ ', '').split(',');
     {centavos && <span class="plan-cents" aria-hidden="true">,{centavos}</span>}
     <span class="plan-per" aria-hidden="true">/mês</span>
   </p>
-  <a class="plan-cta" href={`/assinar/${plan.slug}`} aria-label={`Assinar o ${plan.name}, ${preco} por mês`}>
+  <a class="plan-cta" href={`/assinar/${plan.slug}`} aria-label={`Assinar o ${plan.name}, ${preco} por mês`} data-plan-cta>
     Assinar o {plan.name}
   </a>
   <ul class="plan-items">
@@ -46,7 +48,79 @@ const [inteiro, centavos] = preco.replace('R$ ', '').split(',');
   </ul>
 </article>
 
+<script>
+  // Item 33: para quem está logado, o botão de cada card diz o que aquele plano é para a pessoa.
+  // A regra de verdade está no servidor (middleware); aqui é só o rótulo certo.
+  const ORDEM = ['bronze', 'prata', 'ouro'];
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-plan]'));
+  const billing = cards[0]?.dataset.billing ?? '';
+  let logado = false;
+  try {
+    logado = !!JSON.parse(sessionStorage.getItem('orbita:sessao') ?? 'null');
+  } catch {
+    /* sem cópia da sessão */
+  }
+  let pedido = false;
+  const rotular = () => {
+    if (pedido || !billing || !cards.length) return;
+    pedido = true;
+    fetch(`${billing}/plano`, { credentials: 'include', headers: { accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p: { plano: string | null; status_acesso: string | null; tem_acesso: boolean } | null) => {
+        if (!p?.plano) return;
+        const de = ORDEM.indexOf(p.plano);
+        cards.forEach((card) => {
+          const a = card.querySelector<HTMLAnchorElement>('[data-plan-cta]')!;
+          const nome = card.querySelector('.plan-name')?.textContent ?? '';
+          const para = ORDEM.indexOf(card.dataset.plan!);
+          const rotulo = (texto: string, href: string, estado: string) => {
+            a.textContent = texto;
+            a.href = href;
+            a.setAttribute('aria-label', `${texto}: ${nome}`);
+            card.dataset.estado = estado;
+          };
+          if (p.status_acesso === 'pendente') {
+            if (para === de) rotulo('Concluir o pagamento', '/conta/plano', 'pendente');
+            return;
+          }
+          if (!p.tem_acesso) return;
+          if (para === de) {
+            rotulo('Seu plano · ver detalhes', '/conta/plano', 'atual');
+            card.querySelector<HTMLElement>('[data-plan-seu]')!.hidden = false;
+          } else if (para < de) rotulo('Incluído no seu plano', '/conta/plano', 'incluido');
+          else rotulo(`Fazer upgrade para o ${nome}`, `/upgrade/${card.dataset.plan}`, 'upgrade');
+        });
+      })
+      .catch(() => {});
+  };
+  if (logado) rotular();
+  // Na primeira página depois de entrar, a cópia da sessão chega depois: o header avisa quando confirmar.
+  document.addEventListener('orbita:sessao', (e) => (e as CustomEvent).detail && rotular());
+</script>
+
 <style>
+  .plan-seu {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #111827;
+    color: #ffffff;
+    font: 600 0.75rem/1.4 var(--font-body, inherit);
+  }
+  .plan-seu[hidden] {
+    display: none;
+  }
+  .plan[data-estado='atual'] {
+    border: 2px solid #111827;
+  }
+  .plan[data-estado='atual'] .plan-cta,
+  .plan[data-estado='incluido'] .plan-cta {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #4b5563;
+  }
   /* Paleta própria do card: sempre branco, nos dois temas do site. */
   .plan {
     --pc-bg: #ffffff;

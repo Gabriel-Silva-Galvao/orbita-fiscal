@@ -194,6 +194,8 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
         const dados = u ? { nome: u.nome, email: u.email } : null;
         gravar(dados);
         mostrar(dados);
+        // Avisa o resto da página (cards de plano, rodapé) de que a sessão foi confirmada.
+        document.dispatchEvent(new CustomEvent('orbita:sessao', { detail: dados }));
         if (dados && bep) {
           fetch(`${bep}/plano`, { credentials: 'include', headers: { accept: 'application/json' } })
             .then((r) => (r.ok ? r.json() : null))

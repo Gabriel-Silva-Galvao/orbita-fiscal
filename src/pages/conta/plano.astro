@@ -192,6 +192,18 @@ const upgrades = JSON.stringify(
 
 <script>
   import { aoCarregar, agir, plans, fmt, dataIso, reais, forma, botao, $, type PortalCtx } from '../../scripts/portal';
+  import { avisar as avisoPlano } from '../../scripts/portal';
+  // Item 33: avisos de quem tentou comprar o que já tem (o servidor manda para cá) e do upgrade concluído.
+  {
+    const AVISOS: Record<string, string> = {
+      'ja-assina': 'Você já assina este plano. Tudo dele já está liberado na sua conta.',
+      menor: 'O seu plano já inclui tudo do plano escolhido. Para mudar para um plano menor, fale com a equipe.',
+      pendente: 'Falta confirmar o pagamento da sua assinatura. Conclua abaixo antes de mudar de plano.',
+      'upgrade-ok': 'Upgrade feito. Os recursos novos já estão liberados na sua conta.',
+    };
+    const aviso = new URLSearchParams(location.search).get('aviso');
+    if (aviso && AVISOS[aviso]) avisoPlano(AVISOS[aviso], 'info');
+  }
 
   const upgrades = JSON.parse($('[data-upgrade]').dataset.upgrades ?? '{}') as Record<string, { slug: string; nome: string; preco: string }>;
   const SITUACAO: Record<string, [string, string?]> = {

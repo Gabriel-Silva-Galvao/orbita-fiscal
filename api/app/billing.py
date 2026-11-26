@@ -82,6 +82,14 @@ class NovaAssinatura(BaseModel):
     cartao: Cartao | None = None
 
 
+class TrocaPlano(BaseModel):
+    plano: Literal["bronze", "prata", "ouro"]
+
+
+# Ordem dos planos, do menor ao maior (item 33): só se troca para cima pela API.
+ORDEM = ["bronze", "prata", "ouro"]
+
+
 class TrocaForma(BaseModel):
     forma: Literal["pix", "boleto"]
 
@@ -227,6 +235,28 @@ def criar_router() -> APIRouter:
 
     @router.get("/billing/assinatura")
     def obter(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        return _resumo(banco, asaas, u["id"])
+
+    @router.put("/billing/assinatura/plano")
+    def trocar_plano(dados: TrocaPlano, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        """Item 33: upgrade para um plano maior, com a assinatura ativa. O novo valor vale nas próximas cobranças
+        (como fica a cobrança proporcional no meio do mês: a definir). Plano igual ou menor: 409."""
+        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
+        if not a or not tem_acesso(a) or a["cancelada_em"]:
+            raise HTTPException(409, detail={"codigo": "sem_assinatura_ativa", "mensagem": "O upgrade precisa de uma assinatura ativa."})
+        if ORDEM.index(dados.plano) <= ORDEM.index(a["plano"]):
+            raise HTTPException(
+                409,
+                detail={"codigo": "nao_e_upgrade", "mensagem": "Por aqui só dá para subir de plano. Para um plano menor, fale com a equipe."},
+            )
+        novo = PLANOS[dados.plano]
+        try:
+            asaas.atualizar_assinatura(
+                a["subscription_id"], value=novo["valor"], description=f"Assinatura Órbita {novo['nome']}", updatePendingPayments=True
+            )
+        except AsaasError as e:
+            raise _erro_asaas(e)
+        banco.executar("UPDATE assinaturas SET plano = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.plano, u["id"])
         return _resumo(banco, asaas, u["id"])
 
     @router.put("/billing/assinatura/forma")

@@ -1,0 +1,250 @@
+---
+/**
+ * "Compare os planos" (item 33 da rodada de testes, 26/11/2026). Referência: a seção de comparação da página de
+ * planos do ChatGPT (linhas agrupadas, um valor por plano) e a página de planos da Anthropic.
+ * Computador: tabela com os três planos no topo, fixos ao rolar. Celular: abas Bronze/Prata/Ouro e uma coluna por vez.
+ * ✓ tem, — não tem, "a definir" ainda não definido. Lê src/data/plans.ts (mesma fonte dos cards).
+ */
+import { planList, comparacao, brl } from '../data/plans';
+---
+
+<section class="cp" aria-labelledby="cp-t" data-cp>
+  <h3 id="cp-t" class="cp-titulo">Compare os planos</h3>
+  <div class="cp-abas" role="tablist" aria-label="Escolha o plano para comparar">
+    {
+      planList.map((p) => (
+        <button type="button" role="tab" class="cp-aba" data-cp-aba={p.slug} aria-selected={p.featured ? 'true' : 'false'}>
+          {p.name}
+        </button>
+      ))
+    }
+  </div>
+  <div class="cp-rolagem">
+    <table class="cp-tabela" data-cp-mostra={planList.find((p) => p.featured)?.slug}>
+      <thead>
+        <tr>
+          <th scope="col" class="cp-vazio"><span class="sr-only">Recurso</span></th>
+          {
+            planList.map((p) => (
+              <th scope="col" data-col={p.slug} class:list={{ 'is-destaque': p.featured }}>
+                <span class="cp-nome">{p.name}</span>
+                <span class="cp-preco">{brl(p.cents)}/mês</span>
+                <span class="cp-porque">{p.tagline}</span>
+                <a class="cp-btn" href={`/assinar/${p.slug}`}>Assinar o {p.name}</a>
+              </th>
+            ))
+          }
+        </tr>
+      </thead>
+      {
+        comparacao.map((g) => (
+          <tbody>
+            <tr class="cp-grupo">
+              <th scope="colgroup" colspan={planList.length + 1}>{g.grupo}</th>
+            </tr>
+            {g.linhas.map((l) => (
+              <tr>
+                <th scope="row">{l.nome}</th>
+                {planList.map((p) => {
+                  const v = l.valores[p.slug];
+                  return (
+                    <td data-col={p.slug} class:list={{ 'is-destaque': p.featured }}>
+                      {v === true ? (
+                        <span class="cp-sim" aria-label="Incluído">
+                          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        </span>
+                      ) : v === false ? (
+                        <span class="cp-nao" aria-label="Não incluído">—</span>
+                      ) : v === 'definir' ? (
+                        <span class="cp-def">a definir</span>
+                      ) : (
+                        <span class="cp-val">{v}</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        ))
+      }
+    </table>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cp]').forEach((root) => {
+    const tabela = root.querySelector<HTMLElement>('table')!;
+    const abas = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-cp-aba]'));
+    abas.forEach((b) =>
+      b.addEventListener('click', () => {
+        tabela.dataset.cpMostra = b.dataset.cpAba;
+        abas.forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      }),
+    );
+  });
+</script>
+
+<style>
+  /* Mesma paleta dos cards: branco, nos dois temas. */
+  .cp {
+    --cp-ink: #111827;
+    --cp-mute: #6b7280;
+    --cp-line: #e5e7eb;
+    --cp-accent: #10634f;
+    margin-top: var(--space-7);
+    padding: var(--space-6) var(--space-5);
+    border-radius: 20px;
+    background: #ffffff;
+    color: var(--cp-ink);
+    border: 1px solid var(--cp-line);
+  }
+  .cp-titulo {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    color: var(--cp-ink);
+  }
+  .cp-tabela {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9375rem;
+  }
+  .cp-tabela thead th {
+    position: sticky;
+    top: 74px; /* abaixo do header fixo do site */
+    z-index: 1;
+    background: #ffffff;
+    padding: var(--space-3);
+    vertical-align: top;
+    text-align: left;
+    border-bottom: 1px solid var(--cp-line);
+  }
+  .cp-tabela thead th > span,
+  .cp-tabela thead th > a {
+    display: block;
+  }
+  .cp-nome {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+  }
+  .cp-preco {
+    font-weight: 600;
+  }
+  .cp-porque {
+    min-height: 2.6em;
+    margin: 4px 0 var(--space-2);
+    color: var(--cp-mute);
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+  .cp-btn {
+    padding: 8px 12px;
+    border: 1.5px solid var(--cp-ink);
+    border-radius: 10px;
+    color: var(--cp-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+  }
+  .cp-btn:hover {
+    background: var(--cp-ink);
+    color: #ffffff;
+  }
+  th.is-destaque .cp-btn {
+    background: var(--cp-accent);
+    border-color: var(--cp-accent);
+    color: #ffffff;
+  }
+  .cp-tabela .is-destaque {
+    background: #f3f8f5;
+  }
+  .cp-tabela thead th.is-destaque {
+    background: #f3f8f5;
+    border-top: 3px solid var(--cp-accent);
+  }
+  .cp-tabela tbody th,
+  .cp-tabela tbody td {
+    padding: 12px var(--space-3);
+    border-bottom: 1px solid var(--cp-line);
+    text-align: left;
+    font-weight: 400;
+  }
+  .cp-tabela tbody td {
+    text-align: center;
+  }
+  .cp-grupo th {
+    padding-top: var(--space-5) !important;
+    color: var(--cp-accent);
+    font: 600 0.8125rem/1.4 var(--font-body, inherit) !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 0 !important;
+  }
+  .cp-sim svg {
+    width: 18px;
+    height: 18px;
+    color: var(--cp-accent);
+    vertical-align: middle;
+  }
+  .cp-nao {
+    color: #9ca3af;
+  }
+  .cp-def {
+    padding: 1px 8px;
+    border: 1px dashed #9ca3af;
+    border-radius: 6px;
+    color: var(--cp-mute);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .cp-val {
+    font-weight: 600;
+  }
+  .cp-abas {
+    display: none;
+  }
+
+  /* Celular: abas e uma coluna por vez. */
+  @media (max-width: 760px) {
+    .cp {
+      padding: var(--space-5) var(--space-4);
+    }
+    .cp-abas {
+      display: flex;
+      gap: 6px;
+      margin-bottom: var(--space-3);
+    }
+    .cp-aba {
+      flex: 1;
+      min-height: 40px;
+      border: 1px solid var(--cp-line);
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--cp-ink);
+      font: 600 0.875rem/1 var(--font-body, inherit);
+      cursor: pointer;
+    }
+    .cp-aba[aria-selected='true'] {
+      background: var(--cp-ink);
+      border-color: var(--cp-ink);
+      color: #ffffff;
+    }
+    .cp-tabela [data-col] {
+      display: none;
+    }
+    .cp-tabela[data-cp-mostra='bronze'] [data-col='bronze'],
+    .cp-tabela[data-cp-mostra='prata'] [data-col='prata'],
+    .cp-tabela[data-cp-mostra='ouro'] [data-col='ouro'] {
+      display: table-cell;
+    }
+    .cp-tabela thead th {
+      top: 70px;
+    }
+    .cp-vazio {
+      width: 55%;
+    }
+  }
+</style>

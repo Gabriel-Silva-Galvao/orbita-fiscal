@@ -647,14 +647,17 @@ const credits = Object.values(photos);
 
 <script>
   // Item 32: logado (cópia da sessão que o header guarda), "Planos" vira "Minha conta" e "Mudar de plano".
+  const rodapeLogado = (sim: boolean) => {
+    document.querySelectorAll<HTMLElement>('[data-f-anon]').forEach((el) => (el.hidden = sim));
+    document.querySelectorAll<HTMLElement>('[data-f-logado]').forEach((el) => (el.hidden = !sim));
+  };
   try {
-    if (sessionStorage.getItem('orbita:sessao') && sessionStorage.getItem('orbita:sessao') !== 'null') {
-      document.querySelectorAll<HTMLElement>('[data-f-anon]').forEach((el) => (el.hidden = true));
-      document.querySelectorAll<HTMLElement>('[data-f-logado]').forEach((el) => (el.hidden = false));
-    }
+    const copia = sessionStorage.getItem('orbita:sessao');
+    if (copia && copia !== 'null') rodapeLogado(true);
   } catch {
     /* sem armazenamento: fica a versão para quem não entrou */
   }
+  document.addEventListener('orbita:sessao', (e) => rodapeLogado(!!(e as CustomEvent).detail));
 
   const root = document.documentElement;
   const footer = document.querySelector<HTMLElement>('#rodape');

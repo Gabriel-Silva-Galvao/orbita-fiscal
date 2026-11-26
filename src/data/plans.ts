@@ -78,3 +78,51 @@ export const brl = (cents: number) => {
 
 /** Menor preço, para os botões "Assinar a partir de ...". */
 export const aPartirDe = brl(Math.min(...planList.map((p) => p.cents)));
+
+/**
+ * Comparação dos planos (item 33): linhas agrupadas, com o valor de cada plano.
+ * true = tem, false = não tem, 'definir' = ainda não definido (nunca inventar um valor), texto = o valor.
+ * Quando as especificações chegarem, é aqui (e nos `items` acima) que se atualiza.
+ */
+export type Celula = boolean | 'definir' | string;
+export interface LinhaComparacao {
+  nome: string;
+  valores: Record<PlanSlug, Celula>;
+}
+export const comparacao: { grupo: string; linhas: LinhaComparacao[] }[] = [
+  {
+    grupo: 'Pesquisa',
+    linhas: [
+      { nome: 'A base inteira (108 bases)', valores: { bronze: true, prata: true, ouro: true } },
+      { nome: 'A fonte em cada resposta', valores: { bronze: true, prata: true, ouro: true } },
+      { nome: 'Funciona dentro do Claude', valores: { bronze: true, prata: true, ouro: true } },
+      { nome: 'Consultas por mês', valores: { bronze: 'definir', prata: 'definir', ouro: 'definir' } },
+    ],
+  },
+  {
+    grupo: 'Recursos',
+    linhas: [
+      { nome: 'Recursos do Prata', valores: { bronze: false, prata: 'definir', ouro: 'definir' } },
+      { nome: 'Alertas por tema', valores: { bronze: false, prata: false, ouro: true } },
+      { nome: 'Resumo semanal por área', valores: { bronze: false, prata: false, ouro: true } },
+      { nome: 'Acesso antecipado às novidades', valores: { bronze: false, prata: false, ouro: true } },
+    ],
+  },
+  {
+    grupo: 'Suporte',
+    linhas: [
+      { nome: 'Atendimento pela equipe', valores: { bronze: true, prata: true, ouro: true } },
+      { nome: 'Suporte prioritário', valores: { bronze: false, prata: false, ouro: true } },
+      { nome: 'Conversa de implantação', valores: { bronze: false, prata: false, ouro: true } },
+      { nome: 'Prazo de resposta', valores: { bronze: 'definir', prata: 'definir', ouro: 'definir' } },
+    ],
+  },
+  {
+    grupo: 'Conta e cobrança',
+    linhas: [
+      { nome: 'Usuários', valores: { bronze: '1', prata: '1', ouro: '1' } },
+      { nome: 'Cartão, Pix ou boleto', valores: { bronze: true, prata: true, ouro: true } },
+      { nome: 'Reembolso integral em até 7 dias', valores: { bronze: true, prata: true, ouro: true } },
+    ],
+  },
+];

@@ -1,0 +1,202 @@
+---
+/**
+ * Tela de upgrade (item 33 da rodada de testes, 26/11/2026). Quem já tem um plano e escolhe um maior chega aqui
+ * (o middleware manda /assinar/{plano maior} para cá e recusa planos iguais ou menores). Mostra só o que a pessoa
+ * ganha a mais, o novo valor e como fica a cobrança; "Confirmar upgrade" chama PUT {billing}/assinatura/plano.
+ */
+import Focus from '../../layouts/Focus.astro';
+import Pending from '../../components/Pending.astro';
+import { plans, planList, brl, type PlanSlug } from '../../data/plans';
+
+export const prerender = false;
+
+const alvo = Astro.params.plano as PlanSlug;
+if (!(alvo in plans)) return new Response(null, { status: 404 });
+const atualSlug = (Astro.locals.planoAtual?.plano ?? null) as PlanSlug | null;
+const atual = atualSlug ? plans[atualSlug] : null;
+const novo = plans[alvo];
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
+
+// O que o plano novo traz a mais: os itens dele que não estão nos planos até o atual ("Tudo do ..." não conta).
+const ordem = planList.map((p) => p.slug);
+const ateAtual = atualSlug ? planList.slice(0, ordem.indexOf(atualSlug) + 1) : [];
+const jaTem = new Set(ateAtual.flatMap((p) => p.items.map((i) => i.text)));
+const ganhos = planList
+  .slice(atualSlug ? ordem.indexOf(atualSlug) + 1 : 0, ordem.indexOf(alvo) + 1)
+  .flatMap((p) => p.items)
+  .filter((i) => !i.text.startsWith('Tudo do') && !jaTem.has(i.text));
+const diferenca = atual ? novo.cents - atual.cents : novo.cents;
+---
+
+<Focus title={`Upgrade para o ${novo.name} · Órbita`} description={`Troque para o plano ${novo.name} da Órbita.`}>
+  <div class="wrap up" data-up data-billing={billing} data-alvo={alvo}>
+    <p class="overline">Upgrade de plano</p>
+    <h1 class="display-md">{atual ? `Do ${atual.name} para o ${novo.name}` : `Assinar o ${novo.name}`}</h1>
+
+    <div class="up-grade">
+      <section class="up-card" aria-labelledby="ganha-t">
+        <h2 id="ganha-t" class="up-t">O que você ganha</h2>
+        <ul class="up-lista">
+          {
+            ganhos.map((g) => (
+              <li class:list={{ 'is-pend': g.pending }}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                <span>{g.text}{g.pending && <Pending kind={g.pending} />}</span>
+              </li>
+            ))
+          }
+        </ul>
+        {atual && <p class="small mute">Continua tudo o que o {atual.name} já dá.</p>}
+      </section>
+
+      <aside class="up-card up-resumo" aria-labelledby="valor-t">
+        <h2 id="valor-t" class="up-t">Valor</h2>
+        <dl>
+          {atual && (<div><dt>Hoje ({atual.name})</dt><dd>{brl(atual.cents)}/mês</dd></div>)}
+          <div><dt>Com o {novo.name}</dt><dd><strong>{brl(novo.cents)}/mês</strong></dd></div>
+          {atual && (<div><dt>Diferença</dt><dd>+ {brl(diferenca)}/mês</dd></div>)}
+        </dl>
+        <p class="small mute">
+          O novo valor entra nas próximas cobranças. Como fica a cobrança proporcional deste mês<Pending kind="definir" />.
+        </p>
+        <button type="button" class="btn-main up-btn" data-up-ok>Confirmar upgrade para o {novo.name}</button>
+        <a class="small up-voltar" href="/conta/plano">Voltar sem mudar</a>
+        <p class="notice is-error" data-up-erro role="alert" hidden></p>
+      </aside>
+    </div>
+  </div>
+</Focus>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-up]')!;
+  const botao = root.querySelector<HTMLButtonElement>('[data-up-ok]')!;
+  const erro = root.querySelector<HTMLElement>('[data-up-erro]')!;
+  botao.addEventListener('click', async () => {
+    const billing = root.dataset.billing ?? '';
+    if (!billing) {
+      erro.textContent = 'Na demonstração sem servidor, o upgrade não é gravado.';
+      erro.hidden = false;
+      return;
+    }
+    botao.disabled = true;
+    botao.textContent = 'Confirmando…';
+    erro.hidden = true;
+    try {
+      const r = await fetch(`${billing}/assinatura/plano`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plano: root.dataset.alvo }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j?.detail?.mensagem || 'Não deu para fazer o upgrade agora. Tente de novo em instantes.');
+      }
+      location.href = '/conta/plano?aviso=upgrade-ok';
+    } catch (e) {
+      erro.textContent = (e as Error).message;
+      erro.hidden = false;
+      botao.disabled = false;
+      botao.textContent = 'Tentar de novo';
+    }
+  });
+</script>
+
+<style>
+  .up {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 920px;
+  }
+  .up h1 {
+    margin: 0 0 var(--space-3);
+  }
+  .up-grade {
+    display: grid;
+    gap: var(--space-4);
+  }
+  @media (min-width: 820px) {
+    .up-grade {
+      grid-template-columns: 1.3fr 1fr;
+      align-items: start;
+    }
+  }
+  .up-card {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface);
+  }
+  .up-t {
+    margin: 0;
+    font-size: 1.125rem;
+  }
+  .up-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .up-lista li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 10px;
+    animation: up-entra 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .up-lista li:nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .up-lista li:nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .up-lista li:nth-child(4) {
+    animation-delay: 180ms;
+  }
+  @keyframes up-entra {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .up-lista svg {
+    width: 16px;
+    height: 16px;
+    margin-top: 4px;
+    color: var(--brand);
+  }
+  .up-lista li.is-pend {
+    color: var(--mute);
+  }
+  .up-resumo dl {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .up-resumo dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .up-resumo dt {
+    color: var(--mute);
+  }
+  .up-resumo dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .up-btn {
+    width: 100%;
+  }
+  .up-voltar {
+    justify-self: center;
+    color: var(--mute);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .up-lista li {
+      animation: none;
+    }
+  }
+</style>

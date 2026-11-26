@@ -279,3 +279,18 @@ def test_plano_leve_para_o_header(api):
     confirmar(http, r.json()["cobrancas"][0]["id"])
     p = http.get("/billing/plano").json()
     assert p["status_acesso"] == "ativo" and p["tem_acesso"] is True
+
+
+def test_upgrade_so_para_cima(api):
+    """Item 33: Prata -> Ouro muda o plano e o valor; igual ou menor, e sem pagamento, recusa."""
+    http, *_ = api
+    entrar(http, api[2])
+    r = assinar(http, "pix", plano="prata")
+    assert http.put("/billing/assinatura/plano", json={"plano": "ouro"}).status_code == 409  # ainda pendente
+    confirmar(http, r.json()["cobrancas"][0]["id"])
+    assert http.put("/billing/assinatura/plano", json={"plano": "prata"}).status_code == 409
+    assert http.put("/billing/assinatura/plano", json={"plano": "bronze"}).status_code == 409
+    up = http.put("/billing/assinatura/plano", json={"plano": "ouro"})
+    assert up.status_code == 200, up.text
+    assert up.json()["plano"] == "ouro" and up.json()["valor"] == 119.9
+    assert http.get("/billing/plano").json()["plano"] == "ouro"

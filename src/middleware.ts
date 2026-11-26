@@ -14,7 +14,7 @@ import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
 
-const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar'];
+const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar', '/upgrade'];
 
 const protegida = (path: string) => PROTEGIDAS.some((p) => path === p || path.startsWith(`${p}/`));
 
@@ -86,5 +86,34 @@ async function porta(context: APIContext, next: MiddlewareNext): Promise<Respons
   if (!res.ok) return new Response('Serviço temporariamente indisponível. Tente de novo em instantes.', { status: 503 });
 
   context.locals.usuario = (await res.json()) as App.Locals['usuario'];
+
+  // Item 33: quem já tem plano não compra de novo. A regra vale no servidor, para link direto e para botão.
+  const pedido = pathname.match(/^\/(assinar|upgrade)\/(bronze|prata|ouro)$/);
+  if (pedido) {
+    const [, rota, alvo] = pedido;
+    let atual: App.Locals['planoAtual'];
+    try {
+      const r = await fetch(new URL('/billing/plano', API_URL), {
+        headers: { cookie, accept: 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      });
+      atual = r.ok ? ((await r.json()) as App.Locals['planoAtual']) : undefined;
+    } catch {
+      return new Response('Serviço temporariamente indisponível. Tente de novo em instantes.', { status: 503 });
+    }
+    context.locals.planoAtual = atual;
+    const ORDEM = ['bronze', 'prata', 'ouro'];
+    const temPlano = atual?.plano && atual.tem_acesso;
+    if (atual?.status_acesso === 'pendente') return context.redirect('/conta/plano?aviso=pendente');
+    if (temPlano) {
+      const de = ORDEM.indexOf(atual!.plano!);
+      const para = ORDEM.indexOf(alvo);
+      if (para === de) return context.redirect('/conta/plano?aviso=ja-assina');
+      if (para < de) return context.redirect('/conta/plano?aviso=menor');
+      if (rota === 'assinar') return context.redirect(`/upgrade/${alvo}`); // plano maior: tela de upgrade
+    } else if (rota === 'upgrade') {
+      return context.redirect(`/assinar/${alvo}`); // sem plano ativo: é uma compra nova
+    }
+  }
   return next();
 }

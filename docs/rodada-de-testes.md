@@ -562,7 +562,29 @@ links legais 2 vezes).
 - Logado: a coluna Produto troca "Planos" por "Minha conta" e "Planos" vira "Mudar de plano".
 - O rodapé curto das páginas de foco (item 2) continua como está.
 
-### 33. Compra só do que faz sentido, upgrade com melhorias e comparação de planos — Lapidado com pesquisa (25/11/2026)
+### 33. Compra só do que faz sentido, upgrade com melhorias e comparação de planos — Executado e testado (26/11/2026)
+
+**Feito.**
+- **API:** `PUT /billing/assinatura/plano` só sobe de plano (assinatura ativa e não cancelada), muda o valor da
+  assinatura no Asaas e o plano no banco; igual, menor ou sem pagamento: 409. Teste novo (77 no total).
+- **Servidor (middleware):** em `/assinar/{plano}` e `/upgrade/{plano}`, consulta `GET /billing/plano`: pagamento
+  pendente → `/conta/plano?aviso=pendente`; mesmo plano → `?aviso=ja-assina`; plano menor → `?aviso=menor`; plano maior
+  → `/upgrade/{plano}`; sem plano ativo, `/upgrade` vira compra nova. Vale para link direto e para botão.
+- **Tela de upgrade** (`src/pages/upgrade/[plano].astro`): "Do Prata para o Ouro", só o que se ganha (com ✓), "continua
+  tudo do Prata", valor de hoje, novo valor e diferença, cobrança proporcional "a definir", "Confirmar upgrade" e
+  "Voltar sem mudar"; ao confirmar, volta ao Portal com "Upgrade feito".
+- **Portal, Plano e pagamento:** mostra os avisos de quem tentou comprar o que já tem e do upgrade feito.
+- **Cards da landing** (logado): "Seu plano" (com selo e borda), "Incluído no seu plano" ou "Fazer upgrade para o X";
+  pagamento pendente: "Concluir o pagamento". Os cards (e o rodapé) esperam o aviso `orbita:sessao` do header, para
+  funcionar já na primeira página depois de entrar.
+- **Compare os planos** (`ComparePlanos.astro`, dados em `comparacao` no `src/data/plans.ts`): grupos Pesquisa,
+  Recursos, Suporte e Conta e cobrança; ✓, — ou "a definir"; cabeçalho dos planos fixo ao rolar; Prata em destaque; no
+  celular, abas e uma coluna por vez.
+**Testes.** Conta Prata: mesmo plano, menor e maior levam para onde devem; cards com os rótulos certos; upgrade para o
+Ouro gravado (API e Portal com o aviso); conta com Pix pendente vai para o Portal; tabela no computador e no celular
+(abas, sem rolagem lateral). **Pendente:** a regra da cobrança proporcional no meio do mês e o downgrade (hoje, com a
+equipe); os botões da tabela de comparação não mudam de rótulo para quem está logado (o servidor redireciona do mesmo
+jeito).
 
 **Pedido.** Quem já tem um plano não pode entrar na compra de outro (nem por link, nem por botão); o botão do plano
 dele aparece como "Seu plano"; no upgrade, mostrar o que melhora; e uma comparação dos planos com ✓ e ✗, como fazem a

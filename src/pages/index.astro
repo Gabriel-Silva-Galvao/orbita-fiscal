@@ -8,6 +8,7 @@ import Comparativo from '../components/Comparativo.astro';
 import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
 import EmpresasFaixa from '../components/EmpresasFaixa.astro';
+import ComparePlanos from '../components/ComparePlanos.astro';
 import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
 import { planList, aPartirDe } from '../data/plans';
 import Faq from '../components/Faq.astro';
@@ -166,6 +167,7 @@ const steps = [
         <div class="plans" data-reveal>
           {planList.map((p) => <PlanCard plan={p} badge="Mais escolhido" />)}
         </div>
+        <ComparePlanos />
         <div data-reveal><EmpresasFaixa /></div>
         <ul class="plans-foot small mute" data-reveal>
           <li>Cobrança mensal</li>
