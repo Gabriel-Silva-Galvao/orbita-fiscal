@@ -1,48 +1,27 @@
 ---
 import Button from './Button.astro';
-import MiniAtomo from './MiniAtomo.astro';
-import { comparacoes } from '../data/comparacao';
-import topo from '../data/topo.json';
 import { aPartirDe } from '../data/plans';
 
 // Título de venda (etapa 10f-1, plano da landing): nomeia o resultado que o advogado quer.
 const title = 'A lei e o julgado certos, com a fonte, na IA que você já usa';
 
-// Ao lado do título (etapa 10f-2): um trecho real da resposta do Claude Opus 5.5 com a Órbita, a da
-// pergunta de crime tributário do comparativo (src/data/comparacao.ts). O trecho é o primeiro parágrafo
-// da resposta, sem mudar nada; as fontes listadas aparecem todas, com esses nomes, no texto da resposta.
-// Item 19 (25/11/2026): sai o átomo de lítio do topo; o cartão de resposta fica sozinho ao lado do título.
-const exemplo = comparacoes.find((c) => c.id === 'crime')!;
-const trecho = exemplo.com.texto.split('\n')[0];
-const fontes = [
-  'Súmula Vinculante 24 do STF',
-  'Lei 8.137/1990, art. 1º',
-  'Lei 9.430/1996, art. 83',
-  'ARE 1.618.979 AgR (STF, 13/10/2026)',
-  'LC 225/2026',
-];
-
-// Item 13 da rodada de testes: a cada visita o topo sorteia uma das 11 perguntas do painel da pesquisa
-// (src/data/topo.json, gerado por scripts/exemplos/gerar_topo.py). O HTML já vem com a de crime tributário;
-// um script curto, logo depois do cartão, troca o conteúdo antes da primeira pintura, então nada pula.
-// As 5 tributárias também estão no comparativo; nelas o link leva direto à aba da mesma pergunta.
-const NO_COMPARATIVO: Record<number, string> = { 1: 'frete', 2: 'tema69', 3: 'prescricao', 10: 'issqn', 11: 'crime' };
-const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
+// Item 39 (26/11/2026): o cartão com o exemplo de resposta saiu do topo, porque a seção "Com e sem a Órbita",
+// logo abaixo, já mostra respostas reais. O texto ficou centralizado, com as órbitas do fundo centradas também.
 ---
 
-<!-- Etapa 10f-2: trecho real de resposta com a fonte, gerado ao vivo (10g). Item 19: sem o átomo e com o fundo parado. -->
+<!-- Item 19: sem o átomo e com o fundo parado. Item 39: sem o exemplo e com o texto centralizado. -->
 <section class="hero" data-hero aria-labelledby="hero-title">
   <!-- Fundo: órbitas largas que atravessam a página, com um ponto viajando. -->
   <svg class="hero-bg" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <g transform="rotate(-28 980 380)" fill="none" stroke="var(--line)" stroke-width="1.2">
-      <ellipse cx="980" cy="380" rx="760" ry="300"></ellipse>
-      <ellipse cx="980" cy="380" rx="520" ry="200" stroke-dasharray="2 10"></ellipse>
-      <ellipse id="hero-path" cx="980" cy="380" rx="980" ry="420"></ellipse>
+    <g transform="rotate(-18 720 380)" fill="none" stroke="var(--line)" stroke-width="1.2">
+      <ellipse cx="720" cy="380" rx="760" ry="300"></ellipse>
+      <ellipse cx="720" cy="380" rx="520" ry="200" stroke-dasharray="2 10"></ellipse>
+      <ellipse id="hero-path" cx="720" cy="380" rx="980" ry="420"></ellipse>
     </g>
     <!-- Item 19: os pontos ficam parados sobre as órbitas (o fundo não se mexe mais). -->
-    <g transform="rotate(-28 980 380)">
-      <circle cx="266" cy="277" r="5" fill="var(--brand)"></circle>
-      <circle cx="1240" cy="553" r="3.5" fill="var(--brand)" opacity=".6"></circle>
+    <g transform="rotate(-18 720 380)">
+      <circle cx="6" cy="277" r="5" fill="var(--brand)"></circle>
+      <circle cx="980" cy="553" r="3.5" fill="var(--brand)" opacity=".6"></circle>
     </g>
   </svg>
 
@@ -62,63 +41,6 @@ const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
         <Button href="#exemplo" variant="secondary">Ver com e sem a Órbita</Button>
       </div>
       <p class="small mute">Cartão, Pix ou boleto · cancele quando quiser · funciona no Claude</p>
-    </div>
-
-    <div class="hero-art">
-      <figure class="hero-answer" aria-label="Exemplo de resposta com a Órbita" data-gerar>
-        <p class="ha-q" data-g-q>
-          <span class="ha-label">Pergunta no Claude</span>
-          {exemplo.pergunta}
-        </p>
-        <div class="ha-a">
-          <p class="ha-who"><MiniAtomo size={20} /> Claude Opus 5.5 com a Órbita<span class="ha-status" data-g-status aria-hidden="true"></span></p>
-          <p class="ha-text" data-g-text>{trecho}</p>
-          <p class="ha-label">Fontes citadas na resposta</p>
-          <ul class="ha-sources" data-g-chips>
-            {fontes.map((f) => <li>{f}</li>)}
-          </ul>
-        </div>
-        <figcaption class="small" data-topo-legenda>
-          Resposta real, com <span data-topo-total>{exemplo.com.fontes}</span> fontes citadas.
-          <a href="#exemplo" data-topo-link>Compare com a resposta sem a Órbita</a>
-        </figcaption>
-      </figure>
-      <script type="application/json" id="topo-exemplos" set:html={JSON.stringify(exemplos).replace(/</g, '\\u003c')}></script>
-      <script is:inline>
-        (function () {
-          // Sorteia o exemplo antes de pintar. Sem JavaScript, fica o de crime tributário que já veio no HTML.
-          try {
-            var lista = JSON.parse(document.getElementById('topo-exemplos').textContent);
-            var e = lista[Math.floor(Math.random() * lista.length)];
-            var fig = document.querySelector('[data-gerar]');
-            if (!e || !fig) return;
-            var q = fig.querySelector('[data-g-q]');
-            var rotulo = q.querySelector('.ha-label');
-            q.textContent = '';
-            q.append(rotulo, document.createTextNode(e.pergunta));
-            fig.querySelector('[data-g-text]').textContent = e.trecho;
-            var ul = fig.querySelector('[data-g-chips]');
-            ul.textContent = '';
-            e.fontes.forEach(function (f) {
-              var li = document.createElement('li');
-              li.textContent = f;
-              ul.append(li);
-            });
-            fig.querySelector('[data-topo-total]').textContent = e.fontes_total;
-            var link = fig.querySelector('[data-topo-link]');
-            if (e.aba) {
-              link.href = '#exemplo';
-              link.dataset.aba = e.aba;
-              link.textContent = 'Compare com a resposta sem a Órbita';
-            } else {
-              link.href = '#exemplo';
-              link.removeAttribute('data-aba');
-              link.textContent = 'Veja a diferença com e sem a Órbita';
-            }
-            fig.dataset.exemplo = String(e.n);
-          } catch (err) {}
-        })();
-      </script>
     </div>
   </div>
 
@@ -159,131 +81,25 @@ const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
   .hero-copy {
     display: grid;
     gap: var(--space-4);
-    justify-items: start;
+    justify-items: center;
+    text-align: center;
+    max-width: 880px;
+    margin-inline: auto;
   }
   .hero-title {
-    max-width: 620px;
+    max-width: 840px;
     text-wrap: balance;
   }
   .hero-copy .lead {
-    max-width: 540px;
+    max-width: 620px;
+    text-wrap: pretty;
   }
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--space-3);
     margin-top: var(--space-2);
-  }
-
-  .hero-art {
-    position: relative;
-    display: grid;
-  }
-  /* Cartão de resposta real (etapa 10f-2). */
-  .hero-answer {
-    margin: 0;
-    justify-self: end;
-    display: grid;
-    gap: var(--space-3);
-    width: 100%;
-    max-width: 480px;
-    position: relative;
-    z-index: 1;
-  }
-  .ha-q {
-    margin: 0;
-    justify-self: end;
-    max-width: 92%;
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
-    background: var(--soft);
-    color: var(--ink);
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
-  .ha-a {
-    display: grid;
-    gap: var(--space-2);
-    padding: var(--space-4) var(--space-5);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--brand);
-    background: var(--surface);
-  }
-  .ha-label {
-    display: block;
-    margin: 0;
-    font: var(--text-label);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--mute);
-  }
-  .ha-q .ha-label {
-    color: var(--ink);
-    opacity: 0.75;
-    margin-bottom: 4px;
-  }
-  .ha-who {
-    margin: 0;
-    font-weight: 600;
-    color: var(--brand);
-    font-size: 0.875rem;
-  }
-  .ha-text {
-    margin: 0 0 var(--space-2);
-    font-size: 0.9375rem;
-    line-height: 1.55;
-  }
-  .ha-sources {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .ha-sources li {
-    font-size: 0.8125rem;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--line-strong);
-  }
-  .ha-who {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .ha-status {
-    font-weight: 400;
-    color: var(--mute);
-  }
-  .ha-status:not(:empty)::before {
-    content: ' · ';
-  }
-  .ha-a {
-    transition: box-shadow 0.5s;
-  }
-  .hero-answer.is-live .ha-a {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand) 20%, transparent);
-  }
-  .hero-answer figcaption {
-    justify-self: start;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--mute);
-  }
-  .hero-answer figcaption a {
-    color: var(--brand);
-  }
-  @media (min-width: 900px) {
-    .hero-grid {
-      grid-template-columns: 1.1fr 1fr;
-      gap: var(--space-7);
-    }
-    .hero-answer {
-      justify-self: end;
-      margin-block: var(--space-6);
-    }
   }
 
   /* Convite para rolar. */
@@ -332,33 +148,4 @@ const exemplos = topo.map((e) => ({ ...e, aba: NO_COMPARATIVO[e.n] ?? null }));
       display: flex;
     }
   }
-  /* Item 14: no hover, o cartão da resposta e a pergunta crescem um pouco e ganham profundidade. */
-  .ha-q,
-  .ha-a {
-    transition:
-      transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      box-shadow 320ms;
-  }
-  .hero-answer:hover .ha-a {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 18px 40px rgb(0 0 0 / 0.22), 0 0 0 1px var(--brand);
-  }
-  .hero-answer:hover .ha-q {
-    transform: translateY(-2px) scale(1.02);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ha-q,
-    .ha-a {
-      transition: none;
-    }
-    .hero-answer:hover .ha-a,
-    .hero-answer:hover .ha-q {
-      transform: none;
-    }
-  }
 </style>
-
-<script>
-  import { gerarNoTopo } from '../scripts/gerar';
-  gerarNoTopo();
-</script>

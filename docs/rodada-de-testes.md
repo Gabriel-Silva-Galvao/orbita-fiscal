@@ -915,11 +915,16 @@ no rodapé apontam para /planos; os botões "Assinar" continuam indo aos cards d
 abrir e fechar suaves, uma pergunta aberta por vez). O `Faq` agora também abre a pergunta do endereço (`/ajuda#reembolso`) e
 responde a `hashchange`; o script antigo da Ajuda que abria pelo # saiu.
 
-### 39. Página inicial sem o exemplo e com o texto centralizado — A lapidar
+### 39. Página inicial sem o exemplo e com o texto centralizado — Executado e testado (26/11/2026)
 
 Tirar o exemplo da página inicial para não repetir, centralizar o texto e testar algumas versões de design para escolher a melhor.
 
 **Decidido:** montar só a versão com o texto centralizado.
+
+**Feito:** o cartão com o exemplo de resposta saiu do topo (a seção "Com e sem a Órbita", logo abaixo, já mostra respostas
+reais). Título, texto, botões e a linha de garantias ficaram centralizados, e as órbitas do fundo foram recentradas. Saíram junto
+o sorteio do exemplo e a função `gerarNoTopo` de `src/scripts/gerar.ts`; o `topo.json` continua, porque a boas-vindas usa.
+Testado no desktop e a 375 px, sem rolagem lateral.
 
 ## Ordem proposta de execução
 

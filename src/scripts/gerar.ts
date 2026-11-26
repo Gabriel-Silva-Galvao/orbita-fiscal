@@ -50,50 +50,6 @@ function quandoVisivel(el: Element, fn: () => void) {
   io.observe(el);
 }
 
-/* ---------------- Topo ---------------- */
-export function gerarNoTopo() {
-  const fig = document.querySelector<HTMLElement>('[data-gerar]');
-  if (!fig || !comMovimento()) return;
-  if (getComputedStyle(fig).display === 'none') return;
-  const q = fig.querySelector<HTMLElement>('[data-g-q]')!;
-  const label = q.querySelector('.ha-label');
-  const pergunta = (q.lastChild?.textContent ?? '').trim();
-  const status = fig.querySelector<HTMLElement>('[data-g-status]')!;
-  const texto = fig.querySelector<HTMLElement>('[data-g-text]')!;
-  const original = texto.textContent ?? '';
-  const fontes = Array.from(fig.querySelectorAll<HTMLElement>('[data-g-chips] li'));
-
-  // Antes de esvaziar, cada parte guarda a altura final: a página não pula enquanto o texto é gerado.
-  const chips = fig.querySelector<HTMLElement>('[data-g-chips]');
-  [q, texto, chips].forEach((el) => el && (el.style.minHeight = `${el.offsetHeight}px`));
-
-  // Estado inicial: só a moldura.
-  q.replaceChildren(...(label ? [label] : []));
-  const qTexto = document.createElement('span');
-  q.append(qTexto);
-  texto.textContent = '';
-  fontes.forEach((f) => (f.hidden = true));
-
-  quandoVisivel(fig, async () => {
-    await esperar(300);
-    await escrever(qTexto, pergunta, 32);
-    fig.classList.add('is-live');
-    for (const b of BASES) {
-      status.textContent = `Consultando a base da Órbita: ${b}…`;
-      await esperar(230);
-    }
-    status.textContent = `${nFontes(fontes.length)}`;
-    await escrever(texto, original, 45, true);
-    for (const f of fontes) {
-      f.hidden = false;
-      f.classList.add('g-pop');
-      await esperar(150);
-    }
-    status.textContent = '';
-    fig.classList.remove('is-live');
-  });
-}
-
 /* ---------------- Comparativo ---------------- */
 const LIMITE = 90; // palavras geradas ao vivo por coluna; o resto aparece de uma vez
 
