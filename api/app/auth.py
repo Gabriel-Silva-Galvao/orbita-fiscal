@@ -61,6 +61,7 @@ SESSAO_VALIDADE = 30 * 24 * 3600
 SESSAO_CURTA = 12 * 3600  # sem "manter conectado"
 ULTIMO_USO_PASSO = 60  # grava o último uso no máximo uma vez por minuto
 LOGIN_JANELA, LOGIN_MAX_FALHAS = 15 * 60, 10
+SENHA_ATUAL_MAX_FALHAS = 5  # ARES-SEC-018: senha atual errada na troca de senha/e-mail, por conta, na mesma janela
 # Segurança (26/11/2026): o regex antigo, r"^[^@\s]+@[^@\s]+\.[^@\s]+$", voltava atrás em tempo quadrático num domínio
 # longo cheio de pontos (ReDoS) e, como o regex segura o GIL, travava a API inteira. Este não volta atrás: os pedaços do
 # domínio não contêm ponto, e o ponto é literal entre eles. Além disso, o e-mail passa por limite de tamanho antes.
@@ -259,11 +260,25 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     def desafio_atual(req: Request, token: str | None) -> dict | None:
         return banco(req).um("SELECT * FROM desafios WHERE token_hash=?", _sha(token)) if token else None
 
-    def limite_login(email: str) -> bool:
+    def limite_login(email: str, maximo: int = LOGIN_MAX_FALHAS) -> bool:
         q, agora = falhas[email], time.time()
         while q and agora - q[0] > LOGIN_JANELA:
             q.popleft()
-        return len(q) >= LOGIN_MAX_FALHAS
+        return len(q) >= maximo
+
+    def senha_atual_confere(req: Request, usuario_id: str, senha: str) -> JSONResponse | None:
+        """ARES-SEC-018: a troca de senha (e a de e-mail) conferia a senha atual sem limite, o que permitia adivinhá-la
+        por força bruta com uma sessão roubada, contornando o limite do login. Agora conta os erros por conta: no
+        5º erro em 15 minutos, 429 até a janela passar (mesmo com a senha certa)."""
+        chave = f"conta:{usuario_id}"
+        if limite_login(chave, SENHA_ATUAL_MAX_FALHAS):
+            return _erro(429, "muitas_tentativas", "Muitas tentativas com a senha atual. Espere alguns minutos.")
+        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", usuario_id)
+        if not confere_senha(senha, u["senha_hash"]):
+            falhas[chave].append(time.time())
+            return _erro(401, "senha_atual", "A senha atual não confere.")
+        falhas.pop(chave, None)
+        return None
 
     @r.post("/cadastro", status_code=202)
     def cadastro(dados: Cadastro, req: Request, resp: Response):
@@ -370,9 +385,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
-        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", s["id"])
-        if not confere_senha(dados.atual, u["senha_hash"]):
-            return _erro(401, "senha_atual", "A senha atual não confere.")
+        erro = senha_atual_confere(req, s["id"], dados.atual)
+        if erro:
+            return erro
         if len(dados.nova) < 8:
             return _erro(422, "senha_curta", "A senha nova precisa ter pelo menos 8 caracteres.")
         if dados.nova == dados.atual:
@@ -386,9 +401,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
         # ARES-SEC-017: com uma sessão roubada, trocar o e-mail sem a senha tomava a conta de vez (a recuperação
         # vai para o e-mail). Agora a senha atual é exigida, como na troca de senha.
-        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", s["id"])
-        if not confere_senha(dados.senha, u["senha_hash"]):
-            return _erro(401, "senha_atual", "A senha atual não confere.")
+        erro = senha_atual_confere(req, s["id"], dados.senha)
+        if erro:
+            return erro
         email = dados.email.strip().lower()
         if not EMAIL_RE.match(email):
             return _erro(422, "dados_invalidos", "Informe um e-mail válido.")

@@ -107,3 +107,21 @@ def test_dados_da_nota(api, caixa):
     assert nota["nome"] == "Ana Souza Advocacia" and nota["endereco"] == "Rua A, 10"
     cliente = next(iter(store.clientes.values()))
     assert cliente["name"] == "Ana Souza Advocacia" and cliente["personType"] == "JURIDICA"
+
+
+def test_senha_atual_tem_limite_de_tentativas(api, caixa, monkeypatch):
+    """Regressão ARES-SEC-018: a senha atual podia ser chutada sem limite na troca de senha (12 erros = 12 x 401).
+    Agora, no 5º erro em 15 minutos, a conta para de aceitar tentativas (429), também na troca de e-mail."""
+    import time as _time
+
+    http, *_ = api
+    cadastrar(http, caixa)
+    codigos = [http.post("/auth/senha/trocar", json={"atual": f"chute-{i}", "nova": "outra-senha-2"}).status_code for i in range(6)]
+    assert codigos == [401] * 5 + [429], codigos
+    # Bloqueada, nem a senha certa passa; e a troca de e-mail usa o mesmo contador.
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 429
+    assert http.post("/auth/email/trocar", json={"email": "nova@exemplo.test", "senha": "senha-forte-1"}).status_code == 429
+    # Passada a janela, a senha certa volta a funcionar.
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.LOGIN_JANELA + 1)
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 202

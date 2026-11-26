@@ -103,6 +103,7 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 |---|---|---|---|---|
 | ARES-SEC-017 e ARES-QA-012 | Alta | Com uma sessão roubada, dava para trocar o e-mail sem a senha; o dono ficava trancado fora (a recuperação vai para o e-mail) e as outras sessões continuavam abertas. | `POST /auth/email/trocar` exige a senha atual (401 `senha_atual`); ao confirmar, as outras sessões caem e o e-mail antigo recebe aviso (`correio.avisar_troca_de_email`). Na tela, campo "Sua senha atual". | `test_conta.py::test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo` |
 | ARES-QA-003 (risco S18) | Alta | Quatro `POST /billing/assinatura` ao mesmo tempo (clique duplo, duas abas) criavam quatro assinaturas cobradas no Asaas; a Órbita guardava uma e as outras ficavam órfãs, cobrando. | Reserva por conta na tabela `operacoes_cobranca` (INSERT atômico) antes de chamar o Asaas, liberada no fim mesmo com erro e vencida após 120 s; o segundo pedido recebe 409 `em_andamento`. O Checkout mostra o aviso e não mexe no pedido da outra aba. | `test_billing.py::test_pedidos_simultaneos_criam_uma_assinatura_so`, `test_reserva_esquecida_expira` |
+| ARES-SEC-018 | Média (Alta junto com a SEC-017) | Com uma sessão roubada, a senha atual podia ser chutada sem limite na troca de senha, contornando o limite do login. | Contador de erros da senha atual por conta, o mesmo na troca de senha e na de e-mail: no 5º erro em 15 minutos, 429 até a janela passar. | `test_conta.py::test_senha_atual_tem_limite_de_tentativas` |
 
 ## 6. Plano de testes de segurança
 
