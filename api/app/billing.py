@@ -305,103 +305,108 @@ def criar_router() -> APIRouter:
     def trocar_plano(dados: TrocaPlano, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
         """Item 33: upgrade para um plano maior, com a assinatura ativa. O novo valor vale nas próximas cobranças
         (como fica a cobrança proporcional no meio do mês: a definir). Plano igual ou menor: 409."""
-        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
-        if not a or not tem_acesso(a) or a["cancelada_em"]:
-            raise HTTPException(409, detail={"codigo": "sem_assinatura_ativa", "mensagem": "O upgrade precisa de uma assinatura ativa."})
-        if ORDEM.index(dados.plano) <= ORDEM.index(a["plano"]):
-            raise HTTPException(
-                409,
-                detail={"codigo": "nao_e_upgrade", "mensagem": "Por aqui só dá para subir de plano. Para um plano menor, fale com a equipe."},
-            )
-        novo = PLANOS[dados.plano]
-        try:
-            asaas.atualizar_assinatura(
-                a["subscription_id"], value=novo["valor"], description=f"Assinatura Órbita {novo['nome']}", updatePendingPayments=True
-            )
-        except AsaasError as e:
-            raise _erro_asaas(e)
-        banco.executar("UPDATE assinaturas SET plano = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.plano, u["id"])
-        return _resumo(banco, asaas, u["id"])
+        with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
+            a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
+            if not a or not tem_acesso(a) or a["cancelada_em"]:
+                raise HTTPException(409, detail={"codigo": "sem_assinatura_ativa", "mensagem": "O upgrade precisa de uma assinatura ativa."})
+            if ORDEM.index(dados.plano) <= ORDEM.index(a["plano"]):
+                raise HTTPException(
+                    409,
+                    detail={"codigo": "nao_e_upgrade", "mensagem": "Por aqui só dá para subir de plano. Para um plano menor, fale com a equipe."},
+                )
+            novo = PLANOS[dados.plano]
+            try:
+                asaas.atualizar_assinatura(
+                    a["subscription_id"], value=novo["valor"], description=f"Assinatura Órbita {novo['nome']}", updatePendingPayments=True
+                )
+            except AsaasError as e:
+                raise _erro_asaas(e)
+            banco.executar("UPDATE assinaturas SET plano = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.plano, u["id"])
+            return _resumo(banco, asaas, u["id"])
 
     @router.put("/billing/assinatura/forma")
     def trocar_forma(dados: TrocaForma, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
-        usuario_id = u["id"]
-        # Para o cartão, a decisão entre a página segura do Asaas e o formulário próprio ainda está em aberto.
-        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
-        if not a or a["status_acesso"] in STATUS_FINAIS:
-            raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Não há assinatura ativa para trocar a forma de pagamento."})
-        try:
-            asaas.atualizar_assinatura(a["subscription_id"], billingType=FORMAS[dados.forma], updatePendingPayments=True)
-        except AsaasError as e:
-            raise _erro_asaas(e)
-        banco.executar("UPDATE assinaturas SET forma = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.forma, usuario_id)
-        return _resumo(banco, asaas, usuario_id)
+        with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
+            usuario_id = u["id"]
+            # Para o cartão, a decisão entre a página segura do Asaas e o formulário próprio ainda está em aberto.
+            a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
+            if not a or a["status_acesso"] in STATUS_FINAIS:
+                raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Não há assinatura ativa para trocar a forma de pagamento."})
+            try:
+                asaas.atualizar_assinatura(a["subscription_id"], billingType=FORMAS[dados.forma], updatePendingPayments=True)
+            except AsaasError as e:
+                raise _erro_asaas(e)
+            banco.executar("UPDATE assinaturas SET forma = ?, atualizado_em = datetime('now') WHERE usuario_id = ?", dados.forma, usuario_id)
+            return _resumo(banco, asaas, usuario_id)
 
     @router.delete("/billing/assinatura")
     def cancelar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
-        usuario_id = u["id"]
-        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
-        if not a or a["status_acesso"] in STATUS_FINAIS:
-            raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Não há assinatura para cancelar."})
-        if a["cancelada_em"]:
-            raise HTTPException(409, detail={"codigo": "ja_cancelada", "mensagem": "O cancelamento já foi pedido."})
-        try:
-            if a["status_acesso"] == "ativo" and a["primeira_paga_em"]:
-                # Termos de uso: o acesso segue até o fim do período pago. No Asaas, endDate encerra a
-                # assinatura nessa data, sem novas cobranças; reativar é só apagar o endDate.
-                fim = proxima_cobranca(a["primeira_paga_em"])
-                asaas.atualizar_assinatura(a["subscription_id"], endDate=(fim - timedelta(days=1)).isoformat())
-                banco.executar(
-                    "UPDATE assinaturas SET cancelada_em = ?, acesso_ate = ?, atualizado_em = datetime('now') WHERE usuario_id = ?",
-                    date.today().isoformat(), fim.isoformat(), usuario_id,
-                )
-            else:
-                # Nunca pago (ou suspenso): não há período a respeitar; encerra na hora.
-                asaas.cancelar_assinatura(a["subscription_id"])
-                banco.executar(
-                    "UPDATE assinaturas SET status_acesso = 'cancelado', cancelada_em = ?, atualizado_em = datetime('now') WHERE usuario_id = ?",
-                    date.today().isoformat(), usuario_id,
-                )
-        except AsaasError as e:
-            raise _erro_asaas(e)
-        return _resumo(banco, asaas, usuario_id)
+        with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
+            usuario_id = u["id"]
+            a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
+            if not a or a["status_acesso"] in STATUS_FINAIS:
+                raise HTTPException(404, detail={"codigo": "sem_assinatura", "mensagem": "Não há assinatura para cancelar."})
+            if a["cancelada_em"]:
+                raise HTTPException(409, detail={"codigo": "ja_cancelada", "mensagem": "O cancelamento já foi pedido."})
+            try:
+                if a["status_acesso"] == "ativo" and a["primeira_paga_em"]:
+                    # Termos de uso: o acesso segue até o fim do período pago. No Asaas, endDate encerra a
+                    # assinatura nessa data, sem novas cobranças; reativar é só apagar o endDate.
+                    fim = proxima_cobranca(a["primeira_paga_em"])
+                    asaas.atualizar_assinatura(a["subscription_id"], endDate=(fim - timedelta(days=1)).isoformat())
+                    banco.executar(
+                        "UPDATE assinaturas SET cancelada_em = ?, acesso_ate = ?, atualizado_em = datetime('now') WHERE usuario_id = ?",
+                        date.today().isoformat(), fim.isoformat(), usuario_id,
+                    )
+                else:
+                    # Nunca pago (ou suspenso): não há período a respeitar; encerra na hora.
+                    asaas.cancelar_assinatura(a["subscription_id"])
+                    banco.executar(
+                        "UPDATE assinaturas SET status_acesso = 'cancelado', cancelada_em = ?, atualizado_em = datetime('now') WHERE usuario_id = ?",
+                        date.today().isoformat(), usuario_id,
+                    )
+            except AsaasError as e:
+                raise _erro_asaas(e)
+            return _resumo(banco, asaas, usuario_id)
 
     @router.post("/billing/assinatura/reativar")
     def reativar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
-        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
-        if not a or not a["cancelada_em"] or not tem_acesso(a):
-            raise HTTPException(409, detail={"codigo": "nao_reativavel", "mensagem": "Não há cancelamento em andamento para desfazer. Assine de novo pelo site."})
-        try:
-            asaas.atualizar_assinatura(a["subscription_id"], endDate=None)
-        except AsaasError as e:
-            raise _erro_asaas(e)
-        banco.executar("UPDATE assinaturas SET cancelada_em = NULL, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?", u["id"])
-        return _resumo(banco, asaas, u["id"])
+        with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
+            a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", u["id"])
+            if not a or not a["cancelada_em"] or not tem_acesso(a):
+                raise HTTPException(409, detail={"codigo": "nao_reativavel", "mensagem": "Não há cancelamento em andamento para desfazer. Assine de novo pelo site."})
+            try:
+                asaas.atualizar_assinatura(a["subscription_id"], endDate=None)
+            except AsaasError as e:
+                raise _erro_asaas(e)
+            banco.executar("UPDATE assinaturas SET cancelada_em = NULL, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?", u["id"])
+            return _resumo(banco, asaas, u["id"])
 
     @router.post("/billing/assinatura/reembolso")
     def reembolsar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
-        usuario_id = u["id"]
-        a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
-        if not a or not a["primeira_paga_em"]:
-            raise HTTPException(400, detail={"codigo": "nada_pago", "mensagem": "Ainda não há pagamento confirmado para reembolsar."})
-        if a["status_acesso"] == "reembolsado":
-            raise HTTPException(409, detail={"codigo": "ja_reembolsado", "mensagem": "O reembolso desta assinatura já foi pedido."})
-        pago_em = date.fromisoformat(a["primeira_paga_em"])
-        if (date.today() - pago_em).days > PRAZO_REEMBOLSO_DIAS:
-            fim = (pago_em + timedelta(days=PRAZO_REEMBOLSO_DIAS)).strftime("%d/%m/%Y")
-            raise HTTPException(400, detail={"codigo": "fora_do_prazo", "mensagem": f"O prazo de 7 dias para reembolso terminou em {fim}. Você ainda pode cancelar, sem multa."})
-        try:
-            pagas = [c for c in asaas.cobrancas_da_assinatura(a["subscription_id"]) if c["status"] in ("CONFIRMED", "RECEIVED")]
-            for cob in pagas:
-                asaas.estornar(cob["id"], descricao="Reembolso em até 7 dias (CDC, art. 49)")
-            asaas.cancelar_assinatura(a["subscription_id"])
-        except AsaasError as e:
-            raise _erro_asaas(e)
-        banco.executar(
-            "UPDATE assinaturas SET status_acesso = 'reembolsado', reembolso_em = ?, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?",
-            date.today().isoformat(), usuario_id,
-        )
-        return {"usuario_id": usuario_id, "status_acesso": "reembolsado", "cobrancas_estornadas": [c["id"] for c in pagas]}
+        with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
+            usuario_id = u["id"]
+            a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
+            if not a or not a["primeira_paga_em"]:
+                raise HTTPException(400, detail={"codigo": "nada_pago", "mensagem": "Ainda não há pagamento confirmado para reembolsar."})
+            if a["status_acesso"] == "reembolsado":
+                raise HTTPException(409, detail={"codigo": "ja_reembolsado", "mensagem": "O reembolso desta assinatura já foi pedido."})
+            pago_em = date.fromisoformat(a["primeira_paga_em"])
+            if (date.today() - pago_em).days > PRAZO_REEMBOLSO_DIAS:
+                fim = (pago_em + timedelta(days=PRAZO_REEMBOLSO_DIAS)).strftime("%d/%m/%Y")
+                raise HTTPException(400, detail={"codigo": "fora_do_prazo", "mensagem": f"O prazo de 7 dias para reembolso terminou em {fim}. Você ainda pode cancelar, sem multa."})
+            try:
+                pagas = [c for c in asaas.cobrancas_da_assinatura(a["subscription_id"]) if c["status"] in ("CONFIRMED", "RECEIVED")]
+                for cob in pagas:
+                    asaas.estornar(cob["id"], descricao="Reembolso em até 7 dias (CDC, art. 49)")
+                asaas.cancelar_assinatura(a["subscription_id"])
+            except AsaasError as e:
+                raise _erro_asaas(e)
+            banco.executar(
+                "UPDATE assinaturas SET status_acesso = 'reembolsado', reembolso_em = ?, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?",
+                date.today().isoformat(), usuario_id,
+            )
+            return {"usuario_id": usuario_id, "status_acesso": "reembolsado", "cobrancas_estornadas": [c["id"] for c in pagas]}
 
     @router.post("/billing/assinatura/simular-pagamento")
     def simular_pagamento(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
