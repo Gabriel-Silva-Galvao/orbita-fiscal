@@ -48,3 +48,25 @@ def test_cabecalhos_de_seguranca_em_toda_resposta(api):
         assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
     assert "strict-transport-security" not in http.get("/saude").headers  # sem HTTPS (desenvolvimento), sem HSTS
     assert "content-security-policy" not in http.get("/docs").headers  # o Swagger do desenvolvimento precisa do CDN
+
+
+def test_pedido_de_outra_origem_que_muda_estado_e_recusado(api):
+    """Regressão do risco S8 (CSRF por subdomínio, parte da ARES-QA-004): a API aceitava POST com Origin de outro site
+    (só o SameSite=Lax protegia). Agora Origin diferente do SITE_URL recebe 403 nos pedidos que mudam estado."""
+    from app.config import get_settings
+
+    http, *_ = api
+    site = get_settings().site_url
+    corpo = {"email": "ninguem@exemplo.test", "senha": "qualquer-1"}
+    for origem in ("https://evil.orbitafiscal.com.br", "null", "http://localhost:9999"):
+        r = http.post("/auth/login", json=corpo, headers={"Origin": origem})
+        assert r.status_code == 403 and r.json()["codigo"] == "origem_recusada", origem
+        assert http.delete("/auth/conta", headers={"Origin": origem}).status_code == 403
+    # O próprio site, e chamadas sem Origin (servidor, webhook), seguem normalmente.
+    assert http.post("/auth/login", json=corpo, headers={"Origin": site}).status_code == 401
+    assert http.post("/auth/login", json=corpo).status_code == 401
+    # GET não muda estado: não é barrado.
+    assert http.get("/saude", headers={"Origin": "https://evil.example"}).status_code == 200
+    # O preflight do CORS do site continua funcionando.
+    r = http.options("/auth/login", headers={"Origin": site, "Access-Control-Request-Method": "POST"})
+    assert r.status_code == 200 and r.headers["access-control-allow-origin"] == site

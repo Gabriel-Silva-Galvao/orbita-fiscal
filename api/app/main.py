@@ -75,6 +75,29 @@ class _CorpoGrande(Exception):
     pass
 
 
+class ConfereOrigem:
+    """Risco S8 (CSRF): SameSite=Lax e o CORS fechado barram o ataque comum, mas um subdomínio comprometido do mesmo site
+    ainda conseguiria mandar um POST com o cookie. Pedido que muda estado (POST, PUT, PATCH, DELETE) vindo de navegador
+    traz o cabeçalho Origin; se ele não for o do site (SITE_URL), a API recusa com 403. Sem Origin (webhook do Asaas,
+    servidor MCP, chamadas de servidor), segue como antes."""
+
+    MUDAM_ESTADO = {"POST", "PUT", "PATCH", "DELETE"}
+
+    def __init__(self, app, permitidas: set[str]):
+        self.app, self.permitidas = app, {o.rstrip("/").lower() for o in permitidas}
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] in self.MUDAM_ESTADO:
+            origem = next((v.decode("latin-1") for n, v in scope.get("headers", []) if n == b"origin"), None)
+            if origem is not None and origem.rstrip("/").lower() not in self.permitidas:
+                corpo = b'{"codigo":"origem_recusada","descricao":"Pedido de outro site recusado."}'
+                await send({"type": "http.response.start", "status": 403,
+                            "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(corpo)).encode())]})
+                await send({"type": "http.response.body", "body": corpo})
+                return
+        await self.app(scope, receive, send)
+
+
 class CabecalhosDeSeguranca:
     """ARES-QA-004 (S7): cabeçalhos de segurança em toda resposta da API. A API só devolve JSON, então a CSP proíbe tudo;
     a exceção é a documentação de desenvolvimento (/docs e /redoc carregam o Swagger de um CDN). HSTS só com HTTPS."""
@@ -129,6 +152,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         app.state.banco.con.executescript(alertas.ESQUEMA)
     # Segurança (26/11/2026): nenhum pedido passa de 64 KB (os maiores, webhook do Asaas e contato, ficam bem abaixo).
     app.add_middleware(LimiteDeCorpo, maximo=64 * 1024)
+    app.add_middleware(ConfereOrigem, permitidas={settings.site_url})
     app.add_middleware(CabecalhosDeSeguranca, hsts=settings.cookie_secure)  # por fora: vale até para o 413
     app.add_middleware(
         CORSMiddleware,
