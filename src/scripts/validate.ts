@@ -16,29 +16,40 @@ export function isCPF(raw: string) {
   return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
 }
 
-/** CNPJ numérico com dígitos verificadores. */
+/**
+ * CPF ou CNPJ só com os caracteres que contam: números e, no CNPJ alfanumérico (Receita Federal, desde julho de 2026),
+ * letras nas 12 primeiras posições. Letras viram maiúsculas.
+ */
+export const docChars = (s: string) => s.toUpperCase().replace(/[^0-9A-Z]/g, '');
+
+/**
+ * CNPJ com dígitos verificadores, numérico ou alfanumérico. No cálculo, cada caractere vale o código dele menos 48
+ * (0 a 9 valem 0 a 9, A vale 17, B vale 18...), com os mesmos pesos do CNPJ numérico. É o mesmo cálculo da API
+ * (api/app/documentos.py).
+ */
 export function isCNPJ(raw: string) {
-  const d = digits(raw);
-  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+  const d = docChars(raw);
+  if (!/^[0-9A-Z]{12}\d{2}$/.test(d) || /^(.)\1{13}$/.test(d)) return false;
+  const v = [...d].map((c) => c.charCodeAt(0) - 48);
   const calc = (len: number) => {
     const w = len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-    const sum = w.reduce((acc, wi, i) => acc + wi * Number(d[i]), 0);
+    const sum = w.reduce((acc, wi, i) => acc + wi * v[i], 0);
     const r = sum % 11;
     return r < 2 ? 0 : 11 - r;
   };
-  return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
+  return calc(12) === v[12] && calc(13) === v[13];
 }
 
-/** 000.000.000-00 ou 00.000.000/0000-00, conforme a quantidade de dígitos. */
+/** 000.000.000-00 (CPF, só números) ou 00.000.000/0000-00 (CNPJ, que pode ter letras nas 12 primeiras posições). */
 export function maskDoc(raw: string) {
-  const d = digits(raw).slice(0, 14);
-  if (d.length <= 11)
+  const d = docChars(raw).slice(0, 14);
+  if (d.length <= 11 && /^\d*$/.test(d))
     return d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
   return d
-    .replace(/(\d{2})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1/$2')
-    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    .replace(/^(\w{2})(\w)/, '$1.$2')
+    .replace(/^(\w{2}\.\w{3})(\w)/, '$1.$2')
+    .replace(/^(\w{2}\.\w{3}\.\w{3})(\w)/, '$1/$2')
+    .replace(/^(\w{2}\.\w{3}\.\w{3}\/\w{4})(\w{1,2})$/, '$1-$2');
 }
 
 /** Algoritmo de Luhn para o número do cartão. */

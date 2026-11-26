@@ -102,7 +102,7 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
           </div>
           <div class="field">
             <label for="c-doc">CPF ou CNPJ</label>
-            <input id="c-doc" name="documento" inputmode="numeric" aria-describedby="c-doc-msg" />
+            <input id="c-doc" name="documento" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-describedby="c-doc-msg" />
             <p class="msg" id="c-doc-msg" aria-live="polite"></p>
           </div>
         </fieldset>
@@ -623,7 +623,7 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 </script>
 
 <script>
-  import { isCPF, isCNPJ, maskDoc, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
+  import { isCPF, isCNPJ, maskDoc, docChars, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
 
   const root = document.querySelector<HTMLElement>('[data-checkout]')!;
   const price = root.dataset.price ?? '';
@@ -699,11 +699,11 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     'c-holder': () => (method() !== 'cartao' ? '' : input('c-holder').value.trim().length >= 3 ? '' : 'Escreva o nome como está impresso no cartão.'),
     'c-nome': () => (input('c-nome').value.trim().length >= 3 ? '' : 'Escreva o nome ou a razão social que vai na nota.'),
     'c-doc': () => {
-      const d = digits(input('c-doc').value);
+      const d = docChars(input('c-doc').value);
       if (!d) return 'Informe o CPF ou o CNPJ para a nota fiscal.';
-      if (d.length === 11) return isCPF(d) ? '' : 'Esse CPF não confere. Revise os números.';
-      if (d.length === 14) return isCNPJ(d) ? '' : 'Esse CNPJ não confere. Revise os números.';
-      return 'O CPF tem 11 números e o CNPJ, 14.';
+      if (d.length === 11 && /^\d+$/.test(d)) return isCPF(d) ? '' : 'Esse CPF não confere. Revise os números.';
+      if (d.length === 14) return isCNPJ(d) ? '' : 'Esse CNPJ não confere. Revise os números e as letras.';
+      return 'O CPF tem 11 números e o CNPJ, 14 caracteres (o CNPJ novo pode ter letras).';
     },
   };
   const check = (id: string) => {
@@ -920,7 +920,7 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
       plano: root.dataset.plan,
       forma,
       nome: input('c-nome').value.trim(),
-      cpf_cnpj: digits(input('c-doc').value),
+      cpf_cnpj: docChars(input('c-doc').value),
     };
     if (forma === 'cartao') {
       const [mes, ano] = input('c-exp').value.split('/');
