@@ -125,3 +125,17 @@ def test_senha_atual_tem_limite_de_tentativas(api, caixa, monkeypatch):
     agora = _time.time()
     monkeypatch.setattr(auth.time, "time", lambda: agora + auth.LOGIN_JANELA + 1)
     assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 202
+
+
+def test_reenviar_o_codigo_da_troca_funciona(api, caixa, monkeypatch):
+    """Regressão ARES-QA-010: o código reenviado na troca de senha nunca confirmava (410)."""
+    import time as _time
+
+    http, *_ = api
+    cadastrar(http, caixa)
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 202
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.REENVIO_ESPERA + 1)
+    assert http.post("/auth/codigo/reenviar").status_code == 202
+    r = http.post("/auth/confirmar", json={"codigo": caixa["ana@exemplo.test"]})
+    assert r.status_code == 200 and r.json()["trocou"] == "senha", r.text

@@ -424,7 +424,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if espera > 0:
             return _erro(429, "espere", "Espere para pedir outro código.", espere_segundos=int(espera) + 1)
         banco(req).executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
-        return novo_desafio(req, resp, d["finalidade"], d["email"], d["nome"], d["senha_hash"])
+        # ARES-QA-010: sem o usuario_id, o desafio reenviado da troca de senha/e-mail não era mais "daquela conta" e o
+        # /auth/confirmar sempre respondia 410.
+        return novo_desafio(req, resp, d["finalidade"], d["email"], d["nome"], d["senha_hash"], usuario_id=d["usuario_id"])
 
     @r.post("/senha/esqueci", status_code=202)
     def esqueci(dados: Esqueci, req: Request):
