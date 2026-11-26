@@ -13,6 +13,7 @@
 import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
+import { caminhoSeguro } from './scripts/caminho-seguro';
 
 const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar', '/upgrade', '/boas-vindas'];
 
@@ -50,8 +51,7 @@ async function jaLogado(context: APIContext): Promise<Response | null> {
   const q = context.url.searchParams;
   const next = q.get('next') ?? '';
   const plano = q.get('plano');
-  const seguro = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
-  return context.redirect(plano && ['bronze', 'prata', 'ouro'].includes(plano) ? `/assinar/${plano}` : seguro ? next : '/conta');
+  return context.redirect(plano && ['bronze', 'prata', 'ouro'].includes(plano) ? `/assinar/${plano}` : caminhoSeguro(next));
 }
 
 async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {

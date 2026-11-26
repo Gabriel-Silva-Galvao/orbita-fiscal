@@ -296,6 +296,7 @@ const planData = JSON.stringify(
 
 <script>
   import { isEmail } from '../scripts/validate';
+  import { caminhoSeguro } from '../scripts/caminho-seguro';
 
   type Mode = 'entrar' | 'criar';
   const root = document.querySelector<HTMLElement>('[data-auth]')!;
@@ -326,8 +327,7 @@ const planData = JSON.stringify(
   // Para onde ir depois de entrar: Checkout do plano escolhido; senão a rota que o middleware
   // pediu em ?next= (só caminhos deste site); senão o Portal.
   const askedNext = params.get('next') ?? '';
-  const safeNext = askedNext.startsWith('/') && !askedNext.startsWith('//') && !askedNext.startsWith('/\\') ? askedNext : '';
-  const nextUrl = () => (plan ? `/assinar/${plan}` : safeNext || '/conta');
+  const nextUrl = () => (plan ? `/assinar/${plan}` : caminhoSeguro(askedNext));
 
   const api = (path: string, body: unknown = {}) =>
     fetch(`${endpoint}${path}`, {

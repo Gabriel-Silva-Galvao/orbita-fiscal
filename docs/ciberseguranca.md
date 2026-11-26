@@ -65,7 +65,7 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 
 **Site** (Astro)
 - Páginas da conta e de compra fora do Google (`noindex`, `X-Robots-Tag`).
-- O `next` do Entrar só aceita caminho interno.
+- O `next` do Entrar só aceita caminho interno (`caminhoSeguro`: sem caractere de controle, sem barra invertida, mesma origem).
 - Valores vindos da API entram na tela por `textContent`, não por HTML.
 
 ## 4. Riscos em aberto
@@ -110,6 +110,7 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 | ARES-QA-010 | Baixa | "Reenviar o código" na troca de senha ou de e-mail criava um desafio sem dono, e a confirmação sempre respondia 410. | `/auth/codigo/reenviar` repassa o `usuario_id` do desafio original. | `test_conta.py::test_reenviar_o_codigo_da_troca_funciona` |
 | ARES-QA-011 | Informativa | Se outra conta pegasse o mesmo e-mail entre a conferência e a gravação (corrida), a confirmação da troca de e-mail ou do cadastro respondia 500. | O `UPDATE`/`INSERT` trata o `IntegrityError` do UNIQUE e responde 409 `email_em_uso`. | `test_conta.py::test_corrida_na_confirmacao_da_troca_de_email_responde_409`, `test_corrida_na_confirmacao_do_cadastro_responde_409` |
 | ARES-QA-002 | Baixa | Quebra de linha em "empresa" (vai no assunto do e-mail) derrubava `/contato/empresarial` com 500, e a mensagem se perdia porque era gravada só depois do envio. | Nome e empresa com caractere de controle recebem 422; a mensagem é gravada antes do envio e marcada como enviada depois. | `test_contato.py::test_quebra_de_linha_em_nome_ou_empresa_e_recusada_sem_500`, `test_mensagem_fica_registrada_mesmo_se_o_envio_falhar` |
+| ARES-SEC-004 | Baixa | O `?next=` do Entrar só barrava `//` e `/\` no começo; `/%09/site` passava e o navegador, que remove o TAB, ia para outro domínio (open redirect, útil para phishing). | Função única `caminhoSeguro` (`src/scripts/caminho-seguro.ts`), usada no middleware e no `entrar.astro`: recusa caractere de controle e barra invertida e confere que o caminho resolvido continua na mesma origem. Primeiro teste automático do site: `npm run test:site`. | `scripts/testes/caminho-seguro.test.ts` |
 
 ## 6. Plano de testes de segurança
 
