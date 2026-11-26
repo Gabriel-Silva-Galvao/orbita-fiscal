@@ -1,5 +1,7 @@
 """Configuração da API da Órbita, lida do ambiente ou de api/.env."""
 from functools import lru_cache
+from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -7,6 +9,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    # ARES-SEC-006: onde a API roda. O padrão é produção (o lado seguro); o desenvolvimento declara
+    # ORBITA_ENV=development (.claude/launch.json, api/.env.example e os testes). Antes, "produção" era deduzida do
+    # COOKIE_SECURE, e bastava COOKIE_SECURE=false para a simulação (acesso sem pagar) subir num servidor público.
+    orbita_env: Literal["development", "production"] = "production"
     # Asaas: hoje a simulação local; depois, o sandbox ou a produção do Asaas.
     asaas_base_url: str = "http://127.0.0.1:8000/asaas-sim/v3"
     asaas_api_key: str = "$aact_hmlg_simulacao_orbita"
@@ -44,15 +50,30 @@ TOKEN_WEBHOOK_EXEMPLO = "orbita-simulacao-token-do-webhook-0001"
 CHAVE_SIMULACAO = "$aact_hmlg_simulacao_orbita"
 
 
-def problemas_de_producao(s: "Settings") -> list[str]:
-    """Configurações perigosas (docs/backend-e-seguranca.md, S1, S2 e S4). Lista vazia = pode subir.
+def _local(url: str) -> bool:
+    return (urlsplit(url).hostname or "") in ("localhost", "127.0.0.1", "::1")
 
-    - Simulação ligada com COOKIE_SECURE=true (sinal de produção): daria acesso sem pagar.
+
+def problemas_de_producao(s: "Settings") -> list[str]:
+    """Configurações perigosas (docs/backend-e-seguranca.md, S1, S2 e S4; ARES-SEC-006). Lista vazia = pode subir.
+
+    - Em produção (ORBITA_ENV=production, o padrão): simulação proibida e COOKIE_SECURE obrigatório.
+    - Em qualquer ambiente: a simulação só roda com o site e a API em localhost (nunca num endereço público).
     - Sem a simulação (Asaas de verdade): exige token do webhook e chave próprios, e o código do 2FA fora da resposta.
     """
     erros = []
+    if s.orbita_env == "production":
+        if s.asaas_sim_enabled:
+            erros.append("ASAAS_SIM_ENABLED=true em produção (ORBITA_ENV=production): a simulação daria acesso sem pagar.")
+        if not s.cookie_secure:
+            erros.append("COOKIE_SECURE=false em produção (ORBITA_ENV=production): o cookie da sessão precisa de HTTPS.")
+        if not s.smtp_host:
+            # ARES-QA-007 (S4): sem SMTP, o código do 2FA vai para o log da API, onde quem lê o log entra na conta.
+            erros.append("SMTP_HOST vazio em produção (ORBITA_ENV=production): o código do 2FA iria para o log em vez do e-mail.")
     if s.asaas_sim_enabled and s.cookie_secure:
         erros.append("ASAAS_SIM_ENABLED=true com COOKIE_SECURE=true: a simulação do Asaas não pode rodar em produção.")
+    if s.asaas_sim_enabled and not (_local(s.site_url) and _local(s.api_public_url)):
+        erros.append("ASAAS_SIM_ENABLED=true com SITE_URL ou API_PUBLIC_URL fora de localhost: a simulação é só para a máquina local.")
     if not s.asaas_sim_enabled:
         if s.asaas_webhook_token == TOKEN_WEBHOOK_EXEMPLO or len(s.asaas_webhook_token) < 32:
             erros.append("ASAAS_WEBHOOK_TOKEN é o de exemplo (ou tem menos de 32 caracteres): gere um segredo próprio.")

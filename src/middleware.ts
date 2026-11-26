@@ -13,6 +13,8 @@
 import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
+import { caminhoSeguro } from './scripts/caminho-seguro';
+import { cabecalhosDeSeguranca } from './scripts/cabecalhos';
 
 const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar', '/upgrade', '/boas-vindas'];
 
@@ -24,12 +26,14 @@ const foraDoGoogle = (path: string) => protegida(path) || path === '/entrar';
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const res = await porta(context, next);
-  if (foraDoGoogle(context.url.pathname)) {
-    try {
-      res.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    } catch {
-      // Respostas com cabeçalhos imutáveis (raras): o meta robots do layout continua valendo.
+  try {
+    if (foraDoGoogle(context.url.pathname)) res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    // ARES-QA-004: anti-clickjacking, nosniff, Referrer-Policy e HSTS (com HTTPS) nas respostas do servidor.
+    if (!context.isPrerendered) {
+      for (const [nome, valor] of Object.entries(cabecalhosDeSeguranca(context.url.protocol === 'https:'))) res.headers.set(nome, valor);
     }
+  } catch {
+    // Respostas com cabeçalhos imutáveis (raras): o meta robots do layout continua valendo.
   }
   return res;
 });
@@ -50,8 +54,7 @@ async function jaLogado(context: APIContext): Promise<Response | null> {
   const q = context.url.searchParams;
   const next = q.get('next') ?? '';
   const plano = q.get('plano');
-  const seguro = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
-  return context.redirect(plano && ['bronze', 'prata', 'ouro'].includes(plano) ? `/assinar/${plano}` : seguro ? next : '/conta');
+  return context.redirect(plano && ['bronze', 'prata', 'ouro'].includes(plano) ? `/assinar/${plano}` : caminhoSeguro(next));
 }
 
 async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {

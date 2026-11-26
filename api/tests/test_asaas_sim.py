@@ -182,3 +182,14 @@ def test_webhook_pausa_depois_de_15_falhas():
 def test_saude(ctx):
     _, _, http, _ = ctx
     assert http.get("/saude").json() == {"ok": True, "asaas": "simulacao"}
+
+
+def test_eventos_da_simulacao_exigem_a_chave(api):
+    """Regressão ARES-SEC-005: /asaas-sim/_eventos respondia sem autenticação."""
+    from app.config import get_settings
+
+    http, *_ = api
+    assert http.get("/asaas-sim/_eventos").status_code == 401
+    assert http.get("/asaas-sim/_eventos", headers={"access_token": "$aact_errada"}).status_code == 401
+    r = http.get("/asaas-sim/_eventos", headers={"access_token": get_settings().asaas_api_key})
+    assert r.status_code == 200 and set(r.json()) == {"eventos", "entregas"}

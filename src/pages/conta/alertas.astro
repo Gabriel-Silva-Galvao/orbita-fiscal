@@ -44,7 +44,7 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   <section class="pt-secao" data-liberado hidden aria-labelledby="alertas-t" data-billing={billing}>
     <h2 id="alertas-t">Alertas por tema</h2>
     <p class="pt-intro small mute">Salve os temas que você acompanha. Para cada um, escolha onde acompanhar e quando avisar. Os alertas chegam aqui e por e-mail<Pending kind="confirmar" />.</p>
-    <form class="tema-form" data-tema-form novalidate>
+    <form method="post" class="tema-form" data-tema-form novalidate>
       <div class="field">
         <label for="tema">Novo tema</label>
         <input id="tema" maxlength="60" placeholder="Ex.: crédito de PIS/Cofins sobre frete" aria-describedby="tema-msg" />

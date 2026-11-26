@@ -6,6 +6,7 @@ import os
 
 # Os testes rodam contra a simulação do Asaas, que fica desligada por padrão (item 17).
 os.environ.setdefault("ASAAS_SIM_ENABLED", "true")
+os.environ.setdefault("ORBITA_ENV", "development")  # ARES-SEC-006: produção é o padrão
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient

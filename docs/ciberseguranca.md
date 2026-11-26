@@ -36,10 +36,12 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 
 **Conta e sessão** (`api/app/auth.py`)
 - Senha com scrypt e sal por usuário; comparação em tempo constante. Senha de 8 a 128 caracteres.
-- 2FA por e-mail em todo cadastro, login, troca de senha e troca de e-mail: código de 6 dígitos, 10 minutos, 5 tentativas.
+- 2FA por e-mail em todo cadastro, login, troca de senha e troca de e-mail: código de 6 dígitos, 10 minutos, 5 tentativas
+  por desafio e no máximo 10 códigos errados por conta em 15 minutos.
 - Tokens de sessão, desafio e download guardados só como SHA-256.
 - Cookie `HttpOnly`, `SameSite=Lax` e `Secure` em produção (`COOKIE_SECURE=true`).
-- Troca de senha derruba as outras sessões; lista de aparelhos com "este aparelho", "Sair dos outros" e "Sair de todos".
+- Troca de senha e troca de e-mail derrubam as outras sessões; a troca de e-mail pede a senha atual e avisa o endereço
+  antigo. Lista de aparelhos com "este aparelho", "Sair dos outros" e "Sair de todos".
 - Limite de 10 falhas de login por e-mail em 15 minutos (na memória; ver S5).
 
 **Entrada de dados** (todas as rotas)
@@ -63,7 +65,7 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 
 **Site** (Astro)
 - Páginas da conta e de compra fora do Google (`noindex`, `X-Robots-Tag`).
-- O `next` do Entrar só aceita caminho interno.
+- O `next` do Entrar só aceita caminho interno (`caminhoSeguro`: sem caractere de controle, sem barra invertida, mesma origem).
 - Valores vindos da API entram na tela por `textContent`, não por HTML.
 
 ## 4. Riscos em aberto
@@ -72,11 +74,11 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 
 | # | Risco | Gravidade | O que fazer | Quando |
 |---|---|---|---|---|
-| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026) | **Alto** | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
+| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026; **corrigido** em 26/11/2026, ver 5.1) | ~~Alto~~ | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
 | S3 | Cartão passa pela API | Alto | Tokenização do Asaas no navegador; a API recebe só o token. | Com o Sandbox (item 29) |
 | S5 | Limite de tentativas só na memória e só no login | Alto | Limite por IP e por e-mail em todo `/auth`, guardado no banco; CAPTCHA invisível depois de N falhas. | Antes de publicar |
-| S4 | Código do 2FA no log sem SMTP | Alto | Exigir SMTP fora da simulação. | Antes de publicar |
-| S6 | `/docs` aberto | Médio | Desligar em produção. | Antes de publicar |
+| S4 | Código do 2FA no log sem SMTP (**corrigido** em 26/11/2026: produção exige SMTP, ver 5.1) | ~~Alto~~ | — | — |
+| S6 | `/docs` aberto (**corrigido** em 26/11/2026: só em desenvolvimento, ver 5.1) | ~~Médio~~ | — | — |
 | S7 | Sem cabeçalhos de segurança | Médio | HSTS, CSP restrita, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy` no proxy. | Antes de publicar |
 | S8 | CSRF por subdomínio | Médio | Conferir `Origin` nas rotas que mudam estado. | Antes de publicar |
 | S9 | Descoberta de contas pelo tempo do login | Médio | Rodar o scrypt também quando o e-mail não existe. | Antes de publicar |
@@ -91,6 +93,34 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 | 26/11/2026 | A API parou de responder; o site devolvia 503 nas páginas da conta. | ReDoS no regex de e-mail: um e-mail com domínio longo cheio de pontos segurava o processo (S17). | Regex linear, limite de tamanho em todos os campos e corpo de até 64 KB; testes em `api/tests/test_limites.py`. |
 
 Para cada incidente novo: o que o usuário viu, a causa confirmada, a correção, o teste que impede a volta e a linha aqui.
+
+## 5.1 Correções da revisão ARES (a partir de 26/11/2026)
+
+Achados das revisões REVIEW-001 a 005 do ARES (registro completo no artefato
+[Vulnerabilidades da Órbita](https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD), cópia em `artefatos/06-vulnerabilidades/`).
+Cada correção tem um commit próprio e um teste de regressão que falha no código antigo.
+
+| ID | Gravidade | O que estava errado | Correção | Teste |
+|---|---|---|---|---|
+| ARES-SEC-017 e ARES-QA-012 | Alta | Com uma sessão roubada, dava para trocar o e-mail sem a senha; o dono ficava trancado fora (a recuperação vai para o e-mail) e as outras sessões continuavam abertas. | `POST /auth/email/trocar` exige a senha atual (401 `senha_atual`); ao confirmar, as outras sessões caem e o e-mail antigo recebe aviso (`correio.avisar_troca_de_email`). Na tela, campo "Sua senha atual". | `test_conta.py::test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo` |
+| ARES-QA-003 (risco S18) | Alta | Quatro `POST /billing/assinatura` ao mesmo tempo (clique duplo, duas abas) criavam quatro assinaturas cobradas no Asaas; a Órbita guardava uma e as outras ficavam órfãs, cobrando. | Reserva por conta na tabela `operacoes_cobranca` (INSERT atômico) antes de chamar o Asaas, liberada no fim mesmo com erro e vencida após 120 s; o segundo pedido recebe 409 `em_andamento`. O Checkout mostra o aviso e não mexe no pedido da outra aba. | `test_billing.py::test_pedidos_simultaneos_criam_uma_assinatura_so`, `test_reserva_esquecida_expira` |
+| ARES-SEC-018 | Média (Alta junto com a SEC-017) | Com uma sessão roubada, a senha atual podia ser chutada sem limite na troca de senha, contornando o limite do login. | Contador de erros da senha atual por conta, o mesmo na troca de senha e na de e-mail: no 5º erro em 15 minutos, 429 até a janela passar. | `test_conta.py::test_senha_atual_tem_limite_de_tentativas` |
+| ARES-SEC-002 | Média | O código de 6 dígitos tinha 5 tentativas por desafio, mas cada login novo abria outro desafio com mais 5: sem teto por conta. | Teto de 10 códigos errados por e-mail em 15 minutos, somando todos os desafios: acima dele, nem o código certo passa e o login não abre desafio novo (429). Acerto zera o contador. | `test_auth.py::test_codigo_tem_teto_por_conta_somando_os_logins` |
+| ARES-SEC-016 | Média | O contador de falhas do login criava uma chave por e-mail digitado (até numa leitura) e nunca apagava: um anônimo fazia a memória da API crescer sem limite com e-mails inventados. | Classe `Limitador` em `auth.py`: ler não cria chave, fila vazia sai, chave é hash curto, cada fila guarda no máximo o teto e há varredura das chaves vencidas a cada 1.000 falhas. A memória fica proporcional às falhas dos últimos 15 minutos. Ainda falta o limite por IP (S5). | `test_auth.py::test_limitador_de_login_nao_cresce_sem_limite`, `test_limitador_guarda_no_maximo_o_teto_por_chave` |
+| ARES-QA-010 | Baixa | "Reenviar o código" na troca de senha ou de e-mail criava um desafio sem dono, e a confirmação sempre respondia 410. | `/auth/codigo/reenviar` repassa o `usuario_id` do desafio original. | `test_conta.py::test_reenviar_o_codigo_da_troca_funciona` |
+| ARES-QA-011 | Informativa | Se outra conta pegasse o mesmo e-mail entre a conferência e a gravação (corrida), a confirmação da troca de e-mail ou do cadastro respondia 500. | O `UPDATE`/`INSERT` trata o `IntegrityError` do UNIQUE e responde 409 `email_em_uso`. | `test_conta.py::test_corrida_na_confirmacao_da_troca_de_email_responde_409`, `test_corrida_na_confirmacao_do_cadastro_responde_409` |
+| ARES-QA-002 | Baixa | Quebra de linha em "empresa" (vai no assunto do e-mail) derrubava `/contato/empresarial` com 500, e a mensagem se perdia porque era gravada só depois do envio. | Nome e empresa com caractere de controle recebem 422; a mensagem é gravada antes do envio e marcada como enviada depois. | `test_contato.py::test_quebra_de_linha_em_nome_ou_empresa_e_recusada_sem_500`, `test_mensagem_fica_registrada_mesmo_se_o_envio_falhar` |
+| ARES-SEC-004 | Baixa | O `?next=` do Entrar só barrava `//` e `/\` no começo; `/%09/site` passava e o navegador, que remove o TAB, ia para outro domínio (open redirect, útil para phishing). | Função única `caminhoSeguro` (`src/scripts/caminho-seguro.ts`), usada no middleware e no `entrar.astro`: recusa caractere de controle e barra invertida e confere que o caminho resolvido continua na mesma origem. Primeiro teste automático do site: `npm run test:site`. | `scripts/testes/caminho-seguro.test.ts` |
+| ARES-SEC-007 (parte do login; risco S9) | Baixa | O login com e-mail inexistente pulava o scrypt e respondia mais rápido: o tempo revelava quais e-mails têm conta. | O login confere a senha contra um hash fictício quando a conta não existe (`SENHA_FICTICIA`), então o tempo é o mesmo. **Falta decidir** o 409 do cadastro, que o time tinha aceitado (seção 4, S9). | `test_auth.py::test_login_com_email_inexistente_tambem_roda_o_scrypt` |
+| ARES-QA-009 | Informativa | A API só contava se o CPF/CNPJ tinha 11 ou 14 dígitos; número inventado ia para o Asaas e para a nota (o site conferia, mas a API não). | `app/documentos.py` confere os dígitos verificadores de CPF, CNPJ e CNPJ alfanumérico (Receita, julho de 2026) na assinatura e nos dados da nota; os limites de tamanho já existiam. **Pendente:** o site só aceita números no campo, e falta confirmar se o Asaas real aceita CNPJ alfanumérico. | `test_documentos.py` |
+| CAND-01 a CAND-03 (novos, achados ao conferir o código do pull) | Não classificados | Reembolso, troca de plano, troca de forma, cancelar e reativar conferiam o estado e só depois chamavam o Asaas: pedidos simultâneos pediam o estorno mais de uma vez ou deixavam o banco e o Asaas em estados opostos. | As cinco rotas usam a mesma reserva por conta da ARES-QA-003 (`uma_operacao_por_vez`); o pedido concorrente recebe 409 `em_andamento`. | `test_billing.py::test_reembolsos_simultaneos_estornam_uma_vez_so` |
+| CAND-05 (novo, a partir de um alerta do ZAP) | Não classificado | Os formulários não declaravam `method`, então o padrão era GET: se o script da página falhasse ou demorasse e a pessoa apertasse Enter, a senha (e, no Checkout, o número e o CVV do cartão) iam para o endereço, o histórico e o log do servidor. O ZAP viu `/entrar?email=…&senha=…`. | `method="post"` nos 12 formulários com dado pessoal (Entrar, Checkout, Conta e segurança, Alertas, forma de pagamento e os dois de contato). A busca do Portal continua GET de propósito. | Revisão do HTML (`grep "<form"`); o site ainda não tem teste de navegador |
+| ARES-SEC-006 (riscos S1 e S2) | Precisava validar | "Produção" era deduzida do `COOKIE_SECURE`: com `COOKIE_SECURE=false`, a simulação (acesso sem pagar, token público do webhook) subia num servidor público. | Variável `ORBITA_ENV` (`production` por padrão). Em produção: simulação proibida e `COOKIE_SECURE` obrigatório. Em qualquer ambiente: simulação só com site e API em localhost. O desenvolvimento declara `ORBITA_ENV=development` (`.claude/launch.json`, `api/.env.example`, testes). | `test_config.py::test_simulacao_em_producao_e_recusada_mesmo_sem_cookie_secure`, `test_producao_e_o_padrao`, `test_simulacao_so_roda_em_localhost` |
+| ARES-QA-007 (parte; riscos S4 e S5) | Informativa | Produção subia sem SMTP, e o código do 2FA ia para o log; e-mails entravam no log com `%s`. | Em produção a API se recusa a subir sem `SMTP_HOST`; e-mails no log com `%r`. **Pendente:** limite por IP em `/auth`, que depende de saber qual proxy vai na frente da API (mesma questão da SEC-009). | `test_config.py::test_producao_sem_smtp_nao_sobe` |
+| ARES-QA-005 (risco S6) | Informativa | `/docs`, `/redoc` e `/openapi.json` mostravam todas as rotas (inclusive as da simulação) a qualquer um. | Só existem com `ORBITA_ENV=development`; em produção, 404. | `test_config.py::test_docs_fechados_em_producao` |
+| ARES-SEC-005 | Precisava validar | `/asaas-sim/_eventos` (só com a simulação ligada) respondia sem autenticação e listava eventos de cobrança. | Exige a mesma chave `access_token` das rotas `/v3` da simulação. Com a SEC-006, a simulação também só roda em localhost. | `test_asaas_sim.py::test_eventos_da_simulacao_exigem_a_chave` |
+| ARES-QA-004 (risco S7; parte do S8) | Informativa | Site e API sem CSP, anti-clickjacking, nosniff, Referrer-Policy e HSTS (o ZAP confirmou nos dois). | API: middleware `CabecalhosDeSeguranca` com nosniff, `X-Frame-Options: DENY`, Referrer-Policy, CSP que proíbe tudo (a API só devolve JSON) e HSTS com `COOKIE_SECURE`. Site: `src/scripts/cabecalhos.ts` no middleware, com CSP que barra moldura, `base`, plugins e envio de formulário para fora. **Pendente:** (1) as páginas estáticas do site não passam pelo middleware, então o proxy de produção precisa mandar os mesmos cabeçalhos; (2) uma CSP que restrinja scripts e estilos; (3) conferência de `Origin` nas rotas que mudam estado (S8). | `test_limites.py::test_cabecalhos_de_seguranca_em_toda_resposta`, `scripts/testes/cabecalhos.test.ts`; conferido com `curl` no build (`/conta` e `/entrar` com os cabeçalhos, `/` estática sem eles) |
+| ARES-DEP-001 e ARES-DEP-002 (risco S16) | Informativa | fastapi 0.115.6 trazia a starlette 0.41.3, com 8 CVEs (nenhum alcançável pelo código, mas vulnerável); o pytest 8.3.4 (1 CVE) estava no `requirements.txt` de produção. | fastapi 0.162.5 e starlette 1.10.0, agora fixada explicitamente; pytest 9.2.0 em `requirements-dev.txt`, separado do de produção. Versões com pelo menos duas semanas de publicação. | `pip-audit` do ambiente: 9 alertas antes, "No known vulnerabilities found" depois; os 128 testes passam nas versões novas |
 
 ## 6. Plano de testes de segurança
 

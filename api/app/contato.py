@@ -38,6 +38,9 @@ CREATE TABLE IF NOT EXISTS contatos (
 # Mesmo regex seguro de app/auth.py (sem ReDoS).
 from app.auth import EMAIL_RE  # noqa: E402
 JANELA, MAXIMO = 3600, 5
+# ARES-QA-002: nome e empresa vão para o assunto e o texto do e-mail; quebra de linha ali fazia o EmailMessage
+# recusar o cabeçalho (ValueError), a rota responder 500 e a mensagem se perder. Caractere de controle é recusado.
+CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
 
 
 class Mensagem(BaseModel):
@@ -59,7 +62,8 @@ def criar_router() -> APIRouter:
             return {"ok": True, "enviado": True}
         nome, empresa = dados.nome.strip(), dados.empresa.strip()
         email, msg = dados.email.strip().lower(), dados.mensagem.strip()
-        if len(nome) < 2 or len(empresa) < 2 or not EMAIL_RE.match(email) or len(msg) < 10:
+        if (len(nome) < 2 or len(empresa) < 2 or CONTROLE.search(nome) or CONTROLE.search(empresa)
+                or not EMAIL_RE.match(email) or len(msg) < 10):
             return JSONResponse(
                 {"codigo": "dados_invalidos", "descricao": "Preencha nome, empresa, um e-mail válido e a mensagem."},
                 status_code=422,
@@ -75,6 +79,13 @@ def criar_router() -> APIRouter:
             )
         q.append(agora)
 
+        # Grava antes de enviar: se o envio falhar, a mensagem continua registrada (ARES-QA-002).
+        banco = req.app.state.banco
+        banco.executar(
+            "INSERT INTO contatos (nome, empresa, email, usuarios, mensagem, ip, enviado) VALUES (?,?,?,?,?,?,0)",
+            nome, empresa, email, dados.usuarios, msg, ip,
+        )
+        contato_id = banco.um("SELECT last_insert_rowid() AS id")["id"]
         s = get_settings()
         corpo = f"Nome: {nome}\nEmpresa: {empresa}\nE-mail: {email}\nUsuários: {dados.usuarios or 'não informado'}\n\n{msg}\n"
         enviado = correio.enviar(
@@ -89,10 +100,8 @@ def criar_router() -> APIRouter:
                     "Uma pessoa da equipe responde por este e-mail.\n\nEquipe Órbita\n",
                 )
             )
-        req.app.state.banco.executar(
-            "INSERT INTO contatos (nome, empresa, email, usuarios, mensagem, ip, enviado) VALUES (?,?,?,?,?,?,?)",
-            nome, empresa, email, dados.usuarios, msg, ip, int(enviado),
-        )
+        if enviado:
+            banco.executar("UPDATE contatos SET enviado = 1 WHERE id = ?", contato_id)
         return {"ok": True, "enviado": enviado}
 
     return r

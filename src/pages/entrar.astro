@@ -56,7 +56,7 @@ const planData = JSON.stringify(
 
           <p class="notice is-error" data-error role="alert" hidden></p>
 
-          <form class="form" novalidate data-form>
+          <form method="post" class="form" novalidate data-form>
             <div class="field" data-name-field hidden>
               <label for="a-nome">Nome</label>
               <input id="a-nome" name="nome" type="text" autocomplete="name" aria-describedby="a-nome-msg" />
@@ -102,7 +102,7 @@ const planData = JSON.stringify(
             <strong>Demonstração:</strong> o código é <span class="code-show" data-demo-value></span>.
           </p>
           <p class="notice is-error" data-code-error role="alert" hidden></p>
-          <form class="form" novalidate data-code-form>
+          <form method="post" class="form" novalidate data-code-form>
             <div class="field">
               <label for="a-codigo">Código de verificação</label>
               <input
@@ -296,6 +296,7 @@ const planData = JSON.stringify(
 
 <script>
   import { isEmail } from '../scripts/validate';
+  import { caminhoSeguro } from '../scripts/caminho-seguro';
 
   type Mode = 'entrar' | 'criar';
   const root = document.querySelector<HTMLElement>('[data-auth]')!;
@@ -326,8 +327,7 @@ const planData = JSON.stringify(
   // Para onde ir depois de entrar: Checkout do plano escolhido; senão a rota que o middleware
   // pediu em ?next= (só caminhos deste site); senão o Portal.
   const askedNext = params.get('next') ?? '';
-  const safeNext = askedNext.startsWith('/') && !askedNext.startsWith('//') && !askedNext.startsWith('/\\') ? askedNext : '';
-  const nextUrl = () => (plan ? `/assinar/${plan}` : safeNext || '/conta');
+  const nextUrl = () => (plan ? `/assinar/${plan}` : caminhoSeguro(askedNext));
 
   const api = (path: string, body: unknown = {}) =>
     fetch(`${endpoint}${path}`, {
@@ -543,7 +543,7 @@ const planData = JSON.stringify(
         const manter = $<HTMLInputElement>('[data-manter]').checked;
         const r = await api('/codigo', { codigo, manter });
         if (r.status === 410) return showCodeError('Esse código expirou. Peça outro abaixo.');
-        if (r.status === 429) return showCodeError('Muitas tentativas. Peça um código novo e tente de novo.');
+        if (r.status === 429) return showCodeError('Muitas tentativas com o código. Espere alguns minutos e peça um código novo.');
         if (r.status === 400) {
           const { tentativas_restantes: left } = await r.json().catch(() => ({}));
           return showCodeError(

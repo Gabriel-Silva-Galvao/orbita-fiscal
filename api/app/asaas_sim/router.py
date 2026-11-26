@@ -122,7 +122,8 @@ def criar_router(store: Store) -> APIRouter:
 
     router.include_router(v3)
 
-    @router.get("/_eventos", tags=["Asaas (simulação)"])
+    # ARES-SEC-005: respondia sem autenticação e listava clientes e cobranças a quem chegasse na API de desenvolvimento.
+    @router.get("/_eventos", tags=["Asaas (simulação)"], dependencies=[Depends(autenticar)])
     def eventos():
         """Extensão da simulação: todos os eventos gerados e as tentativas de entrega."""
         return {"eventos": store.eventos, "entregas": store.entregas}

@@ -42,3 +42,26 @@ def test_limite_por_ip(api):
     http, *_ = api
     codigos = [http.post("/contato/empresarial", json=OK).status_code for _ in range(6)]
     assert codigos[:5] == [202] * 5 and codigos[5] == 429
+
+
+def test_quebra_de_linha_em_nome_ou_empresa_e_recusada_sem_500(api):
+    """Regressão ARES-QA-002: CRLF em "empresa" derrubava a rota com 500 (cabeçalho do e-mail) e a mensagem se perdia."""
+    http, _, banco = api
+    for campo, valor in (("empresa", "Souza\r\nBcc: alvo@exemplo.test"), ("nome", "Ana\nSouza")):
+        r = http.post("/contato/empresarial", json={**OK, campo: valor})
+        assert r.status_code == 422 and r.json()["codigo"] == "dados_invalidos", (campo, r.status_code)
+    assert banco.um("SELECT count(*) AS n FROM contatos")["n"] == 0
+
+
+def test_mensagem_fica_registrada_mesmo_se_o_envio_falhar(api, monkeypatch):
+    http, _, banco = api
+
+    def quebra(_m):
+        raise RuntimeError("SMTP caiu no meio")
+
+    monkeypatch.setattr(correio, "enviar", quebra)
+    import pytest
+
+    with pytest.raises(RuntimeError):
+        http.post("/contato/empresarial", json=OK)
+    assert banco.um("SELECT empresa, enviado FROM contatos") == {"empresa": "Souza Contabilidade", "enviado": 0}

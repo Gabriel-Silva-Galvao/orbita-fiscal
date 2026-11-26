@@ -17,13 +17,16 @@ A empresa ainda não tem CNPJ, então a integração real com o Asaas está susp
 ```powershell
 cd api
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # produção: requirements.txt (sem o pytest)
+copy .env.example .env   # traz ORBITA_ENV=development e a simulação ligada
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
 - Saúde: http://localhost:8000/saude
 - Documentação interativa: http://localhost:8000/docs
 - Simulação: http://localhost:8000/asaas-sim/v3/... (cabeçalho `access_token` obrigatório, com a chave do `.env.example`)
+
+Sem `ORBITA_ENV=development` a API se considera em produção e recusa subir com a simulação ligada.
 
 ## Testes
 

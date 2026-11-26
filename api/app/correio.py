@@ -63,8 +63,28 @@ def enviar(msg: EmailMessage) -> bool:
                 c.send_message(msg)
         return True
     except (smtplib.SMTPException, OSError):
-        log.exception("Falha ao enviar e-mail para %s pelo SMTP", msg["To"])
+        log.exception("Falha ao enviar e-mail para %r pelo SMTP", msg["To"])
         return False
+
+
+AVISO_EMAIL = """Olá,
+
+O e-mail de acesso da sua conta na Órbita acabou de ser trocado para {novo}.
+A partir de agora, o login e os códigos de verificação vão para o endereço novo.
+
+Se não foi você, responda a este e-mail ou escreva para {suporte} o quanto antes: vamos recuperar a conta.
+
+Equipe Órbita
+"""
+
+
+def avisar_troca_de_email(antigo: str, novo: str) -> None:
+    """ARES-SEC-017: depois da troca, avisa o endereço ANTIGO. Sem SMTP (desenvolvimento), o aviso fica no log."""
+    s = get_settings()
+    msg = texto_simples(antigo, "O e-mail da sua conta na Órbita foi trocado", AVISO_EMAIL.format(novo=novo, suporte=s.contato_email),
+                        responder_para=s.contato_email)
+    if not enviar(msg):
+        log.warning("Aviso de troca de e-mail para %r (novo: %r) não enviado: SMTP_HOST vazio ou falha no envio", antigo, novo)
 
 
 def texto_simples(destino: str, assunto: str, texto: str, responder_para: str | None = None) -> EmailMessage:
@@ -80,7 +100,7 @@ def texto_simples(destino: str, assunto: str, texto: str, responder_para: str | 
 
 def enviar_codigo(destino: str, codigo: str) -> None:
     if not get_settings().smtp_host:
-        log.warning("Código de verificação para %s: %s (SMTP_HOST vazio: e-mail não enviado)", destino, codigo)
+        log.warning("Código de verificação para %r: %s (SMTP_HOST vazio: e-mail não enviado)", destino, codigo)
         return
     # Se o envio falhar, não derruba o login: a pessoa pode pedir o reenvio. O erro fica no log, sem o código.
     enviar(montar(destino, codigo))

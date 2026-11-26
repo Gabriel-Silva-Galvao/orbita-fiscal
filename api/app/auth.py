@@ -16,8 +16,8 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   DELETE /auth/sessoes/{id}                                -> 204 (sai daquele aparelho) | 404
   POST /auth/sair-de-todos                                 -> 204 (encerra todas, inclusive esta)
   POST /auth/senha/trocar     {atual, nova}                -> 202 código enviado ao e-mail | 401 senha atual errada
-  POST /auth/email/trocar     {email}                      -> 202 código enviado ao e-mail NOVO | 409 em uso
-  POST /auth/confirmar        {codigo}                     -> 200 troca feita (senha: as outras sessões caem)
+  POST /auth/email/trocar     {email, senha}               -> 202 código enviado ao e-mail NOVO | 401 senha atual errada | 409 em uso
+  POST /auth/confirmar        {codigo}                     -> 200 troca feita (as outras sessões caem; troca de e-mail avisa o antigo)
   GET/PUT /auth/preferencias  {novidades, resumo_semanal}  -> preferências de e-mail (item 9)
 
 Sessão (item 1 da rodada de testes, 25/11/2026): no máximo 30 dias a partir do login, sem renovar.
@@ -38,9 +38,10 @@ import hmac
 import logging
 import re
 import secrets
+import sqlite3
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import deque
 from typing import Callable
 
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
@@ -48,7 +49,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
-from app.correio import enviar_codigo
+from app.correio import avisar_troca_de_email, enviar_codigo
 
 log = logging.getLogger("orbita.auth")
 
@@ -61,6 +62,8 @@ SESSAO_VALIDADE = 30 * 24 * 3600
 SESSAO_CURTA = 12 * 3600  # sem "manter conectado"
 ULTIMO_USO_PASSO = 60  # grava o último uso no máximo uma vez por minuto
 LOGIN_JANELA, LOGIN_MAX_FALHAS = 15 * 60, 10
+SENHA_ATUAL_MAX_FALHAS = 5  # ARES-SEC-018: senha atual errada na troca de senha/e-mail, por conta, na mesma janela
+CODIGO_MAX_FALHAS_CONTA = 10  # ARES-SEC-002: códigos errados por e-mail, somando todos os desafios, na mesma janela
 # Segurança (26/11/2026): o regex antigo, r"^[^@\s]+@[^@\s]+\.[^@\s]+$", voltava atrás em tempo quadrático num domínio
 # longo cheio de pontos (ReDoS) e, como o regex segura o GIL, travava a API inteira. Este não volta atrás: os pedaços do
 # domínio não contêm ponto, e o ponto é literal entre eles. Além disso, o e-mail passa por limite de tamanho antes.
@@ -153,6 +156,11 @@ def confere_senha(senha: str, guardado: str) -> bool:
     return hmac.compare_digest(novo.hex(), dk)
 
 
+# ARES-SEC-007: hash de uma senha qualquer, conferido quando o e-mail do login não existe, para o tempo da resposta
+# ser o mesmo nos dois casos (sem isso, a resposta rápida revelava que a conta não existe).
+SENHA_FICTICIA = hash_senha(secrets.token_hex(16))
+
+
 def sessao_valida(banco, token: str | None) -> dict | None:
     """Sessão do cookie, se existe e não expirou; marca o último uso (no máximo uma vez por minuto)."""
     if not token:
@@ -213,6 +221,7 @@ class TrocaSenha(BaseModel):
 
 class TrocaEmail(BaseModel):
     email: str = Field(max_length=EMAIL_MAX)
+    senha: str = Field(max_length=128)  # ARES-SEC-017: só a sessão não basta para trocar o e-mail
 
 
 class Confirmacao(BaseModel):
@@ -224,13 +233,68 @@ class Preferencias(BaseModel):
     resumo_semanal: bool
 
 
+class Limitador:
+    """Contador de falhas por chave numa janela de tempo, na memória do processo.
+
+    ARES-SEC-016: a versão anterior era um defaultdict que criava uma chave a cada e-mail digitado (até numa leitura)
+    e só apagava no login certo; um anônimo fazia a memória crescer sem limite mandando logins com e-mails inventados.
+    Agora: ler não cria chave; fila vazia é apagada; a chave é um hash curto (não o e-mail); cada fila guarda no máximo
+    o teto daquele limite; e a cada 1.000 falhas (ou acima de TETO_CHAVES) as chaves vencidas são varridas. Assim a
+    memória fica proporcional às falhas dos últimos 15 minutos, com no máximo ~10 registros por chave."""
+
+    TETO_CHAVES = 50_000
+    VARRER_A_CADA = 1_000
+
+    def __init__(self, janela: float):
+        self.janela = janela
+        self.filas: dict[str, deque] = {}
+        self._escritas = 0
+
+    @staticmethod
+    def _k(chave: str) -> str:
+        return hashlib.sha256(chave.encode()).hexdigest()[:24]
+
+    def _podar(self, k: str, agora: float) -> int:
+        q = self.filas.get(k)
+        if q is None:
+            return 0
+        while q and agora - q[0] > self.janela:
+            q.popleft()
+        if not q:
+            del self.filas[k]
+            return 0
+        return len(q)
+
+    def bloqueado(self, chave: str, maximo: int) -> bool:
+        return self._podar(self._k(chave), time.time()) >= maximo
+
+    def falhou(self, chave: str, maximo: int) -> None:
+        k, agora = self._k(chave), time.time()
+        self._podar(k, agora)
+        self.filas.setdefault(k, deque(maxlen=maximo)).append(agora)
+        self._escritas += 1
+        if self._escritas % self.VARRER_A_CADA == 0 or len(self.filas) > self.TETO_CHAVES:
+            self.varrer()
+
+    def zerar(self, chave: str) -> None:
+        self.filas.pop(self._k(chave), None)
+
+    def varrer(self) -> None:
+        agora = time.time()
+        for k in list(self.filas):
+            self._podar(k, agora)
+        if len(self.filas) > self.TETO_CHAVES:
+            log.warning("Limitador de login com %d chaves ativas (acima de %d): possível ataque de volume", len(self.filas), self.TETO_CHAVES)
+
+
 def _erro(status: int, codigo: str, descricao: str, **extra) -> JSONResponse:
     return JSONResponse({"codigo": codigo, "descricao": descricao, **extra}, status_code=status)
 
 
 def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     r = APIRouter(prefix="/auth", tags=["Conta e login"])
-    falhas: dict[str, deque] = defaultdict(deque)
+    falhas = Limitador(LOGIN_JANELA)
+    r.limitador = falhas  # main.py guarda em app.state.limitador_login (observação e testes)
 
     def banco(req: Request):
         return req.app.state.banco
@@ -258,11 +322,22 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     def desafio_atual(req: Request, token: str | None) -> dict | None:
         return banco(req).um("SELECT * FROM desafios WHERE token_hash=?", _sha(token)) if token else None
 
-    def limite_login(email: str) -> bool:
-        q, agora = falhas[email], time.time()
-        while q and agora - q[0] > LOGIN_JANELA:
-            q.popleft()
-        return len(q) >= LOGIN_MAX_FALHAS
+    def limite_login(chave: str, maximo: int = LOGIN_MAX_FALHAS) -> bool:
+        return falhas.bloqueado(chave, maximo)
+
+    def senha_atual_confere(req: Request, usuario_id: str, senha: str) -> JSONResponse | None:
+        """ARES-SEC-018: a troca de senha (e a de e-mail) conferia a senha atual sem limite, o que permitia adivinhá-la
+        por força bruta com uma sessão roubada, contornando o limite do login. Agora conta os erros por conta: no
+        5º erro em 15 minutos, 429 até a janela passar (mesmo com a senha certa)."""
+        chave = f"conta:{usuario_id}"
+        if limite_login(chave, SENHA_ATUAL_MAX_FALHAS):
+            return _erro(429, "muitas_tentativas", "Muitas tentativas com a senha atual. Espere alguns minutos.")
+        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", usuario_id)
+        if not confere_senha(senha, u["senha_hash"]):
+            falhas.falhou(chave, SENHA_ATUAL_MAX_FALHAS)
+            return _erro(401, "senha_atual", "A senha atual não confere.")
+        falhas.zerar(chave)
+        return None
 
     @r.post("/cadastro", status_code=202)
     def cadastro(dados: Cadastro, req: Request, resp: Response):
@@ -281,10 +356,14 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if limite_login(email):
             return _erro(429, "muitas_tentativas", "Muitas tentativas. Espere alguns minutos.")
         u = banco(req).um("SELECT * FROM usuarios WHERE email=?", email)
-        if not u or not confere_senha(dados.senha, u["senha_hash"]):
-            falhas[email].append(time.time())
+        senha_ok = confere_senha(dados.senha, u["senha_hash"] if u else SENHA_FICTICIA)  # sempre roda o scrypt
+        if not u or not senha_ok:
+            falhas.falhou(email, LOGIN_MAX_FALHAS)
             return _erro(401, "credenciais", "E-mail ou senha não conferem.")
-        falhas.pop(email, None)
+        falhas.zerar(email)
+        if limite_login(f"codigo:{email}", CODIGO_MAX_FALHAS_CONTA):
+            # ARES-SEC-002: conta com códigos errados demais na janela não ganha desafio novo (nem mais 5 chutes).
+            return _erro(429, "muitas_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
         return novo_desafio(req, resp, "login", email)
 
     def conferir(req: Request, d: dict | None, codigo: str) -> JSONResponse | None:
@@ -293,12 +372,19 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(410, "expirado", "O código expirou. Peça outro.")
         if d["tentativas"] <= 0:
             return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
+        # ARES-SEC-002: além das 5 tentativas de cada desafio, um teto por e-mail somando todos os desafios; sem ele,
+        # cada login novo dava mais 5 chutes e o código de 6 dígitos caía por força bruta com a senha já descoberta.
+        conta = f"codigo:{d['email']}"
+        if limite_login(conta, CODIGO_MAX_FALHAS_CONTA):
+            return _erro(429, "sem_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
         if not hmac.compare_digest(_sha(codigo.strip()), d["codigo_hash"]):
+            falhas.falhou(conta, CODIGO_MAX_FALHAS_CONTA)
             restantes = d["tentativas"] - 1
             banco(req).executar("UPDATE desafios SET tentativas=? WHERE token_hash=?", restantes, d["token_hash"])
             if restantes <= 0:
                 return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
             return _erro(400, "codigo_errado", "Código incorreto.", tentativas_restantes=restantes)
+        falhas.zerar(conta)
         return None
 
     @r.post("/codigo")
@@ -315,7 +401,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
                 return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
             uid = str(uuid.uuid4())
-            b.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?,?,?,?)", uid, d["email"], d["nome"], d["senha_hash"])
+            try:
+                b.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?,?,?,?)", uid, d["email"], d["nome"], d["senha_hash"])
+            except sqlite3.IntegrityError:  # ARES-QA-011: outro cadastro do mesmo e-mail entrou entre a conferência e o INSERT
+                return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
         else:
             uid = b.um("SELECT id FROM usuarios WHERE email=?", d["email"])["id"]
         b.executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
@@ -345,14 +434,16 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if espera > 0:
             return _erro(429, "espere", "Espere para pedir outro código.", espere_segundos=int(espera) + 1)
         banco(req).executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
-        return novo_desafio(req, resp, d["finalidade"], d["email"], d["nome"], d["senha_hash"])
+        # ARES-QA-010: sem o usuario_id, o desafio reenviado da troca de senha/e-mail não era mais "daquela conta" e o
+        # /auth/confirmar sempre respondia 410.
+        return novo_desafio(req, resp, d["finalidade"], d["email"], d["nome"], d["senha_hash"], usuario_id=d["usuario_id"])
 
     @r.post("/senha/esqueci", status_code=202)
     def esqueci(dados: Esqueci, req: Request):
         email = dados.email.strip().lower()
         if banco(req).um("SELECT 1 FROM usuarios WHERE email=?", email):
             # Troca de senha por link: etapa futura. Por ora, só registra o pedido.
-            log.warning("Pedido de troca de senha para %s (envio do link: a definir)", email)
+            log.warning("Pedido de troca de senha para %r (envio do link: a definir)", email)
         return {"ok": True}
 
     @r.get("/sessao")
@@ -369,9 +460,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
-        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", s["id"])
-        if not confere_senha(dados.atual, u["senha_hash"]):
-            return _erro(401, "senha_atual", "A senha atual não confere.")
+        erro = senha_atual_confere(req, s["id"], dados.atual)
+        if erro:
+            return erro
         if len(dados.nova) < 8:
             return _erro(422, "senha_curta", "A senha nova precisa ter pelo menos 8 caracteres.")
         if dados.nova == dados.atual:
@@ -383,6 +474,11 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
+        # ARES-SEC-017: com uma sessão roubada, trocar o e-mail sem a senha tomava a conta de vez (a recuperação
+        # vai para o e-mail). Agora a senha atual é exigida, como na troca de senha.
+        erro = senha_atual_confere(req, s["id"], dados.senha)
+        if erro:
+            return erro
         email = dados.email.strip().lower()
         if not EMAIL_RE.match(email):
             return _erro(422, "dados_invalidos", "Informe um e-mail válido.")
@@ -414,7 +510,14 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return {"ok": True, "trocou": "senha"}
         if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
             return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
-        b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        try:
+            b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        except sqlite3.IntegrityError:  # ARES-QA-011: o e-mail virou de outra conta entre a conferência e o UPDATE
+            return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
+        # ARES-SEC-017 / ARES-QA-012: como na troca de senha, as outras sessões caem; e o endereço antigo é avisado,
+        # para o dono perceber se não foi ele.
+        b.executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
+        avisar_troca_de_email(s["email"], d["email"])
         return {"ok": True, "trocou": "email", "email": d["email"]}
 
     @r.get("/preferencias")

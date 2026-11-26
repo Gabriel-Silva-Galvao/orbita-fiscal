@@ -1,0 +1,3 @@
+# Dependências de desenvolvimento e testes (ARES-DEP-002: o pytest saiu do requirements.txt de produção).
+-r requirements.txt
+pytest==9.2.0

@@ -316,3 +316,65 @@ def test_sessoes_marcam_tipo_e_mesmo_aparelho_e_sair_dos_outros(api, caixa):
     assert http.get("/auth/sessao").status_code == 200
     assert antigo.get("/auth/sessao").status_code == 401 and celular.get("/auth/sessao").status_code == 401
     assert [s["atual"] for s in http.get("/auth/sessoes").json()] == [True]
+
+
+def test_codigo_tem_teto_por_conta_somando_os_logins(api, caixa):
+    """Regressão ARES-SEC-002: cada login com a senha certa dava mais 5 chutes do código, sem teto. Agora, com 10
+    códigos errados em 15 minutos (somando todos os desafios), nem o código certo passa e não sai desafio novo."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    http.post("/auth/sair")
+    login = {"email": "ana@exemplo.test", "senha": "senha-forte-1"}
+    erros = []
+    for _ in range(3):  # três logins seguidos: 4 + 4 + 2 códigos errados = 10 no total
+        assert http.post("/auth/login", json=login).status_code == 202
+        for _ in range(4 if len(erros) < 8 else 2):
+            erros.append(http.post("/auth/codigo", json={"codigo": "000000" if caixa["ana@exemplo.test"] != "000000" else "111111"}).status_code)
+    assert erros == [400] * 10, erros
+    # O 11º chute (mesmo o código certo do desafio aberto) é recusado, e um login novo não abre outro desafio.
+    assert http.post("/auth/codigo", json={"codigo": caixa["ana@exemplo.test"]}).status_code == 429
+    r = http.post("/auth/login", json=login)
+    assert r.status_code == 429 and r.json()["codigo"] == "muitas_tentativas"
+
+
+def test_limitador_de_login_nao_cresce_sem_limite(api, monkeypatch):
+    """Regressão ARES-SEC-016: cada login com um e-mail inventado criava uma chave que nunca saía (a leitura também
+    criava). Agora só falha cria chave, a chave sai quando a janela passa e ler não cria nada."""
+    import time as _time
+
+    http, *_ = api
+    lim = http.app.state.limitador_login
+    monkeypatch.setattr(auth, "confere_senha", lambda s, h: False)  # o teste mede memória, não o scrypt
+    for i in range(300):  # e-mails que não existem, como no ataque de volume
+        assert http.post("/auth/login", json={"email": f"x{i}@exemplo.test", "senha": "qualquer-1"}).status_code == 401
+    assert len(lim.filas) == 300
+    assert all(len(q) <= auth.LOGIN_MAX_FALHAS for q in lim.filas.values())
+    assert all("@" not in k for k in lim.filas)  # a chave é um hash, não o e-mail
+    # Passada a janela, a varredura esvazia tudo; e consultar uma chave não a cria.
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.LOGIN_JANELA + 1)
+    lim.varrer()
+    assert lim.filas == {}
+    assert lim.bloqueado("ninguem@exemplo.test", auth.LOGIN_MAX_FALHAS) is False and lim.filas == {}
+
+
+def test_limitador_guarda_no_maximo_o_teto_por_chave():
+    lim = auth.Limitador(60)
+    for _ in range(1000):
+        lim.falhou("alvo@exemplo.test", 10)
+    assert lim.bloqueado("alvo@exemplo.test", 10) and len(lim.filas) == 1
+    assert len(next(iter(lim.filas.values()))) == 10
+
+
+def test_login_com_email_inexistente_tambem_roda_o_scrypt(api, caixa, monkeypatch):
+    """Regressão ARES-SEC-007 (parte do login): sem conta, a resposta vinha sem o scrypt e era mais rápida,
+    revelando quais e-mails têm conta. Agora a senha é conferida nos dois casos."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    chamadas = []
+    original = auth.confere_senha
+    monkeypatch.setattr(auth, "confere_senha", lambda s, h: chamadas.append(h) or original(s, h))
+    r1 = http.post("/auth/login", json={"email": "ninguem@exemplo.test", "senha": "qualquer-1"})
+    r2 = http.post("/auth/login", json={"email": "ana@exemplo.test", "senha": "errada-123"})
+    assert r1.status_code == r2.status_code == 401 and r1.json() == r2.json()
+    assert len(chamadas) == 2 and chamadas[0] == auth.SENHA_FICTICIA

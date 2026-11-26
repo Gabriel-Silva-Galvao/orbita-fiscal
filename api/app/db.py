@@ -26,6 +26,11 @@ CREATE TABLE IF NOT EXISTS assinaturas (
     reembolso_em      TEXT,
     atualizado_em     TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- ARES-QA-003: uma operação de cobrança por conta de cada vez (reserva gravada antes de chamar o Asaas).
+CREATE TABLE IF NOT EXISTS operacoes_cobranca (
+    usuario_id  TEXT PRIMARY KEY,
+    iniciada    REAL NOT NULL
+);
 -- Idempotência: cada evento do Asaas é processado uma vez só (entrega "pelo menos uma vez").
 CREATE TABLE IF NOT EXISTS eventos_webhook (
     id           TEXT PRIMARY KEY,

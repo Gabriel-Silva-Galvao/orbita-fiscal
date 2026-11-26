@@ -15,7 +15,7 @@ export const prerender = false;
   <div data-conta>
     <section class="pt-secao" aria-labelledby="perfil-t">
       <h2 id="perfil-t">Perfil</h2>
-      <form class="form-nome" data-nome-form novalidate>
+      <form method="post" class="form-nome" data-nome-form novalidate>
         <div class="field">
           <label for="nome">Nome</label>
           <input id="nome" name="nome" autocomplete="name" maxlength="80" />
@@ -27,10 +27,14 @@ export const prerender = false;
         <div><span>E-mail</span><strong data-email></strong></div>
         <div><span>Acesso</span><strong>E-mail e senha, com código por e-mail</strong></div>
       </div>
-      <form class="form-linha" data-email-form novalidate data-so-api>
+      <form method="post" class="form-linha" data-email-form novalidate data-so-api>
         <div class="field">
           <label for="email-novo">Trocar o e-mail</label>
           <input id="email-novo" type="email" autocomplete="email" placeholder="novo@exemplo.com" />
+        </div>
+        <div class="field">
+          <label for="email-senha">Sua senha atual</label>
+          <input id="email-senha" type="password" autocomplete="current-password" />
         </div>
         <button type="submit" class="btn-alt">Enviar código ao novo e-mail</button>
       </form>
@@ -46,7 +50,7 @@ export const prerender = false;
 
     <section class="pt-secao" aria-labelledby="senha-t" data-so-api>
       <h2 id="senha-t">Senha</h2>
-      <form class="form-senha" data-senha-form novalidate>
+      <form method="post" class="form-senha" data-senha-form novalidate>
         <div class="field">
           <label for="senha-atual">Senha atual</label>
           <input id="senha-atual" type="password" autocomplete="current-password" />
@@ -86,7 +90,7 @@ export const prerender = false;
 
     <section class="pt-secao" aria-labelledby="pref-t" data-so-api>
       <h2 id="pref-t">E-mails da Órbita</h2>
-      <form class="prefs" data-prefs>
+      <form method="post" class="prefs" data-prefs>
         <label><input type="checkbox" name="novidades" /> Novidades da base (o que entrou de novo)</label>
         <label data-pref-resumo><input type="checkbox" name="resumo_semanal" /> Resumo semanal por área <span class="selo-ouro">Ouro</span></label>
         <label class="mute"><input type="checkbox" checked disabled /> Avisos de cobrança e de segurança (sempre enviados)</label>
@@ -105,7 +109,7 @@ export const prerender = false;
     <section class="pt-secao" aria-labelledby="nota-t" data-so-api>
       <h2 id="nota-t">Dados da nota fiscal</h2>
       <p class="small mute" data-nota-vazia hidden>Os dados da nota são informados na primeira compra.</p>
-      <form class="form-nota" data-nota-form novalidate hidden>
+      <form method="post" class="form-nota" data-nota-form novalidate hidden>
         <div class="field">
           <label for="nota-nome">Nome ou razão social</label>
           <input id="nota-nome" autocomplete="organization" />
@@ -434,15 +438,19 @@ export const prerender = false;
     e.preventDefault();
     const msg = $('[data-email-msg]');
     const email = $<HTMLInputElement>('#email-novo').value.trim();
+    const senha = $<HTMLInputElement>('#email-senha').value;
+    if (!senha) return void (msg.textContent = 'Digite sua senha atual para trocar o e-mail.');
     try {
-      const r = await call(authEndpoint, '/email/trocar', 'POST', { email });
+      const r = await call(authEndpoint, '/email/trocar', 'POST', { email, senha });
       if (!r.ok) return void (msg.textContent = await erroDe(r, 'Não conseguimos trocar o e-mail agora.'));
       const d = await r.json();
       pedirCodigo('email', d.enviado_para, msg, (res) => {
         usuario.email = res.email;
         $('[data-email]').textContent = res.email;
         $<HTMLInputElement>('#email-novo').value = '';
-        msg.textContent = 'E-mail trocado. A partir de agora, entre com o e-mail novo.';
+        $<HTMLInputElement>('#email-senha').value = '';
+        msg.textContent = 'E-mail trocado. A partir de agora, entre com o e-mail novo. Os outros aparelhos saíram da conta.';
+        carregarAparelhos();
         try {
           sessionStorage.removeItem('orbita:sessao');
         } catch {}

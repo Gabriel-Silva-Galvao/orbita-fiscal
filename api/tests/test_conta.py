@@ -12,6 +12,7 @@ from tests.test_billing import assinar
 def caixa(monkeypatch):
     recebidos: dict[str, str] = {}
     monkeypatch.setattr(auth, "enviar_codigo", lambda email, codigo: recebidos.__setitem__(email, codigo))
+    monkeypatch.setattr(auth, "avisar_troca_de_email", lambda antigo, novo: recebidos.__setitem__(f"aviso:{antigo}", novo), raising=False)
     return recebidos
 
 
@@ -45,13 +46,36 @@ def test_troca_de_email_confirma_no_endereco_novo(api, caixa):
     http, *_ = api
     cadastrar(http, caixa)
     cadastrar(TestClient(http.app), caixa, email="bia@exemplo.test")
-    assert http.post("/auth/email/trocar", json={"email": "bia@exemplo.test"}).status_code == 409
-    assert http.post("/auth/email/trocar", json={"email": "ana@exemplo.test"}).status_code == 422
-    assert http.post("/auth/email/trocar", json={"email": "Ana.Nova@Exemplo.test"}).status_code == 202
+    senha = "senha-forte-1"
+    assert http.post("/auth/email/trocar", json={"email": "bia@exemplo.test", "senha": senha}).status_code == 409
+    assert http.post("/auth/email/trocar", json={"email": "ana@exemplo.test", "senha": senha}).status_code == 422
+    assert http.post("/auth/email/trocar", json={"email": "Ana.Nova@Exemplo.test", "senha": senha}).status_code == 202
     assert "ana.nova@exemplo.test" in caixa  # o código foi para o endereço novo
     r = http.post("/auth/confirmar", json={"codigo": caixa["ana.nova@exemplo.test"]})
     assert r.status_code == 200 and r.json()["email"] == "ana.nova@exemplo.test"
     assert http.get("/auth/sessao").json()["email"] == "ana.nova@exemplo.test"
+
+
+def test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo(api, caixa):
+    """Regressão ARES-SEC-017 e ARES-QA-012: só a sessão não troca o e-mail; depois da troca, as outras sessões caem
+    e o endereço antigo recebe aviso."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    outro = TestClient(http.app)
+    assert outro.post("/auth/login", json={"email": "ana@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    assert outro.post("/auth/codigo", json={"codigo": caixa["ana@exemplo.test"]}).status_code == 200
+
+    # Quem tem só a sessão (o "outro" aparelho, por exemplo roubado) não consegue pedir a troca.
+    assert outro.post("/auth/email/trocar", json={"email": "ladrao@exemplo.test"}).status_code == 422
+    r = outro.post("/auth/email/trocar", json={"email": "ladrao@exemplo.test", "senha": "chute-errado"})
+    assert r.status_code == 401 and r.json()["codigo"] == "senha_atual"
+    assert "ladrao@exemplo.test" not in caixa
+
+    assert http.post("/auth/email/trocar", json={"email": "ana.nova@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    assert http.post("/auth/confirmar", json={"codigo": caixa["ana.nova@exemplo.test"]}).status_code == 200
+    assert http.get("/auth/sessao").status_code == 200  # esta continua
+    assert outro.get("/auth/sessao").status_code == 401  # a outra caiu
+    assert caixa["aviso:ana@exemplo.test"] == "ana.nova@exemplo.test"  # o e-mail antigo foi avisado
 
 
 def test_codigo_de_troca_nao_serve_para_entrar(api, caixa):
@@ -83,3 +107,67 @@ def test_dados_da_nota(api, caixa):
     assert nota["nome"] == "Ana Souza Advocacia" and nota["endereco"] == "Rua A, 10"
     cliente = next(iter(store.clientes.values()))
     assert cliente["name"] == "Ana Souza Advocacia" and cliente["personType"] == "JURIDICA"
+
+
+def test_senha_atual_tem_limite_de_tentativas(api, caixa, monkeypatch):
+    """Regressão ARES-SEC-018: a senha atual podia ser chutada sem limite na troca de senha (12 erros = 12 x 401).
+    Agora, no 5º erro em 15 minutos, a conta para de aceitar tentativas (429), também na troca de e-mail."""
+    import time as _time
+
+    http, *_ = api
+    cadastrar(http, caixa)
+    codigos = [http.post("/auth/senha/trocar", json={"atual": f"chute-{i}", "nova": "outra-senha-2"}).status_code for i in range(6)]
+    assert codigos == [401] * 5 + [429], codigos
+    # Bloqueada, nem a senha certa passa; e a troca de e-mail usa o mesmo contador.
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 429
+    assert http.post("/auth/email/trocar", json={"email": "nova@exemplo.test", "senha": "senha-forte-1"}).status_code == 429
+    # Passada a janela, a senha certa volta a funcionar.
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.LOGIN_JANELA + 1)
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 202
+
+
+def test_reenviar_o_codigo_da_troca_funciona(api, caixa, monkeypatch):
+    """Regressão ARES-QA-010: o código reenviado na troca de senha nunca confirmava (410)."""
+    import time as _time
+
+    http, *_ = api
+    cadastrar(http, caixa)
+    assert http.post("/auth/senha/trocar", json={"atual": "senha-forte-1", "nova": "outra-senha-2"}).status_code == 202
+    agora = _time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: agora + auth.REENVIO_ESPERA + 1)
+    assert http.post("/auth/codigo/reenviar").status_code == 202
+    r = http.post("/auth/confirmar", json={"codigo": caixa["ana@exemplo.test"]})
+    assert r.status_code == 200 and r.json()["trocou"] == "senha", r.text
+
+
+def _outra_conta_pega_o_email_no_meio(banco, monkeypatch, email):
+    """Simula a corrida: logo depois da conferência "esse e-mail está livre?", outra conta é criada com ele."""
+    original = banco.um
+
+    def um(sql, *args):
+        r = original(sql, *args)
+        if sql.startswith("SELECT 1 FROM usuarios WHERE email") and args == (email,) and r is None:
+            banco.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES ('rival', ?, 'Rival', 'x')", email)
+        return r
+
+    monkeypatch.setattr(banco, "um", um)
+
+
+def test_corrida_na_confirmacao_da_troca_de_email_responde_409(api, caixa, monkeypatch):
+    """Regressão ARES-QA-011: a corrida na confirmação respondia 500 (IntegrityError do UNIQUE)."""
+    http, _, banco = api
+    cadastrar(http, caixa)
+    assert http.post("/auth/email/trocar", json={"email": "disputado@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    _outra_conta_pega_o_email_no_meio(banco, monkeypatch, "disputado@exemplo.test")
+    r = http.post("/auth/confirmar", json={"codigo": caixa["disputado@exemplo.test"]})
+    assert r.status_code == 409 and r.json()["codigo"] == "email_em_uso"
+    assert http.get("/auth/sessao").json()["email"] == "ana@exemplo.test"
+
+
+def test_corrida_na_confirmacao_do_cadastro_responde_409(api, caixa, monkeypatch):
+    http, _, banco = api
+    assert http.post("/auth/cadastro", json={"nome": "Ana", "email": "disputado@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    _outra_conta_pega_o_email_no_meio(banco, monkeypatch, "disputado@exemplo.test")
+    r = http.post("/auth/codigo", json={"codigo": caixa["disputado@exemplo.test"]})
+    assert r.status_code == 409 and r.json()["codigo"] == "email_em_uso"

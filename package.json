@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "og": "node scripts/og/gerar.mjs"
+    "og": "node scripts/og/gerar.mjs",
+    "test:site": "node --test \"scripts/testes/*.test.ts\""
   },
   "dependencies": {
     "@astrojs/node": "^11.1.14",

@@ -7,8 +7,8 @@ from app.config import CHAVE_SIMULACAO, TOKEN_WEBHOOK_EXEMPLO, Settings, get_set
 
 
 def conf(**k):
-    base = dict(asaas_sim_enabled=False, cookie_secure=True, asaas_webhook_token="x" * 40,
-                asaas_api_key="$aact_prod_chave_de_verdade", auth_codigo_na_resposta=False)
+    base = dict(orbita_env="production", asaas_sim_enabled=False, cookie_secure=True, asaas_webhook_token="x" * 40,
+                asaas_api_key="$aact_prod_chave_de_verdade", auth_codigo_na_resposta=False, smtp_host="smtp.exemplo.test")
     base.update(k)
     return Settings(_env_file=None, **base)
 
@@ -29,7 +29,7 @@ def test_segredos_de_exemplo_e_codigo_na_resposta_sao_recusados():
 
 
 def test_desenvolvimento_com_simulacao_sobe():
-    assert problemas_de_producao(conf(asaas_sim_enabled=True, cookie_secure=False, asaas_webhook_token=TOKEN_WEBHOOK_EXEMPLO,
+    assert problemas_de_producao(conf(orbita_env="development", smtp_host="", asaas_sim_enabled=True, cookie_secure=False, asaas_webhook_token=TOKEN_WEBHOOK_EXEMPLO,
                                       asaas_api_key=CHAVE_SIMULACAO, auth_codigo_na_resposta=True)) == []
 
 
@@ -50,3 +50,57 @@ def test_webhook_recusa_token_errado(api):
     assert http.post("/webhooks/asaas", json={"id": "e1", "event": "PAYMENT_RECEIVED"}).status_code == 401
     r = http.post("/webhooks/asaas", json={"id": "e1", "event": "PAYMENT_RECEIVED"}, headers={"asaas-access-token": "errado"})
     assert r.status_code == 401
+
+
+def test_simulacao_em_producao_e_recusada_mesmo_sem_cookie_secure():
+    """Regressão ARES-SEC-006: com COOKIE_SECURE=false, a simulação (que libera acesso sem pagar e aceita o token
+    público do webhook) subia sem erro num servidor de produção. Agora produção é declarada por ORBITA_ENV."""
+    erros = problemas_de_producao(conf(orbita_env="production", asaas_sim_enabled=True, cookie_secure=False))
+    assert any("ASAAS_SIM_ENABLED=true em produção" in e for e in erros)
+    assert any("COOKIE_SECURE=false em produção" in e for e in erros)
+
+
+def test_producao_e_o_padrao():
+    import os
+
+    antes = os.environ.pop("ORBITA_ENV", None)
+    try:
+        assert Settings(_env_file=None).orbita_env == "production"
+    finally:
+        if antes is not None:
+            os.environ["ORBITA_ENV"] = antes
+
+
+def test_simulacao_so_roda_em_localhost():
+    base = dict(orbita_env="development", asaas_sim_enabled=True, cookie_secure=False)
+    assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, site_url="https://orbitafiscal.com.br")))
+    assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, api_public_url="https://api.orbitafiscal.com.br")))
+
+
+def test_producao_sem_smtp_nao_sobe():
+    """Regressão ARES-QA-007 (S4): sem SMTP, o código do 2FA ia para o log; em produção a API se recusa a subir."""
+    assert any("SMTP_HOST vazio" in e for e in problemas_de_producao(conf(smtp_host="")))
+    assert problemas_de_producao(conf(orbita_env="development", smtp_host="", asaas_sim_enabled=True, cookie_secure=False)) == []
+
+
+def test_docs_fechados_em_producao(monkeypatch, tmp_path, api):
+    """Regressão ARES-QA-005 (S6): /docs e /openapi.json mostravam todas as rotas a qualquer um, também em produção."""
+    from fastapi.testclient import TestClient
+
+    from app.db import Banco
+    from app.main import create_app
+
+    http, *_ = api  # desenvolvimento: continuam abertos
+    assert http.get("/docs").status_code == 200 and http.get("/openapi.json").status_code == 200
+
+    for k, v in {"ORBITA_ENV": "production", "ASAAS_SIM_ENABLED": "false", "COOKIE_SECURE": "true", "SMTP_HOST": "smtp.exemplo.test",
+                 "ASAAS_WEBHOOK_TOKEN": "x" * 40, "ASAAS_API_KEY": "$aact_prod_chave_de_verdade", "AUTH_CODIGO_NA_RESPOSTA": "false"}.items():
+        monkeypatch.setenv(k, v)
+    get_settings.cache_clear()
+    try:
+        prod = TestClient(create_app(banco=Banco(str(tmp_path / "prod.db"))))
+        for caminho in ("/docs", "/redoc", "/openapi.json"):
+            assert prod.get(caminho).status_code == 404, caminho
+        assert prod.get("/saude").status_code == 200
+    finally:
+        get_settings.cache_clear()
