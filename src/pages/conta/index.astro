@@ -76,11 +76,31 @@ const passosInst = ['Baixar o plugin', 'Enviar o arquivo ao Claude', 'Conectar a
 
     <section class="cartao" aria-labelledby="uso-t">
       <h2 class="h3" id="uso-t">Consultas neste mês</h2>
-      <p class="numero" data-uso>0</p>
+      <p class="sem-numeros">Seus números aparecem depois da primeira pergunta no Claude com a Órbita.</p>
       <p class="small mute">Limite do plano<Pending kind="definir" /></p>
-      <p class="small mute">A contagem começa na primeira pergunta feita no Claude com a Órbita.</p>
     </section>
   </div>
+
+  <!-- Bloco G, ideia 2: o Início ajuda a usar o produto. Uma pergunta por público. -->
+  <section class="pt-secao" aria-labelledby="pergunte-t">
+    <h2 id="pergunte-t">Pergunte agora</h2>
+    <p class="pt-intro small mute">Copie uma pergunta, abra o Claude e veja a resposta com as fontes.</p>
+    <ul class="perguntas">
+      {[
+        { quem: 'Advogado', q: 'Execução fiscal parada sem bens localizados. Quando começa a correr a prescrição intercorrente? Traga o fundamento.' },
+        { quem: 'Contador', q: 'Uma indústria no lucro real pode tomar crédito de PIS/Cofins sobre o frete entre seus estabelecimentos? Qual a posição do CARF e da Receita?' },
+        { quem: 'Empresário', q: 'Minha empresa atrasou o pagamento de um tributo federal. Quais multas e juros incidem e como regularizar?' },
+      ].map((p) => (
+        <li class="pergunta">
+          <span class="selo">{p.quem}</span>
+          <p>{p.q}</p>
+          <div class="acoes">
+            <button type="button" class="btn-alt" data-copiar-q={p.q}>Copiar e abrir o Claude</button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
 
   <section class="cartao continuar" aria-labelledby="cont-t" data-continuar hidden>
     <div class="cont-topo">
@@ -149,6 +169,20 @@ const passosInst = ['Baixar o plugin', 'Enviar o arquivo ao Claude', 'Conectar a
     </div>
   </section>
 </Portal>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copiar-q]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.dataset.copiarQ!);
+        b.textContent = 'Copiada. Cole no Claude';
+      } catch {
+        b.textContent = 'Abra o Claude e cole a pergunta';
+      }
+      window.open('https://claude.ai/new', '_blank', 'noopener');
+    }),
+  );
+</script>
 
 <style>
   .saudacao {
@@ -477,6 +511,41 @@ const passosInst = ['Baixar o plugin', 'Enviar o arquivo ao Claude', 'Conectar a
   .atalho:focus-visible {
     outline: 3px solid var(--brand);
     outline-offset: 2px;
+  }
+  .sem-numeros {
+    margin: 0;
+    font-size: 1rem;
+  }
+  .perguntas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: var(--space-3);
+  }
+  .pergunta {
+    display: grid;
+    align-content: space-between;
+    justify-items: start;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .pergunta:hover {
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+    transform: translateY(-2px);
+  }
+  .pergunta p {
+    margin: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pergunta:hover {
+      transform: none;
+    }
   }
 </style>
 

@@ -18,15 +18,10 @@ export const prerender = false;
       <strong class="stat-v" data-acesso></strong>
       <span class="stat-n" data-acesso-nota></span>
     </article>
-    <article class="stat">
-      <span class="stat-k">Consultas neste mês</span>
-      <strong class="stat-v">0</strong>
-      <span class="stat-n">Limite do plano<Pending kind="definir" /></span>
-    </article>
-    <article class="stat">
-      <span class="stat-k">Última consulta</span>
-      <strong class="stat-v">Nenhuma ainda</strong>
-      <span class="stat-n">Aparece depois da primeira pergunta</span>
+    <article class="stat stat-largo">
+      <span class="stat-k">Uso</span>
+      <strong class="stat-frase">Seus números aparecem depois da primeira pergunta.</strong>
+      <span class="stat-n">Consultas do mês e última consulta. Limite do plano<Pending kind="definir" /></span>
     </article>
     <article class="stat">
       <span class="stat-k">Versão do plugin</span>
@@ -34,7 +29,7 @@ export const prerender = false;
     </article>
   </div>
 
-  <section class="cartao" id="baixar" aria-labelledby="baixar-t">
+  <section class="cartao is-marca" id="baixar" aria-labelledby="baixar-t">
     <h2 class="h2" id="baixar-t">Baixar o plugin</h2>
     <p class="small">O arquivo é o mesmo para o Claude na web, no computador e no Claude Code. O link de download vale por 15 minutos.</p>
     <div class="acoes">
@@ -181,6 +176,17 @@ export const prerender = false;
     gap: 6px;
     font: var(--text-small);
     font-size: 0.9375rem;
+  }
+  .stat-largo {
+    grid-column: span 2;
+  }
+  .stat-frase {
+    font-weight: 500;
+  }
+  @media (max-width: 520px) {
+    .stat-largo {
+      grid-column: auto;
+    }
   }
 </style>
 

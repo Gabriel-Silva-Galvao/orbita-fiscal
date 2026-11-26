@@ -22,6 +22,12 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
       <li><strong>Resumo semanal:</strong> toda semana, as decisões e normas mais relevantes das áreas que você escolher.</li>
       <li><strong>Acesso antecipado:</strong> novidades da base chegam primeiro para o Ouro.</li>
     </ul>
+    <figure class="exemplo-alerta" aria-label="Exemplo de alerta">
+      <span class="selo">Exemplo</span>
+      <p class="small mute">Alerta · Crédito de PIS/Cofins</p>
+      <p><strong>Novo acórdão da CSRF sobre frete entre estabelecimentos</strong></p>
+      <p class="small">A Câmara Superior negou o crédito e citou a Súmula CARF nº 217. Veja a ementa e o link para conferir.</p>
+    </figure>
     <a class="btn-main" href="/assinar/ouro">Fazer upgrade para o Ouro ({brl(plans.ouro.cents)} por mês)</a>
   </section>
 
@@ -141,6 +147,19 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
   }
   .area input {
     accent-color: var(--brand);
+  }
+  .exemplo-alerta {
+    margin: var(--space-3) 0;
+    padding: var(--space-4);
+    border: 1px dashed color-mix(in srgb, var(--brand) 55%, var(--line));
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+  }
+  .exemplo-alerta p {
+    margin: 0;
   }
 </style>
 

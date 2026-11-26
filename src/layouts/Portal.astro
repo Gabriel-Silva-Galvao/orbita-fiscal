@@ -123,6 +123,12 @@ const year = new Date().getFullYear();
             <a role="menuitem" href="/instalar">Instalar o plugin</a>
             <a role="menuitem" href="/ajuda">Ajuda</a>
             <a role="menuitem" href="/">Voltar ao site</a>
+            <div class="pt-tema" role="group" aria-label="Tema" data-pt-tema>
+              <span class="small mute">Tema</span>
+              <button type="button" role="menuitemradio" aria-checked="false" data-tema="auto">Automático</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-tema="light">Claro</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-tema="dark">Escuro</button>
+            </div>
             <button type="button" role="menuitem" data-pt-sair>Sair</button>
           </div>
         </div>
@@ -492,6 +498,32 @@ const year = new Date().getFullYear();
     text-align: left;
     text-decoration: none;
     cursor: pointer;
+  }
+  .pt-tema {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin: 6px 0;
+    padding: 8px 6px;
+    border-block: 1px solid var(--line);
+  }
+  .pt-tema > span {
+    grid-column: 1 / -1;
+    padding: 0 4px 2px;
+  }
+  .pt-menu-conta .pt-tema button {
+    padding: 7px 4px;
+    border: 1px solid var(--line);
+    text-align: center;
+    font-size: 0.8125rem;
+  }
+  .pt-menu-conta .pt-tema button[aria-checked='true'] {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 14%, transparent);
+    font-weight: 600;
+  }
+  .pt-tag[hidden] {
+    display: none;
   }
   .pt-menu-conta a:hover,
   .pt-menu-conta a:focus,
@@ -1002,6 +1034,9 @@ const year = new Date().getFullYear();
       $('[data-vazio-conta]').hidden = root.dataset.pagina === 'configuracoes';
     }
 
+    // Bloco G, ideia 7: o selo "Ouro" do menu só aparece para quem ainda não é Ouro.
+    document.querySelectorAll<HTMLElement>('.pt-tag').forEach((t) => (t.hidden = ctx.ouro));
+
     // Plano no menu lateral.
     const plano = $('[data-portal-plano]');
     const nome = ctx.plano ? plans[ctx.plano]?.name : '';
@@ -1055,10 +1090,10 @@ const year = new Date().getFullYear();
     const abre = menu.hidden;
     menu.hidden = !abre;
     avatar.setAttribute('aria-expanded', String(abre));
-    if (abre) menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    if (abre) menu.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
   });
   menu.addEventListener('keydown', (e) => {
-    const itens = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    const itens = Array.from(menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
     const i = itens.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -1069,6 +1104,26 @@ const year = new Date().getFullYear();
     if (!user.contains(e.target as Node)) fechar();
   });
   $('[data-pt-sair]').addEventListener('click', () => sair('/'));
+
+  // Bloco G, ideia 1: tema no menu do avatar (mesma chave do seletor do rodapé do site).
+  const temas = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-tema]'));
+  const marcarTema = () => {
+    const atual = document.documentElement.getAttribute('data-theme') ?? 'auto';
+    temas.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.tema === atual)));
+  };
+  temas.forEach((b) =>
+    b.addEventListener('click', () => {
+      const t = b.dataset.tema!;
+      if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', t);
+      try {
+        if (t === 'auto') localStorage.removeItem('of-theme');
+        else localStorage.setItem('of-theme', t);
+      } catch {}
+      marcarTema();
+    }),
+  );
+  marcarTema();
 
   // Folha "Mais" no celular.
   const maisBtn = $<HTMLButtonElement>('[data-pt-mais-btn]');

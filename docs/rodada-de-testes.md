@@ -688,9 +688,36 @@ se mexe sob o cursor, sem ícone decorativo, sem laço sem motivo):
 build limpo. **Não visto na tela:** o deslizar do menu entre páginas (o painel de teste não mostra a transição) e o
 movimento reduzido ligado.
 
-## Bloco G: ideias da revisão do Portal (25/11/2026) — Em aberto
+## Bloco G: ideias da revisão do Portal (25/11/2026) — Design executado (26/11/2026)
 
-Revisão das 7 telas depois dos itens 5 e 8. Nada executado; cada ideia espera a decisão.
+Revisão das 7 telas depois dos itens 5 e 8. Em 26/11 o Gabriel mandou fazer tudo o que é design e interface
+(ideias 1, 2, 3, 4, 7 e 8) e só documentar o resto (5, 6 e 9).
+
+**Feito (26/11/2026).**
+- **1.** Menu do avatar com "Tema: Automático, Claro, Escuro" (`menuitemradio`, setas funcionam). Usa a mesma chave
+  `of-theme` do seletor do rodapé do site, então a escolha vale nos dois lugares.
+- **2.** "Pergunte agora" no Início: três cartões (Advogado, Contador, Empresário) com "Copiar e abrir o Claude", que
+  copia a pergunta e abre `claude.ai/new` em outra aba.
+- **3.** No Início e em Plugin e conexões, os zeros deram lugar à frase "Seus números aparecem depois da primeira
+  pergunta". A versão do plugin continua "a definir".
+- **4.** Em Alertas, quem não é Ouro vê um alerta de exemplo (moldura tracejada e selo "Exemplo") acima do upgrade.
+- **7.** O selo "Ouro" do menu lateral e da folha "Mais" some para quem já é Ouro.
+- **8.** Plano e pagamento ("Seu plano"), Plugin ("Baixar o plugin") e Suporte ("Falar com a equipe") abrem com o
+  cartão de marca do Início.
+- **Testado** com conta Ouro local: as 4 páginas, o tema trocado pelo menu e gravado, o selo escondido. O exemplo
+  de alerta foi visto forçando a tela de quem não é Ouro.
+
+**Só documentado (não executado).**
+- **5. Suporte dentro do Portal.** Precisa de backend: rota `POST /suporte/mensagem` (sessão obrigatória, e-mail e
+  plano tirados da sessão, texto até 4.000 caracteres, limite por pessoa), envio por `correio.enviar` como o
+  contato empresarial (item 26), e, depois, a lista "Seus chamados". Até lá, o botão segue para `/ajuda#contato`.
+- **6. Novidades por tribunal ou órgão.** Depende de cada novidade em `src/data/novidades.ts` ter o campo do
+  tribunal/órgão (hoje só tem a origem). Quando houver, a página Novidades ganha o filtro, no mesmo padrão dos
+  filtros de `/bases`.
+- **9. Comprar o mesmo plano de novo.** Já resolvido no item 33 (o middleware manda quem assina para o Portal com
+  aviso). Encerrado.
+
+**Ideias originais.**
 
 1. **Tema claro/escuro no Portal.** O seletor só existe no rodapé do site. Proposta: no menu do avatar.
 2. **"Pergunte agora" no Início.** Três perguntas de exemplo, uma por público (advogado, contador, empresário), com
