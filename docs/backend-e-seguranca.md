@@ -137,6 +137,8 @@ O `api/.env` está no `.gitignore` e nunca vai para o repositório.
 
 ## 6. Segurança, ponto a ponto
 
+A visão geral de cibersegurança (ameaças, controles, incidentes e plano de testes) fica em [ciberseguranca.md](ciberseguranca.md).
+
 ### 6.1 O que já está bem feito
 
 - **Senhas** com scrypt e sal por usuário; comparação em tempo constante (`hmac.compare_digest`).
@@ -177,6 +179,7 @@ O `api/.env` está no `.gitignore` e nunca vai para o repositório.
 | S15 | **Nome e e-mail no `sessionStorage`** | Baixo | Cópia para o avatar aparecer sem piscar; some ao fechar a aba. | Aceitável; some também no Sair. |
 | S16 | **Dependências** | Baixo | Versões fixas no `requirements.txt` e no `package-lock.json`. | `pip-audit` e `npm audit` mensais; atualizar com testes. |
 | S17 | **ReDoS na validação de e-mail (API travou em 26/11/2026)** | ~~Crítico~~ **Corrigido** | O regex `^[^@\s]+@[^@\s]+\.[^@\s]+$` voltava atrás em tempo quadrático num domínio longo cheio de pontos; um único pedido (8 mil pontos = 0,27 s; ~1 MB = mais de uma hora) segurava o GIL e travava a API inteira, e o site respondia 503 nas páginas da conta. | **Feito em 26/11/2026:** regex linear (`^[^@\s]{1,64}@[^@\s.]{1,63}(?:\.[^@\s.]{1,63})+$`, o mesmo em `/auth` e `/contato`); limite de tamanho (`max_length`) em todos os campos de texto de `/auth`, `/billing`, `/contato` e `/plugin` (422 antes de processar); e corpo de pedido limitado a 64 KB (413) por middleware. Testes em `api/tests/test_limites.py`. |
+| S18 | **Assinatura em dobro por pedidos simultâneos** | **Alto** | `POST /billing/assinatura` confere se a conta já tem assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo passam os dois: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. | Trava por usuário gravada no banco antes de chamar o Asaas e chave de idempotência; teste em paralelo. Será feito no item 37. Ver `docs/ciberseguranca.md`. |
 
 ### 6.3 LGPD
 

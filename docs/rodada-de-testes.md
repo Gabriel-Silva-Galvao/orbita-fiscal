@@ -894,7 +894,7 @@ O rodapé sobe por cima do conteúdo da 404. Deixar o rodapé sempre embaixo da 
 **Feito:** a 404 não tinha a folha `.page-sheet` que cobre o rodapé fixo. Agora tem, com altura mínima de uma tela e o texto centrado
 na vertical; o rodapé só aparece rolando até o fim. Os dois botões passaram a usar o componente `Button`. Testado no desktop e a 375 px.
 
-### 37. Revisão de segurança da assinatura com o Asaas — A lapidar
+### 37. Revisão de segurança da assinatura com o Asaas — A lapidar (inclui o risco S18)
 
 Quando a assinatura estiver ligada ao Asaas (item 29), rodar o security-review em tudo o que envolve cobrança e conferir, principalmente,
 se a mesma pessoa consegue assinar mais de uma vez (cliques repetidos, duas abas, duas compras ao mesmo tempo, webhook repetido).
@@ -1079,10 +1079,16 @@ As outras páginas abrem pelos links da própria inicial: /bases ("Ver tudo o qu
 planos"), /empresas ("Saiba mais sobre o plano Empresarial") e /ajuda (prévia da Ajuda e Dúvidas). Nas demais páginas o header
 continua com os links. O caminho de diretório (breadcrumb) fica com o item 42. Testado no desktop e a 375 px.
 
-### 50. Documentação de cibersegurança — A lapidar
+### 50. Documentação de cibersegurança — Executado (26/11/2026)
 
 Começar um documento próprio de cibersegurança (`docs/ciberseguranca.md`), partindo do `docs/backend-e-seguranca.md`: ameaças,
 controles que existem, riscos abertos (S3 a S5), plano de testes e a revisão do item 37.
+
+**Feito:** `docs/ciberseguranca.md` com o que protegemos, quem pode atacar e como, os controles que já existem (conta e sessão,
+entrada de dados, autorização, pagamento, site), os riscos em aberto em ordem, o registro de incidentes (S17), o plano de
+testes de segurança e oito regras para quem mexe no código. Ao levantar os controles, apareceu um risco novo, **S18
+(alto): assinatura em dobro por pedidos simultâneos**, registrado também em `docs/backend-e-seguranca.md` e deixado para o
+item 37, que é exatamente essa revisão.
 
 ### 51. Documentação do suporte com login de admin — A lapidar (por último, com o 52)
 
