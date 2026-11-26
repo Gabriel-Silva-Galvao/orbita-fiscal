@@ -14,8 +14,11 @@ só com a simulação ligada,
 from __future__ import annotations
 
 import hmac
+import sqlite3
+import time
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta
-from typing import Literal
+from typing import Iterator, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -178,6 +181,29 @@ def _mudar_status(banco: Banco, subscription_id: str, novo: str, pago_em: str | 
     )
 
 
+OPERACAO_MAX_SEGUNDOS = 120  # reserva esquecida (processo caiu no meio) deixa de valer depois disso
+
+
+@contextmanager
+def uma_operacao_por_vez(banco: Banco, usuario_id: str) -> Iterator[None]:
+    """ARES-QA-003: conferir e depois agir deixava dois pedidos ao mesmo tempo (clique duplo, duas abas) passarem os
+    dois pela conferência e criarem duas assinaturas cobradas no Asaas. A reserva é um INSERT na chave do usuário,
+    atômico no SQLite: o segundo pedido falha na hora com 409, antes de qualquer chamada ao Asaas."""
+    agora = time.time()
+    banco.executar("DELETE FROM operacoes_cobranca WHERE usuario_id = ? AND iniciada < ?", usuario_id, agora - OPERACAO_MAX_SEGUNDOS)
+    try:
+        banco.executar("INSERT INTO operacoes_cobranca (usuario_id, iniciada) VALUES (?, ?)", usuario_id, agora)
+    except sqlite3.IntegrityError:
+        raise HTTPException(
+            409,
+            detail={"codigo": "em_andamento", "mensagem": "Já estamos processando um pedido desta conta. Aguarde alguns segundos e confira em Plano e pagamento."},
+        ) from None
+    try:
+        yield
+    finally:
+        banco.executar("DELETE FROM operacoes_cobranca WHERE usuario_id = ?", usuario_id)
+
+
 def criar_router() -> APIRouter:
     router = APIRouter(tags=["Cobrança"])
 
@@ -191,6 +217,10 @@ def criar_router() -> APIRouter:
 
     @router.post("/billing/assinatura", status_code=201)
     def criar_assinatura(dados: NovaAssinatura, request: Request, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        with uma_operacao_por_vez(banco, u["id"]):
+            return _criar_assinatura(dados, request, u, banco, asaas)
+
+    def _criar_assinatura(dados: NovaAssinatura, request: Request, u: dict, banco: Banco, asaas: AsaasClient):
         usuario_id, email = u["id"], u["email"]
         atual = banco.um("SELECT status_acesso FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if atual and atual["status_acesso"] not in STATUS_FINAIS:

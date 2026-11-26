@@ -930,6 +930,12 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     try {
       const enviar = () => bill('/assinatura', { method: 'POST', body: JSON.stringify(corpo) });
       let r = await enviar();
+      if (r.status === 409 && (await apiDetail(r.clone())).codigo === 'em_andamento') {
+        // Outro pedido desta conta (outra aba, clique duplo) ainda está sendo processado: não mexe nele.
+        errorBox.innerHTML = 'Já estamos processando um pedido desta conta. Aguarde alguns segundos e confira em <a href="/conta/plano">Plano e pagamento</a>.';
+        errorBox.hidden = false;
+        return;
+      }
       if (r.status === 409) {
         // Já existe assinatura. Se ainda está esperando pagamento (voltou para trocar a forma), substitui;
         // se está ativa, a pessoa já é assinante.

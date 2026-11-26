@@ -294,3 +294,63 @@ def test_upgrade_so_para_cima(api):
     assert up.status_code == 200, up.text
     assert up.json()["plano"] == "ouro" and up.json()["valor"] == 119.9
     assert http.get("/billing/plano").json()["plano"] == "ouro"
+
+
+def test_pedidos_simultaneos_criam_uma_assinatura_so(api, monkeypatch):
+    """Regressão ARES-QA-003: quatro POST /billing/assinatura ao mesmo tempo (clique duplo, duas abas) criavam quatro
+    assinaturas cobradas no Asaas. Agora um passa (201) e os outros recebem 409 em_andamento, sem tocar no Asaas."""
+    import threading
+    import time as _time
+
+    from fastapi.testclient import TestClient
+
+    from app import auth
+
+    http, store, banco = api
+    entrar(http, banco)
+    # Cenário da revisão: a 1ª tentativa teve o cartão recusado (o cliente do Asaas já existe) e a pessoa clica de novo.
+    assert assinar(http, "cartao", cartao={**CARTAO, "numero": "5184019740373151"}).status_code == 400
+    # A reserva foi liberada mesmo com o erro do Asaas: nada fica preso.
+    assert banco.um("SELECT 1 FROM operacoes_cobranca") is None
+
+    asaas = http.app.state.asaas
+    original = asaas.criar_assinatura
+
+    def lento(**corpo):  # o Asaas real leva centenas de ms; aqui garante que os pedidos se sobreponham
+        _time.sleep(0.3)
+        return original(**corpo)
+
+    monkeypatch.setattr(asaas, "criar_assinatura", lento)
+    barreira, resultados = threading.Barrier(4), []
+
+    def pedir():
+        c = TestClient(http.app)
+        c.cookies.set(auth.COOKIE_SESSAO, http.cookies.get(auth.COOKIE_SESSAO))
+        barreira.wait()
+        r = assinar(c, "cartao", cartao=CARTAO)
+        resultados.append((r.status_code, r.json().get("detail", {}).get("codigo") if r.status_code != 201 else None))
+
+    ts = [threading.Thread(target=pedir) for _ in range(4)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+
+    assert sorted(resultados, key=str) == [(201, None)] + [(409, "em_andamento")] * 3, resultados
+    assert len(store.assinaturas) == 1  # uma cobrança só no Asaas
+    assert len(banco.todos("SELECT * FROM assinaturas")) == 1
+    assert banco.um("SELECT 1 FROM operacoes_cobranca") is None
+    # Depois que o primeiro termina, um novo pedido recebe a resposta de sempre: já é assinante.
+    r = assinar(http, "pix")
+    assert r.status_code == 409 and r.json()["detail"]["codigo"] == "ja_assinante"
+
+
+def test_reserva_esquecida_expira(api):
+    """Se o processo cair no meio de uma compra, a reserva não trava a conta para sempre."""
+    import time as _time
+
+    http, _, banco = api
+    entrar(http, banco)
+    banco.executar("INSERT INTO operacoes_cobranca (usuario_id, iniciada) VALUES ('u1', ?)", _time.time())
+    r = assinar(http, "pix")
+    assert r.status_code == 409 and r.json()["detail"]["codigo"] == "em_andamento"
+    banco.executar("UPDATE operacoes_cobranca SET iniciada = ?", _time.time() - 600)
+    assert assinar(http, "pix").status_code == 201

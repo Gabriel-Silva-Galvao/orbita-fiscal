@@ -73,7 +73,7 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 
 | # | Risco | Gravidade | O que fazer | Quando |
 |---|---|---|---|---|
-| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026) | **Alto** | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
+| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026; **corrigido** em 26/11/2026, ver 5.1) | ~~Alto~~ | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
 | S3 | Cartão passa pela API | Alto | Tokenização do Asaas no navegador; a API recebe só o token. | Com o Sandbox (item 29) |
 | S5 | Limite de tentativas só na memória e só no login | Alto | Limite por IP e por e-mail em todo `/auth`, guardado no banco; CAPTCHA invisível depois de N falhas. | Antes de publicar |
 | S4 | Código do 2FA no log sem SMTP | Alto | Exigir SMTP fora da simulação. | Antes de publicar |
@@ -102,6 +102,7 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 | ID | Gravidade | O que estava errado | Correção | Teste |
 |---|---|---|---|---|
 | ARES-SEC-017 e ARES-QA-012 | Alta | Com uma sessão roubada, dava para trocar o e-mail sem a senha; o dono ficava trancado fora (a recuperação vai para o e-mail) e as outras sessões continuavam abertas. | `POST /auth/email/trocar` exige a senha atual (401 `senha_atual`); ao confirmar, as outras sessões caem e o e-mail antigo recebe aviso (`correio.avisar_troca_de_email`). Na tela, campo "Sua senha atual". | `test_conta.py::test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo` |
+| ARES-QA-003 (risco S18) | Alta | Quatro `POST /billing/assinatura` ao mesmo tempo (clique duplo, duas abas) criavam quatro assinaturas cobradas no Asaas; a Órbita guardava uma e as outras ficavam órfãs, cobrando. | Reserva por conta na tabela `operacoes_cobranca` (INSERT atômico) antes de chamar o Asaas, liberada no fim mesmo com erro e vencida após 120 s; o segundo pedido recebe 409 `em_andamento`. O Checkout mostra o aviso e não mexe no pedido da outra aba. | `test_billing.py::test_pedidos_simultaneos_criam_uma_assinatura_so`, `test_reserva_esquecida_expira` |
 
 ## 6. Plano de testes de segurança
 
