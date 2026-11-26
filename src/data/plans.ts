@@ -112,9 +112,6 @@ export const comparacao: { grupo: string; linhas: LinhaComparacao[] }[] = [
     grupo: 'Suporte',
     linhas: [
       { nome: 'Atendimento pela equipe', valores: { bronze: true, prata: true, ouro: true } },
-      { nome: 'Suporte prioritário', valores: { bronze: false, prata: false, ouro: true } },
-      { nome: 'Conversa de implantação', valores: { bronze: false, prata: false, ouro: true } },
-      { nome: 'Prazo de resposta', valores: { bronze: 'definir', prata: 'definir', ouro: 'definir' } },
     ],
   },
   {

@@ -969,10 +969,15 @@ o cartão (tokenização) e a API guardar só o token e os 4 últimos dígitos.
 Explorar mais as áreas de alertas por tema e resumo semanal do Portal. A lapidar: o que falta hoje (temas, frequência, prévia do
 resumo, histórico dos alertas enviados) e o que depende de dados reais.
 
-### 45. Suporte: só "Atendimento" e sem suporte prioritário — A lapidar
+### 45. Suporte: só "Atendimento" e sem suporte prioritário — Executado e testado (26/11/2026)
 
 Na página de suporte do Portal, tirar o "Prazo de resposta" e deixar só o atendimento. Tirar o "suporte prioritário" do Ouro
 (não vai existir), ficando só o pedido de ajuda. Conferir os outros lugares que citam suporte prioritário (planos, comparação).
+
+**Feito:** em `/conta/suporte` saíram a linha "Prazo de resposta", o cartão da conversa de implantação do Ouro e o aviso "No Ouro,
+o suporte é prioritário"; ficam o e-mail, o atendimento, "Escrever para a equipe", os chamados e os artigos. Na comparação dos
+planos (`src/data/plans.ts`), o grupo Suporte ficou só com "Atendimento pela equipe" (saíram suporte prioritário, conversa de
+implantação e prazo de resposta). A implantação do plano Empresarial continua. Testado no Portal e em /planos.
 
 ### 46. Formulário de ajuda sem imagem e com medidas exatas — A lapidar
 

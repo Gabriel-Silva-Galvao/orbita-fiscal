@@ -1,7 +1,8 @@
 ---
 /**
- * Suporte (itens 5 e 8): falar com a equipe, prazo de resposta, artigos da Ajuda mais usados e, no Ouro,
- * a conversa de implantação. Abre em qualquer estado da assinatura: suporte não fica atrás do plano.
+ * Suporte (itens 5 e 8): falar com a equipe, atendimento e artigos da Ajuda mais usados.
+ * Item 45 (26/11/2026): sem prazo de resposta e sem suporte prioritário nem conversa de implantação no Ouro;
+ * o suporte é o mesmo pedido de ajuda para todos os planos. Abre em qualquer estado da assinatura: suporte não fica atrás do plano.
  * Chamados abertos: ainda não existe sistema de chamados (a definir).
  */
 import Portal from '../../layouts/Portal.astro';
@@ -23,7 +24,6 @@ export const prerender = false;
           <button type="button" class="link-btn" data-copiar>Copiar</button>
         </strong>
       </div>
-      <div><span>Prazo de resposta</span><strong data-prazo>Até 2 dias úteis (a confirmar)</strong></div>
       <div><span>Atendimento</span><strong>Dias úteis<Pending kind="confirmar" /></strong></div>
     </div>
     <p class="small mute">Para agilizar, diga em qual IA você usa a Órbita e, se houver, a mensagem de erro que apareceu.</p>
@@ -47,15 +47,6 @@ export const prerender = false;
     </ul>
   </section>
 
-  <article class="cartao" data-implantacao hidden>
-    <h3>Conversa de implantação</h3>
-    <p class="small">No Ouro, uma conversa curta com a equipe para configurar a Órbita no seu escritório, contabilidade ou empresa e mostrar as pesquisas que mais rendem no dia a dia.</p>
-    <a class="btn-alt" href="/ajuda#contato">Pedir a conversa</a>
-  </article>
-  <article class="bloqueado" data-implantacao-convite hidden>
-    <p class="small"><strong>No Ouro, o suporte é prioritário</strong> e inclui uma conversa de implantação com a equipe.</p>
-    <a class="btn-alt" href="/conta/alertas">Conhecer o Ouro</a>
-  </article>
 </Portal>
 
 <style>
@@ -94,20 +85,13 @@ export const prerender = false;
   .artigos a:hover {
     text-decoration: underline;
   }
-  .cartao p,
-  .bloqueado p {
+  .cartao p {
     margin: 0;
   }
 </style>
 
 <script>
-  import { aoCarregar, $ } from '../../scripts/portal';
-
-  aoCarregar((ctx) => {
-    $('[data-prazo]').textContent = ctx.ouro ? 'Prioritário: no mesmo dia útil (a confirmar)' : 'Até 2 dias úteis (a confirmar)';
-    $('[data-implantacao]').hidden = !ctx.ouro;
-    $('[data-implantacao-convite]').hidden = ctx.ouro || ctx.estado !== 'ativo';
-  });
+  import { $ } from '../../scripts/portal';
 
   $('[data-copiar]').addEventListener('click', async (e) => {
     const b = e.currentTarget as HTMLButtonElement;
