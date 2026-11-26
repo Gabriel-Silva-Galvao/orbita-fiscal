@@ -47,6 +47,9 @@ class Banco:
             for col in ("criada_em", "final_cartao", "cancelada_em", "acesso_ate", "reembolso_em"):
                 if col not in existentes:
                     self.con.execute(f"ALTER TABLE assinaturas ADD COLUMN {col} TEXT")
+            # Item 9: endereço da nota fiscal.
+            if "endereco" not in {r[1] for r in self.con.execute("PRAGMA table_info(assinantes)")}:
+                self.con.execute("ALTER TABLE assinantes ADD COLUMN endereco TEXT")
             self.con.commit()
 
     def um(self, sql: str, *args) -> dict | None:

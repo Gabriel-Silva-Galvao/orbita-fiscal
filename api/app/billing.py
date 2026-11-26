@@ -82,6 +82,12 @@ class NovaAssinatura(BaseModel):
     cartao: Cartao | None = None
 
 
+class Nota(BaseModel):
+    nome: str
+    cpf_cnpj: str
+    endereco: str | None = None
+
+
 class TrocaPlano(BaseModel):
     plano: Literal["bronze", "prata", "ouro"]
 
@@ -236,6 +242,30 @@ def criar_router() -> APIRouter:
     @router.get("/billing/assinatura")
     def obter(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
         return _resumo(banco, asaas, u["id"])
+
+    @router.get("/billing/nota")
+    def nota(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco)):
+        """Item 9: dados da nota fiscal (vêm do checkout; null se ainda não houve compra)."""
+        a = banco.um("SELECT nome, cpf_cnpj, endereco FROM assinantes WHERE usuario_id = ?", u["id"])
+        return a
+
+    @router.put("/billing/nota")
+    def salvar_nota(dados: Nota, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+        a = banco.um("SELECT customer_id FROM assinantes WHERE usuario_id = ?", u["id"])
+        if not a:
+            raise HTTPException(409, detail={"codigo": "sem_cadastro", "mensagem": "Os dados da nota são informados na primeira compra."})
+        nome = dados.nome.strip()
+        doc = "".join(ch for ch in dados.cpf_cnpj if ch.isdigit())
+        if len(nome) < 2 or len(doc) not in (11, 14):
+            raise HTTPException(422, detail={"codigo": "dados_invalidos", "mensagem": "Informe o nome ou a razão social e um CPF ou CNPJ válido."})
+        endereco = (dados.endereco or "").strip() or None
+        try:
+            extra = {"address": endereco} if endereco else {}
+            asaas.atualizar_cliente(a["customer_id"], name=nome, cpfCnpj=doc, **extra)
+        except AsaasError as e:
+            raise _erro_asaas(e)
+        banco.executar("UPDATE assinantes SET nome = ?, cpf_cnpj = ?, endereco = ? WHERE usuario_id = ?", nome, doc, endereco, u["id"])
+        return {"nome": nome, "cpf_cnpj": doc, "endereco": endereco}
 
     @router.put("/billing/assinatura/plano")
     def trocar_plano(dados: TrocaPlano, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):

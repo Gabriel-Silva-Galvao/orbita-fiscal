@@ -54,6 +54,11 @@ def criar_router(store: Store) -> APIRouter:
     def obter_cliente(cid: str):
         return store.cliente(cid)
 
+    @v3.put("/customers/{cid}")
+    def atualizar_cliente(cid: str, dados: dict = Depends(corpo)):
+        with store.trava:
+            return store.atualizar_cliente(cid, dados)
+
     @v3.post("/subscriptions")
     def criar_assinatura(dados: dict = Depends(corpo)):
         with store.trava:

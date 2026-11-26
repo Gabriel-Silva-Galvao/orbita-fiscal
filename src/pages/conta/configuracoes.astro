@@ -1,8 +1,8 @@
 ---
 /**
- * Conta e segurança (itens 5 e 8): nome, e-mail, sair e excluir a conta. Abre em qualquer estado da
- * assinatura. O item 9 completa esta página: troca de senha, aparelhos conectados, preferências de e-mail
- * e dados da nota fiscal.
+ * Conta e segurança (itens 5, 8 e 9): perfil (nome e troca de e-mail com código), senha (com código; as outras
+ * sessões caem), aparelhos conectados, preferências de e-mail, dados da nota fiscal, sair e excluir a conta.
+ * Abre em qualquer estado da assinatura. Sem a API (demonstração), só nome, sair e excluir funcionam.
  */
 import Portal from '../../layouts/Portal.astro';
 import Pending from '../../components/Pending.astro';
@@ -26,12 +26,90 @@ export const prerender = false;
         <div><span>E-mail</span><strong data-email></strong></div>
         <div><span>Acesso</span><strong>E-mail e senha, com código por e-mail</strong></div>
       </div>
-      <p class="small mute">Para trocar o e-mail, confirmamos o novo endereço com um código<Pending kind="definir" />.</p>
+      <form class="form-linha" data-email-form novalidate data-so-api>
+        <div class="field">
+          <label for="email-novo">Trocar o e-mail</label>
+          <input id="email-novo" type="email" autocomplete="email" placeholder="novo@exemplo.com" />
+        </div>
+        <button type="submit" class="btn-alt">Enviar código ao novo e-mail</button>
+      </form>
+      <div class="codigo" data-codigo="email" hidden>
+        <label for="cod-email">Código enviado para <strong data-codigo-para></strong></label>
+        <div class="codigo-linha">
+          <input id="cod-email" inputmode="numeric" maxlength="6" autocomplete="one-time-code" />
+          <button type="button" class="btn-main" data-confirmar>Confirmar</button>
+        </div>
+      </div>
+      <p class="small" data-email-msg role="status"></p>
     </section>
 
-    <section class="pt-secao" aria-labelledby="sessao-t">
+    <section class="pt-secao" aria-labelledby="senha-t" data-so-api>
+      <h2 id="senha-t">Senha</h2>
+      <form class="form-senha" data-senha-form novalidate>
+        <div class="field">
+          <label for="senha-atual">Senha atual</label>
+          <input id="senha-atual" type="password" autocomplete="current-password" />
+        </div>
+        <div class="field">
+          <label for="senha-nova">Senha nova</label>
+          <input id="senha-nova" type="password" autocomplete="new-password" aria-describedby="senha-dica" />
+          <p class="small mute" id="senha-dica">Pelo menos 8 caracteres, diferente da atual.</p>
+        </div>
+        <button type="submit" class="btn-alt">Trocar a senha</button>
+      </form>
+      <div class="codigo" data-codigo="senha" hidden>
+        <label for="cod-senha">Para confirmar, digite o código enviado para <strong data-codigo-para></strong></label>
+        <div class="codigo-linha">
+          <input id="cod-senha" inputmode="numeric" maxlength="6" autocomplete="one-time-code" />
+          <button type="button" class="btn-main" data-confirmar>Confirmar</button>
+        </div>
+      </div>
+      <p class="small" data-senha-msg role="status"></p>
+      <p class="small mute">Ao trocar a senha, os outros aparelhos saem da conta; este continua conectado.</p>
+    </section>
+
+    <section class="pt-secao" aria-labelledby="aparelhos-t" data-so-api>
+      <h2 id="aparelhos-t">Aparelhos conectados</h2>
+      <ul class="aparelhos" data-aparelhos aria-live="polite"></ul>
+      <div class="acoes">
+        <button type="button" class="btn-alt" data-sair-todos>Sair de todos os aparelhos</button>
+        <button type="button" class="btn-alt" data-sair>Sair deste aparelho</button>
+      </div>
+    </section>
+
+    <section class="pt-secao" aria-labelledby="pref-t" data-so-api>
+      <h2 id="pref-t">E-mails da Órbita</h2>
+      <form class="prefs" data-prefs>
+        <label><input type="checkbox" name="novidades" /> Novidades da base (o que entrou de novo)</label>
+        <label data-pref-resumo><input type="checkbox" name="resumo_semanal" /> Resumo semanal por área <span class="selo-ouro">Ouro</span></label>
+        <label class="mute"><input type="checkbox" checked disabled /> Avisos de cobrança e de segurança (sempre enviados)</label>
+      </form>
+      <p class="small" data-prefs-msg role="status"></p>
+    </section>
+
+    <section class="pt-secao" aria-labelledby="nota-t" data-so-api>
+      <h2 id="nota-t">Dados da nota fiscal</h2>
+      <p class="small mute" data-nota-vazia hidden>Os dados da nota são informados na primeira compra.</p>
+      <form class="form-nota" data-nota-form novalidate hidden>
+        <div class="field">
+          <label for="nota-nome">Nome ou razão social</label>
+          <input id="nota-nome" autocomplete="organization" />
+        </div>
+        <div class="field">
+          <label for="nota-doc">CPF ou CNPJ</label>
+          <input id="nota-doc" inputmode="numeric" />
+        </div>
+        <div class="field nota-end">
+          <label for="nota-end">Endereço (opcional)</label>
+          <input id="nota-end" autocomplete="street-address" />
+        </div>
+        <button type="submit" class="btn-alt">Salvar dados da nota</button>
+      </form>
+      <p class="small" data-nota-msg role="status"></p>
+    </section>
+
+    <section class="pt-secao" aria-labelledby="sessao-t" data-so-demo hidden>
       <h2 id="sessao-t">Sessão</h2>
-      <p class="small mute">Sair encerra a sessão neste aparelho. A lista de aparelhos conectados e a troca de senha chegam na próxima etapa<Pending kind="definir" />.</p>
       <div class="acoes">
         <button type="button" class="btn-alt" data-sair>Sair</button>
       </div>
@@ -88,6 +166,105 @@ export const prerender = false;
   .perigo {
     border-color: var(--line-strong);
   }
+  /* Item 9 */
+  .form-linha,
+  .form-senha,
+  .form-nota {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .form-linha .field,
+  .form-senha .field,
+  .form-nota .field {
+    width: min(100%, 420px);
+  }
+  .form-nota {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    align-items: end;
+  }
+  .form-nota .nota-end {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .codigo {
+    display: grid;
+    gap: 6px;
+    padding: var(--space-4);
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-lg);
+    animation: cf-entra 260ms ease-out;
+  }
+  .codigo-linha {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .codigo-linha input {
+    width: 9ch;
+    letter-spacing: 0.3em;
+    font-variant-numeric: tabular-nums;
+  }
+  @keyframes cf-entra {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  .aparelhos {
+    list-style: none;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .aparelhos li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+  .aparelhos .ap-nome {
+    font-weight: 600;
+  }
+  .aparelhos .ap-este {
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--brand) 18%, transparent);
+    color: var(--brand);
+    font-size: 0.75rem;
+  }
+  .prefs {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .prefs label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .prefs input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand);
+  }
+  .selo-ouro {
+    padding: 0 6px;
+    border-radius: 6px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .codigo {
+      animation: none;
+    }
+  }
 </style>
 
 <script>
@@ -126,7 +303,206 @@ export const prerender = false;
     msg.textContent = 'Nome salvo.';
   });
 
-  $('[data-sair]').addEventListener('click', () => sair());
+  document.querySelectorAll<HTMLElement>('[data-sair]').forEach((b) => b.addEventListener('click', () => sair()));
+
+  /* ---------- Item 9 ---------- */
+  const erroDe = async (r: Response, padrao: string) => {
+    const d = await r.json().catch(() => ({}));
+    return d.detail?.mensagem ?? d.descricao ?? padrao;
+  };
+  const SEM_SERVIDOR = 'Não conseguimos falar com o servidor. Tente de novo em instantes.';
+
+  // Sem a API (demonstração), as seções que dependem dela ficam escondidas.
+  document.querySelectorAll<HTMLElement>('[data-so-api]').forEach((el) => (el.hidden = !billing));
+  document.querySelectorAll<HTMLElement>('[data-so-demo]').forEach((el) => (el.hidden = !!billing));
+
+  // Código de confirmação (senha ou e-mail): mostra a caixa e confirma em POST /auth/confirmar.
+  function pedirCodigo(qual: 'senha' | 'email', para: string, msg: HTMLElement, aoConfirmar: (d: any) => void, dev?: string) {
+    const caixa = $(`[data-codigo="${qual}"]`);
+    caixa.hidden = false;
+    caixa.querySelector('[data-codigo-para]')!.textContent = para;
+    const campo = caixa.querySelector<HTMLInputElement>('input')!;
+    campo.value = '';
+    campo.focus();
+    msg.textContent = dev ? `Demonstração: o código é ${dev}.` : '';
+    const botao = caixa.querySelector<HTMLButtonElement>('[data-confirmar]')!;
+    botao.onclick = async () => {
+      botao.disabled = true;
+      try {
+        const r = await call(authEndpoint, '/confirmar', 'POST', { codigo: campo.value.trim() });
+        if (!r.ok) {
+          msg.textContent = await erroDe(r, 'Código incorreto.');
+          return;
+        }
+        caixa.hidden = true;
+        aoConfirmar(await r.json());
+      } catch {
+        msg.textContent = SEM_SERVIDOR;
+      } finally {
+        botao.disabled = false;
+      }
+    };
+  }
+
+  $<HTMLFormElement>('[data-email-form]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('[data-email-msg]');
+    const email = $<HTMLInputElement>('#email-novo').value.trim();
+    try {
+      const r = await call(authEndpoint, '/email/trocar', 'POST', { email });
+      if (!r.ok) return void (msg.textContent = await erroDe(r, 'Não conseguimos trocar o e-mail agora.'));
+      const d = await r.json();
+      pedirCodigo('email', d.enviado_para, msg, (res) => {
+        usuario.email = res.email;
+        $('[data-email]').textContent = res.email;
+        $<HTMLInputElement>('#email-novo').value = '';
+        msg.textContent = 'E-mail trocado. A partir de agora, entre com o e-mail novo.';
+        try {
+          sessionStorage.removeItem('orbita:sessao');
+        } catch {}
+      }, d.codigo_dev);
+    } catch {
+      msg.textContent = SEM_SERVIDOR;
+    }
+  });
+
+  $<HTMLFormElement>('[data-senha-form]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('[data-senha-msg]');
+    const atual = $<HTMLInputElement>('#senha-atual').value;
+    const nova = $<HTMLInputElement>('#senha-nova').value;
+    if (nova.length < 8) return void (msg.textContent = 'A senha nova precisa ter pelo menos 8 caracteres.');
+    try {
+      const r = await call(authEndpoint, '/senha/trocar', 'POST', { atual, nova });
+      if (!r.ok) return void (msg.textContent = await erroDe(r, 'Não conseguimos trocar a senha agora.'));
+      const d = await r.json();
+      pedirCodigo('senha', d.enviado_para, msg, () => {
+        $<HTMLFormElement>('[data-senha-form]').reset();
+        msg.textContent = 'Senha trocada. Os outros aparelhos saíram da conta.';
+        carregarAparelhos();
+      }, d.codigo_dev);
+    } catch {
+      msg.textContent = SEM_SERVIDOR;
+    }
+  });
+
+  // Aparelhos conectados
+  const dataHora = (seg: number) =>
+    new Date(seg * 1000).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  async function carregarAparelhos() {
+    if (!billing) return;
+    const lista = $('[data-aparelhos]');
+    try {
+      const r = await call(authEndpoint, '/sessoes');
+      if (!r.ok) return;
+      const sessoes = (await r.json()) as { id: string; aparelho: string; criada: number; ultimo_uso: number; atual: boolean }[];
+      lista.replaceChildren(
+        ...sessoes.map((s) => {
+          const li = document.createElement('li');
+          const info = document.createElement('div');
+          const nome = document.createElement('span');
+          nome.className = 'ap-nome';
+          nome.textContent = s.aparelho || 'Navegador';
+          info.append(nome);
+          if (s.atual) {
+            const este = document.createElement('span');
+            este.className = 'ap-este';
+            este.textContent = 'Este aparelho';
+            info.append(este);
+          }
+          const quando = document.createElement('p');
+          quando.className = 'small mute';
+          quando.style.margin = '0';
+          quando.textContent = `Último uso: ${dataHora(s.ultimo_uso || s.criada)} · entrou em ${dataHora(s.criada)}`;
+          info.append(quando);
+          li.append(info);
+          if (!s.atual) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-alt';
+            b.textContent = 'Sair deste aparelho';
+            b.addEventListener('click', async () => {
+              b.disabled = true;
+              const r2 = await call(authEndpoint, `/sessoes/${s.id}`, 'DELETE').catch(() => null);
+              if (r2?.ok || r2?.status === 404) li.remove();
+              else b.disabled = false;
+            });
+            li.append(b);
+          }
+          return li;
+        }),
+      );
+    } catch {
+      /* lista fica vazia; os botões continuam funcionando */
+    }
+  }
+  $('[data-sair-todos]').addEventListener('click', async () => {
+    await call(authEndpoint, '/sair-de-todos', 'POST').catch(() => null);
+    try {
+      sessionStorage.removeItem('orbita:sessao');
+    } catch {}
+    location.href = '/entrar';
+  });
+
+  // Preferências de e-mail (salvam ao marcar)
+  const prefs = $<HTMLFormElement>('[data-prefs]');
+  async function carregarPrefs() {
+    if (!billing) return;
+    const r = await call(authEndpoint, '/preferencias').catch(() => null);
+    if (!r?.ok) return;
+    const p = await r.json();
+    (prefs.elements.namedItem('novidades') as HTMLInputElement).checked = p.novidades;
+    (prefs.elements.namedItem('resumo_semanal') as HTMLInputElement).checked = p.resumo_semanal;
+  }
+  prefs.addEventListener('change', async () => {
+    const msg = $('[data-prefs-msg]');
+    const corpo = {
+      novidades: (prefs.elements.namedItem('novidades') as HTMLInputElement).checked,
+      resumo_semanal: (prefs.elements.namedItem('resumo_semanal') as HTMLInputElement).checked,
+    };
+    const r = await call(authEndpoint, '/preferencias', 'PUT', corpo).catch(() => null);
+    msg.textContent = r?.ok ? 'Preferências salvas.' : SEM_SERVIDOR;
+  });
+
+  // Dados da nota fiscal
+  async function carregarNota() {
+    if (!billing) return;
+    const r = await call(billing, '/nota').catch(() => null);
+    const n = r?.ok ? await r.json() : null;
+    $('[data-nota-vazia]').hidden = !!n;
+    $('[data-nota-form]').hidden = !n;
+    if (n) {
+      $<HTMLInputElement>('#nota-nome').value = n.nome ?? '';
+      $<HTMLInputElement>('#nota-doc').value = n.cpf_cnpj ?? '';
+      $<HTMLInputElement>('#nota-end').value = n.endereco ?? '';
+    }
+  }
+  $<HTMLFormElement>('[data-nota-form]').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('[data-nota-msg]');
+    const corpo = {
+      nome: $<HTMLInputElement>('#nota-nome').value,
+      cpf_cnpj: $<HTMLInputElement>('#nota-doc').value,
+      endereco: $<HTMLInputElement>('#nota-end').value,
+    };
+    try {
+      const r = await call(billing, '/nota', 'PUT', corpo);
+      msg.textContent = r.ok ? 'Dados da nota salvos. Valem para as próximas notas.' : await erroDe(r, 'Não conseguimos salvar agora.');
+    } catch {
+      msg.textContent = SEM_SERVIDOR;
+    }
+  });
+
+  aoCarregar((ctx) => {
+    // Resumo semanal é do Ouro: nos outros planos, a opção aparece desativada.
+    const resumo = $<HTMLElement>('[data-pref-resumo]');
+    const input = resumo.querySelector<HTMLInputElement>('input')!;
+    input.disabled = !ctx.ouro;
+    resumo.classList.toggle('mute', !ctx.ouro);
+  });
+  carregarAparelhos();
+  carregarPrefs();
+  carregarNota();
 
   const confirmar = $<HTMLInputElement>('#confirmar');
   const excluir = $<HTMLButtonElement>('[data-excluir]');

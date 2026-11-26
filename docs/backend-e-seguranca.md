@@ -172,7 +172,7 @@ O `api/.env` está no `.gitignore` e nunca vai para o repositório.
 | S10 | **CPF/CNPJ em texto puro** | Médio | Necessário para a nota, mas fica legível no banco e nos backups. | Disco criptografado no servidor, backups criptografados, acesso ao banco só pela API. Avaliar criptografia do campo. |
 | S11 | **Banco SQLite** | Médio | Um arquivo, um processo. Bom para o MVP. | Backup diário fora do servidor; ao crescer, PostgreSQL. Rodar a API com um processo só enquanto for SQLite. |
 | S12 | **Sessões vencidas e eventos antigos** | Baixo | Ficam no banco para sempre. | Rotina diária que apaga sessões e desafios vencidos e eventos com mais de 90 dias. |
-| S13 | **Troca de senha** | Baixo | Ainda não existe; quando existir, precisa derrubar todas as sessões. | Implementar com `DELETE FROM sessoes WHERE usuario_id = ?` (já anotado). |
+| S13 | **Troca de senha** | Baixo | **Resolvido (item 9, 26/11/2026).** `POST /auth/senha/trocar` pede a senha atual e um código por e-mail; ao confirmar, apaga as outras sessões do usuário. | — |
 | S14 | **Token de download no endereço** | Baixo | Aparece em logs do servidor. Vale 15 min. | Aceitável; não registrar o caminho completo no log de acesso. |
 | S15 | **Nome e e-mail no `sessionStorage`** | Baixo | Cópia para o avatar aparecer sem piscar; some ao fechar a aba. | Aceitável; some também no Sair. |
 | S16 | **Dependências** | Baixo | Versões fixas no `requirements.txt` e no `package-lock.json`. | `pip-audit` e `npm audit` mensais; atualizar com testes. |

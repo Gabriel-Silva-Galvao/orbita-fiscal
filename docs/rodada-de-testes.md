@@ -746,7 +746,9 @@ MCP; ficam marcados "a definir" como hoje.
 **Teste.** Cada página no computador e no celular; menu lateral e barra inferior com a página atual marcada; teclado
 e leitor de tela; o Portal só abre com sessão; nada de rolagem lateral.
 
-### 9. Conta e segurança completa — Fechado na teoria (25/11/2026)
+### 9. Conta e segurança completa — Fechado na teoria (25/11/2026) · Executado (26/11/2026)
+
+**Feito.** Troca de senha com código (as outras sessões caem), troca de e-mail confirmada no endereço novo, aparelhos conectados com "Sair deste aparelho" e "Sair de todos", preferências de e-mail (resumo semanal só no Ouro; avisos de cobrança sempre ligados) e dados da nota fiscal editáveis depois da primeira compra (atualizam o cliente no Asaas). Rotas novas: `POST /auth/senha/trocar`, `POST /auth/email/trocar`, `POST /auth/confirmar`, `GET`/`PUT /auth/preferencias`, `GET`/`PUT /billing/nota` (82 testes).
 
 Página `/conta/configuracoes` do Portal (itens 5 e 8).
 

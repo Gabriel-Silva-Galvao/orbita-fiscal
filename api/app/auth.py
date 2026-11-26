@@ -14,6 +14,10 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   GET  /auth/sessoes                                       -> 200 [{id, aparelho, criada, ultimo_uso, atual}]
   DELETE /auth/sessoes/{id}                                -> 204 (sai daquele aparelho) | 404
   POST /auth/sair-de-todos                                 -> 204 (encerra todas, inclusive esta)
+  POST /auth/senha/trocar     {atual, nova}                -> 202 código enviado ao e-mail | 401 senha atual errada
+  POST /auth/email/trocar     {email}                      -> 202 código enviado ao e-mail NOVO | 409 em uso
+  POST /auth/confirmar        {codigo}                     -> 200 troca feita (senha: as outras sessões caem)
+  GET/PUT /auth/preferencias  {novidades, resumo_semanal}  -> preferências de e-mail (item 9)
 
 Sessão (item 1 da rodada de testes, 25/11/2026): no máximo 30 dias a partir do login, sem renovar.
 Com "manter conectado" (padrão), o cookie dura 30 dias; sem ele, o cookie some ao fechar o navegador e a
@@ -68,7 +72,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 CREATE TABLE IF NOT EXISTS desafios (
     token_hash   TEXT PRIMARY KEY,
-    finalidade   TEXT NOT NULL,          -- cadastro | login
+    finalidade   TEXT NOT NULL,          -- cadastro | login | senha | email
     email        TEXT NOT NULL,
     nome         TEXT,
     senha_hash   TEXT,
@@ -82,6 +86,11 @@ CREATE TABLE IF NOT EXISTS sessoes (
     usuario_id  TEXT NOT NULL REFERENCES usuarios(id),
     expira      REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS preferencias (
+    usuario_id      TEXT PRIMARY KEY,
+    novidades       INTEGER NOT NULL DEFAULT 1,
+    resumo_semanal  INTEGER NOT NULL DEFAULT 1
+);
 """
 
 # Colunas da sessão acrescentadas no item 1 (bancos antigos ganham as colunas sem perder as sessões).
@@ -94,6 +103,9 @@ def migrar(con) -> None:
         if col not in existentes:
             con.execute(f"ALTER TABLE sessoes ADD COLUMN {col} {tipo}")
     con.execute("UPDATE sessoes SET id = lower(hex(randomblob(8))) WHERE id IS NULL")
+    # Item 9: desafios de troca de senha e de e-mail são de um usuário já logado.
+    if "usuario_id" not in {r[1] for r in con.execute("PRAGMA table_info(desafios)")}:
+        con.execute("ALTER TABLE desafios ADD COLUMN usuario_id TEXT")
     con.commit()
 
 
@@ -177,6 +189,24 @@ class Nome(BaseModel):
     nome: str
 
 
+class TrocaSenha(BaseModel):
+    atual: str
+    nova: str
+
+
+class TrocaEmail(BaseModel):
+    email: str
+
+
+class Confirmacao(BaseModel):
+    codigo: str
+
+
+class Preferencias(BaseModel):
+    novidades: bool
+    resumo_semanal: bool
+
+
 def _erro(status: int, codigo: str, descricao: str, **extra) -> JSONResponse:
     return JSONResponse({"codigo": codigo, "descricao": descricao, **extra}, status_code=status)
 
@@ -193,12 +223,13 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = get_settings()
         resp.set_cookie(nome, valor, max_age=max_age, httponly=True, samesite="lax", secure=s.cookie_secure, path="/")
 
-    def novo_desafio(req: Request, resp: Response, finalidade: str, email: str, nome=None, senha_hash=None) -> dict:
+    def novo_desafio(req: Request, resp: Response, finalidade: str, email: str, nome=None, senha_hash=None, usuario_id=None) -> dict:
         token, codigo = secrets.token_urlsafe(32), f"{secrets.randbelow(10**6):06d}"
         agora = time.time()
         banco(req).executar(
-            "INSERT INTO desafios VALUES (?,?,?,?,?,?,?,?,?)",
-            _sha(token), finalidade, email, nome, senha_hash, _sha(codigo), agora + CODIGO_VALIDADE, CODIGO_TENTATIVAS, agora,
+            "INSERT INTO desafios (token_hash, finalidade, email, nome, senha_hash, codigo_hash, expira, tentativas, enviado_em, usuario_id)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?)",
+            _sha(token), finalidade, email, nome, senha_hash, _sha(codigo), agora + CODIGO_VALIDADE, CODIGO_TENTATIVAS, agora, usuario_id,
         )
         cookie(resp, COOKIE_DESAFIO, token, CODIGO_VALIDADE)
         (enviar or enviar_codigo)(email, codigo)
@@ -239,19 +270,28 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         falhas.pop(email, None)
         return novo_desafio(req, resp, "login", email)
 
-    @r.post("/codigo")
-    def codigo(dados: Codigo, req: Request, resp: Response, orbita_desafio: str | None = Cookie(None)):
-        d = desafio_atual(req, orbita_desafio)
+    def conferir(req: Request, d: dict | None, codigo: str) -> JSONResponse | None:
+        """Confere o código de um desafio: expirado, sem tentativas ou errado viram a resposta de erro."""
         if not d or d["expira"] < time.time():
             return _erro(410, "expirado", "O código expirou. Peça outro.")
         if d["tentativas"] <= 0:
             return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
-        if not hmac.compare_digest(_sha(dados.codigo.strip()), d["codigo_hash"]):
+        if not hmac.compare_digest(_sha(codigo.strip()), d["codigo_hash"]):
             restantes = d["tentativas"] - 1
             banco(req).executar("UPDATE desafios SET tentativas=? WHERE token_hash=?", restantes, d["token_hash"])
             if restantes <= 0:
                 return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
             return _erro(400, "codigo_errado", "Código incorreto.", tentativas_restantes=restantes)
+        return None
+
+    @r.post("/codigo")
+    def codigo(dados: Codigo, req: Request, resp: Response, orbita_desafio: str | None = Cookie(None)):
+        d = desafio_atual(req, orbita_desafio)
+        if d and d["finalidade"] not in ("cadastro", "login"):
+            d = None  # código de troca de senha/e-mail não serve para entrar
+        erro = conferir(req, d, dados.codigo)
+        if erro:
+            return erro
 
         b = banco(req)
         if d["finalidade"] == "cadastro":
@@ -306,6 +346,81 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s.pop("sessao_id")
         return s
 
+    # ---------- Item 9: troca de senha e de e-mail, sempre com código ----------
+    @r.post("/senha/trocar", status_code=202)
+    def trocar_senha(dados: TrocaSenha, req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", s["id"])
+        if not confere_senha(dados.atual, u["senha_hash"]):
+            return _erro(401, "senha_atual", "A senha atual não confere.")
+        if len(dados.nova) < 8:
+            return _erro(422, "senha_curta", "A senha nova precisa ter pelo menos 8 caracteres.")
+        if dados.nova == dados.atual:
+            return _erro(422, "senha_igual", "A senha nova precisa ser diferente da atual.")
+        return novo_desafio(req, resp, "senha", s["email"], senha_hash=hash_senha(dados.nova), usuario_id=s["id"])
+
+    @r.post("/email/trocar", status_code=202)
+    def trocar_email(dados: TrocaEmail, req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        email = dados.email.strip().lower()
+        if not EMAIL_RE.match(email):
+            return _erro(422, "dados_invalidos", "Informe um e-mail válido.")
+        if email == s["email"]:
+            return _erro(422, "email_igual", "Esse já é o seu e-mail.")
+        if banco(req).um("SELECT 1 FROM usuarios WHERE email=?", email):
+            return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
+        # O código vai para o e-mail NOVO: prova que a pessoa tem acesso a ele.
+        return novo_desafio(req, resp, "email", email, usuario_id=s["id"])
+
+    @r.post("/confirmar")
+    def confirmar(dados: Confirmacao, req: Request, resp: Response, orbita_sessao: str | None = Cookie(None), orbita_desafio: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        d = desafio_atual(req, orbita_desafio)
+        if d and (d["finalidade"] not in ("senha", "email") or d["usuario_id"] != s["id"]):
+            d = None
+        erro = conferir(req, d, dados.codigo)
+        if erro:
+            return erro
+        b = banco(req)
+        b.executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
+        resp.delete_cookie(COOKIE_DESAFIO, path="/")
+        if d["finalidade"] == "senha":
+            b.executar("UPDATE usuarios SET senha_hash=? WHERE id=?", d["senha_hash"], s["id"])
+            # Senha nova: todas as outras sessões caem; esta continua (S13 do documento de segurança).
+            b.executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
+            return {"ok": True, "trocou": "senha"}
+        if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
+            return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
+        b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        return {"ok": True, "trocou": "email", "email": d["email"]}
+
+    @r.get("/preferencias")
+    def preferencias(req: Request, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        p = banco(req).um("SELECT novidades, resumo_semanal FROM preferencias WHERE usuario_id=?", s["id"])
+        p = p or {"novidades": 1, "resumo_semanal": 1}
+        return {"novidades": bool(p["novidades"]), "resumo_semanal": bool(p["resumo_semanal"]), "avisos_de_cobranca": True}
+
+    @r.put("/preferencias")
+    def salvar_preferencias(dados: Preferencias, req: Request, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        banco(req).executar(
+            "INSERT INTO preferencias (usuario_id, novidades, resumo_semanal) VALUES (?,?,?) "
+            "ON CONFLICT(usuario_id) DO UPDATE SET novidades=excluded.novidades, resumo_semanal=excluded.resumo_semanal",
+            s["id"], int(dados.novidades), int(dados.resumo_semanal),
+        )
+        return {"novidades": dados.novidades, "resumo_semanal": dados.resumo_semanal, "avisos_de_cobranca": True}
+
     @r.get("/sessoes")
     def sessoes(req: Request, orbita_sessao: str | None = Cookie(None)):
         s = sessao_valida(banco(req), orbita_sessao)
@@ -359,6 +474,7 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         # Dados de cobrança (assinantes, assinaturas) ficam pelo prazo legal de guarda fiscal; a conta e o login saem.
         b.executar("DELETE FROM sessoes WHERE usuario_id = ?", u["id"])
         b.executar("DELETE FROM desafios WHERE email = ?", u["email"])
+        b.executar("DELETE FROM preferencias WHERE usuario_id = ?", u["id"])
         b.executar("DELETE FROM usuarios WHERE id = ?", u["id"])
         resp.delete_cookie(COOKIE_SESSAO, path="/")
         resp.status_code = 204

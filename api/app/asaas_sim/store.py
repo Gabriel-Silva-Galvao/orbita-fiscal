@@ -151,6 +151,19 @@ class Store:
         self.clientes[cli["id"]] = cli
         return cli
 
+    def atualizar_cliente(self, cid: str, corpo: dict) -> dict:
+        cli = self.cliente(cid)
+        if "cpfCnpj" in corpo:
+            doc = "".join(ch for ch in str(corpo["cpfCnpj"]) if ch.isdigit())
+            if len(doc) not in (11, 14):
+                raise SimError(400, "invalid_cpfCnpj", "O CPF ou CNPJ informado é inválido.")
+            cli["cpfCnpj"] = doc
+            cli["personType"] = "FISICA" if len(doc) == 11 else "JURIDICA"
+        for campo in ("name", "email", "address", "addressNumber", "postalCode", "mobilePhone"):
+            if campo in corpo:
+                cli[campo] = corpo[campo]
+        return cli
+
     def cliente(self, cid: str) -> dict:
         cli = self.clientes.get(cid)
         if not cli:

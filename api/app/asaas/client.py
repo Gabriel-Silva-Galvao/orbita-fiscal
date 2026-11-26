@@ -47,6 +47,9 @@ class AsaasClient:
     def criar_cliente(self, **dados: Any) -> dict:
         return self._req("POST", "/customers", dados)
 
+    def atualizar_cliente(self, cid: str, **dados: Any) -> dict:
+        return self._req("PUT", f"/customers/{cid}", dados)
+
     # Assinaturas
     def criar_assinatura(self, **dados: Any) -> dict:
         return self._req("POST", "/subscriptions", dados)
