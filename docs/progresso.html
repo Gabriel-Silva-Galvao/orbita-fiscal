@@ -191,7 +191,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     <svg viewBox="6 14 88 72" role="img" aria-label="Símbolo da Órbita"><g transform="rotate(-28 50 50)"><ellipse cx="50" cy="50" rx="43" ry="28" fill="none" stroke="var(--brand)" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="27" ry="17" fill="none" stroke="var(--brand)" stroke-width="2.6"/><circle cx="23" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="77" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/><circle cx="93" cy="50" r="3.4" fill="var(--bg)" stroke="var(--ink)" stroke-width="2"/></g><circle cx="57.2" cy="50" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="56.236" r="4.4" fill="var(--brand)"/><circle cx="46.4" cy="43.764" r="4.4" fill="var(--brand)"/><circle cx="53.6" cy="56.236" r="4.4" fill="var(--nucleus)"/><circle cx="42.8" cy="50" r="4.4" fill="var(--nucleus)"/><circle cx="53.6" cy="43.764" r="4.4" fill="var(--nucleus)"/><circle cx="50" cy="50" r="4.4" fill="var(--nucleus)"/></svg>
     <div>
       <p class="name">Progresso do site</p>
-      <p class="meta">Órbita · <span id="updated">atualizado em 25/11/2026</span></p>
+      <p class="meta">Órbita · <span id="updated">atualizado em 26/11/2026</span></p>
     </div>
     <span class="spacer"></span>
     <span class="live" id="live"><i></i><span>Conectando</span></span>
@@ -287,6 +287,8 @@ details.more ul b { color: var(--ink); font-weight: 600 }
     <section class="sec" aria-labelledby="nx-t">
       <h2 id="nx-t" style="font-size:1.75rem">Próximos passos</h2>
       <ol class="steps">
+        <li>Fase de segurança (agora): assinatura em dobro (S18), revisão da assinatura com o Asaas e os riscos S3 a S9. Ver <code>docs/ciberseguranca.md</code>.</li>
+        <li>Suporte e administração: telas e regras em <code>docs/suporte-e-admin.md</code>, prontas para começar.</li>
         <li>Animação de explosão do átomo (última etapa do código).</li>
         <li>Abrir o CNPJ e trocar a simulação pelo Asaas real.</li>
         <li>Escolher hospedagem, domínio e o provedor de e-mail; publicar.</li>
@@ -309,6 +311,8 @@ details.more ul b { color: var(--ink); font-weight: 600 }
         <li><span class="f">Código do site <code>src/</code></span></li>
         <li><span class="f">Auditoria de traços de IA <code>docs/auditoria-ia.md</code></span></li>
         <li><span class="f">Análise de animações <code>docs/analise-do-site.md</code></span></li>
+        <li><span class="f">Cibersegurança <code>docs/ciberseguranca.md</code></span></li>
+        <li><span class="f">Suporte e administração <code>docs/suporte-e-admin.md</code></span></li>
       </ul>
     </section>
   </div>
@@ -316,6 +320,7 @@ details.more ul b { color: var(--ink); font-weight: 600 }
   <section class="sec" aria-labelledby="hs-t">
     <h2 id="hs-t" style="font-size:1.75rem">Histórico</h2>
     <ol class="timeline">
+      <li><span class="d">26/11/2026</span><span class="t">Começa a fase de segurança</span><span class="x">Documento de cibersegurança (ameaças, controles, riscos, incidentes e testes). Incidente da API travada por ReDoS corrigido. Próximos: assinatura em dobro (S18), revisão da assinatura com o Asaas (item 37) e os riscos S3 a S9. Telas do suporte e da administração documentadas para começar também.</span></li>
       <li><span class="d">25/11/2026</span><span class="t">Ajuda e átomo mais lento</span><span class="x">Formulário de contato vai para a Ajuda, com prévia "Ficou alguma dúvida?" na inicial. Átomo gira mais devagar e acelera de leve. Commit 41066ad.</span></li>
       <li><span class="d">25/11/2026</span><span class="t">IA gerando ao vivo</span><span class="x">Topo e comparativo mostram as respostas sendo geradas, com citações acendendo. Volta o átomo de lítio atrás do cartão. Bloco "O que a Órbita consulta". Foto de Brasília sem cartões, acendendo do desfoque. Commit 412db2d.</span></li>
       <li><span class="d">25/11/2026</span><span class="t">Landing de vendas</span><span class="x">Pesquisa e plano; comparativo com e sem a Órbita (respostas reais do Claude Opus 5.5); textos e botões de venda; header fixo; "dia a dia" numa linha.</span></li>

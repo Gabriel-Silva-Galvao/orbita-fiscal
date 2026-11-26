@@ -206,6 +206,24 @@
     ["Formulário de contato na Ajuda e prévia na inicial", true],
     ["Átomo mais lento no topo e na logo", true]
   ]},
+  {"id": "e22", "titulo": "Segurança (fase atual, desde 26/11/2026)", "itens": [
+    ["Documento de cibersegurança (docs/ciberseguranca.md)", true],
+    ["S17: API travava com ReDoS no e-mail; corrigido com limites de tamanho e corpo de 64 KB", true],
+    ["S18: impedir assinatura em dobro com pedidos simultâneos", false],
+    ["Item 37: revisão de segurança da assinatura com o Asaas", false],
+    ["S3: cartão pela tokenização do Asaas (nunca passa pela API)", false],
+    ["S4 e S5: SMTP obrigatório e limite de tentativas por IP", false],
+    ["S6 a S9: /docs fechado, cabeçalhos, Origin e tempo igual no login", false],
+    ["Varredura (OWASP ZAP), pip-audit e npm audit antes de publicar", false]
+  ]},
+  {"id": "e23", "titulo": "Suporte e administração (itens 51 e 52)", "itens": [
+    ["Telas e regras documentadas em docs/suporte-e-admin.md", true],
+    ["Login separado da equipe, com 2FA obrigatório e papéis", false],
+    ["Telas do suporte: busca, ficha do cliente, chamados", false],
+    ["Telas do admin: usuários, assinaturas, auditoria", false],
+    ["Registro de auditoria de todo acesso e ação", false],
+    ["Revisão de segurança dedicada antes de ligar", false]
+  ]},
   {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
     ["Definir quando toca: uma vez, na confirmação do pagamento", true],
     ["Explosão do átomo e elétrons virando as abas novas", false],

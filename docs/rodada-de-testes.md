@@ -1090,16 +1090,22 @@ testes de segurança e oito regras para quem mexe no código. Ao levantar os con
 (alto): assinatura em dobro por pedidos simultâneos**, registrado também em `docs/backend-e-seguranca.md` e deixado para o
 item 37, que é exatamente essa revisão.
 
-### 51. Documentação do suporte com login de admin — A lapidar (por último, com o 52)
+### 51. Documentação do suporte com login de admin — Documentado (26/11/2026); construção por último, com o 52
 
 Desenhar a área de suporte para a equipe, com login de admin: o que cada tela mostra sobre o usuário (só o necessário para
 atender), quem pode ver o quê, registro de cada acesso e cuidados de segurança e LGPD.
 
-### 52. Documentação da administração — A lapidar (por último, com o 51)
+### 52. Documentação da administração — Documentado (26/11/2026); construção por último, com o 51
 
 Desenhar a página de administração com as informações necessárias para gerenciar os usuários (conta, plano, cobrança, sessões),
 com verificação de vulnerabilidades mais forte que em qualquer outra página: login separado com 2FA obrigatório, permissões por
 papel, registro de auditoria, limites de acesso e revisão de segurança dedicada.
+
+**Documentado (51 e 52):** `docs/suporte-e-admin.md`: papéis (Suporte, Financeiro, Admin) e o que cada um pode; acesso da equipe
+separado do cliente, com 2FA forte (autenticador ou passkey), sessão curta e reautenticação nas ações sensíveis; registro de
+auditoria que ninguém apaga; as telas do suporte (busca, ficha resumida com CPF mascarado, chamados) e da administração (painel,
+clientes, assinaturas, equipe, auditoria, segurança, conteúdo); verificação de vulnerabilidades reforçada; ordem de construção e
+o que falta decidir.
 
 ## Ordem proposta de execução
 
@@ -1113,5 +1119,7 @@ papel, registro de auditoria, limites de acesso e revisão de segurança dedicad
    **Bloco G** (ideias da revisão do Portal): conforme o que for decidido.
 7. Riscos altos de segurança (S3 a S5) antes de publicar.
 8. ~~**Bloco H**: 36 → 35 → 34 → 38 → 39~~ feito; o 37 depois do 29.
-   **Bloco I** (rápidos primeiro): 45 → 46 → 47 → 49 → 42 → 40 → 41 → 43 com 48 → 44 → 50 → 51 e 52 por último.
+   ~~**Bloco I**: 45 → 46 → 47 → 49 → 42 → 40 → 41 → 43 com 48 → 44 → 50~~ feito; 51 e 52 documentados.
+9. **Fase de segurança (a partir de 26/11/2026):** S18 (assinatura em dobro) → item 37 → S3 a S9 (`docs/ciberseguranca.md`);
+   depois, a construção do suporte e da administração (`docs/suporte-e-admin.md`).
 9. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
