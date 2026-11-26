@@ -30,6 +30,7 @@ if (root.classList.contains('anim')) {
   reveals();
   stepsLine();
   drawOnView();
+  irParaAncora((window as any).__lenis);
   // Fontes e imagens mudam alturas: recalcula os gatilhos quando tudo carrega.
   window.addEventListener('load', () => ScrollTrigger.refresh());
 }
@@ -93,6 +94,7 @@ function reveals() {
         overwrite: true,
         onStart() {
           batch.forEach((el) => {
+            if (el.classList.contains('is-in')) return; // já mostrado na chegada por âncora (item 35)
             el.classList.add('is-in');
             const words = el.querySelectorAll('.sw > span');
             if (words.length)
@@ -118,6 +120,30 @@ function smoothScroll() {
   gsap.ticker.lagSmoothing(0);
   root.classList.add('has-lenis');
   (window as any).__lenis = lenis;
+}
+
+/*
+ * Item 35: ao chegar de outra página com #âncora (ex.: /ajuda#contato), o navegador pula antes de fontes e imagens
+ * mudarem as alturas, e a tela ficava vazia por segundos. Vai direto ao alvo agora e de novo quando tudo carrega.
+ */
+function irParaAncora(lenis: Lenis) {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const alvo = id ? document.getElementById(id) : null;
+  if (!alvo) return;
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  // A seção de destino aparece pronta, sem esperar a animação de entrada.
+  const blocos = [alvo, ...alvo.querySelectorAll<HTMLElement>('[data-reveal]')].filter((el) => el.matches('[data-reveal]'));
+  gsap.set(blocos, { autoAlpha: 1, y: 0, scale: 1 });
+  blocos.forEach((el) => el.classList.add('is-in'));
+  gsap.set(alvo.querySelectorAll('.sw > span'), { yPercent: 0 });
+  const ir = () => {
+    ScrollTrigger.refresh();
+    lenis.scrollTo(alvo, { offset: -72, immediate: true, force: true });
+    ScrollTrigger.update();
+  };
+  requestAnimationFrame(ir);
+  document.fonts?.ready.then(ir);
+  window.addEventListener('load', ir, { once: true });
 }
 
 /*

@@ -872,10 +872,15 @@ sem preço, com o botão "Entre em contato para mais informações" bem destacad
 
 **Decidido:** faixa larga e destacada logo abaixo dos três planos (como o Claude faz com Team/Enterprise).
 
-### 35. Botões de ajuda que não funcionam direito — A lapidar
+### 35. Botões de ajuda que não funcionam direito — Executado e testado (26/11/2026)
 
 Conferir os dois botões de ajuda quando clicados. Na prévia da Ajuda da página inicial, "Ver a Ajuda" e "Escrever para a equipe" recebem
 o clique (conferido em 26/11/2026); **Decidido:** são esses dois da prévia da página inicial; conferir o que acontece depois do clique (rolagem até o formulário, âncora #contato).
+
+**Feito:** "Escrever para a equipe" abria `/ajuda#contato` numa tela vazia por uns 2 s: o navegador pulava para a âncora antes de
+fontes e imagens mudarem as alturas, e os blocos com animação de entrada ainda estavam escondidos. Agora `motion.ts`
+(`irParaAncora`) vai direto ao alvo, mostra a seção de destino pronta e repete a ida quando as fontes e a página terminam de carregar.
+Testado: os dois botões no desktop, `#contato` e `#conectar` a 375 px.
 
 ### 36. 404 com o rodapé invadindo o conteúdo — Executado e testado (26/11/2026)
 
