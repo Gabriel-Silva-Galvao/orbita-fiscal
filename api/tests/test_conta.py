@@ -139,3 +139,35 @@ def test_reenviar_o_codigo_da_troca_funciona(api, caixa, monkeypatch):
     assert http.post("/auth/codigo/reenviar").status_code == 202
     r = http.post("/auth/confirmar", json={"codigo": caixa["ana@exemplo.test"]})
     assert r.status_code == 200 and r.json()["trocou"] == "senha", r.text
+
+
+def _outra_conta_pega_o_email_no_meio(banco, monkeypatch, email):
+    """Simula a corrida: logo depois da conferência "esse e-mail está livre?", outra conta é criada com ele."""
+    original = banco.um
+
+    def um(sql, *args):
+        r = original(sql, *args)
+        if sql.startswith("SELECT 1 FROM usuarios WHERE email") and args == (email,) and r is None:
+            banco.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES ('rival', ?, 'Rival', 'x')", email)
+        return r
+
+    monkeypatch.setattr(banco, "um", um)
+
+
+def test_corrida_na_confirmacao_da_troca_de_email_responde_409(api, caixa, monkeypatch):
+    """Regressão ARES-QA-011: a corrida na confirmação respondia 500 (IntegrityError do UNIQUE)."""
+    http, _, banco = api
+    cadastrar(http, caixa)
+    assert http.post("/auth/email/trocar", json={"email": "disputado@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    _outra_conta_pega_o_email_no_meio(banco, monkeypatch, "disputado@exemplo.test")
+    r = http.post("/auth/confirmar", json={"codigo": caixa["disputado@exemplo.test"]})
+    assert r.status_code == 409 and r.json()["codigo"] == "email_em_uso"
+    assert http.get("/auth/sessao").json()["email"] == "ana@exemplo.test"
+
+
+def test_corrida_na_confirmacao_do_cadastro_responde_409(api, caixa, monkeypatch):
+    http, _, banco = api
+    assert http.post("/auth/cadastro", json={"nome": "Ana", "email": "disputado@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    _outra_conta_pega_o_email_no_meio(banco, monkeypatch, "disputado@exemplo.test")
+    r = http.post("/auth/codigo", json={"codigo": caixa["disputado@exemplo.test"]})
+    assert r.status_code == 409 and r.json()["codigo"] == "email_em_uso"

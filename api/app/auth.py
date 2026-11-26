@@ -38,6 +38,7 @@ import hmac
 import logging
 import re
 import secrets
+import sqlite3
 import time
 import uuid
 from collections import deque
@@ -394,7 +395,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
                 return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
             uid = str(uuid.uuid4())
-            b.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?,?,?,?)", uid, d["email"], d["nome"], d["senha_hash"])
+            try:
+                b.executar("INSERT INTO usuarios (id, email, nome, senha_hash) VALUES (?,?,?,?)", uid, d["email"], d["nome"], d["senha_hash"])
+            except sqlite3.IntegrityError:  # ARES-QA-011: outro cadastro do mesmo e-mail entrou entre a conferência e o INSERT
+                return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
         else:
             uid = b.um("SELECT id FROM usuarios WHERE email=?", d["email"])["id"]
         b.executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
@@ -500,7 +504,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return {"ok": True, "trocou": "senha"}
         if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
             return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
-        b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        try:
+            b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        except sqlite3.IntegrityError:  # ARES-QA-011: o e-mail virou de outra conta entre a conferência e o UPDATE
+            return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
         # ARES-SEC-017 / ARES-QA-012: como na troca de senha, as outras sessões caem; e o endereço antigo é avisado,
         # para o dono perceber se não foi ele.
         b.executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
