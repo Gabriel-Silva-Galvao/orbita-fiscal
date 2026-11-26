@@ -35,3 +35,16 @@ def test_corpo_acima_de_64kb_volta_413(api):
     r = http.post("/auth/login", content=b'{"email":"' + b"a" * 70_000 + b'"}', headers={"content-type": "application/json"})
     assert r.status_code == 413
     assert http.post("/auth/login", json={"email": "ana@exemplo.com", "senha": "x"}).status_code in (401, 404, 422)
+
+
+def test_cabecalhos_de_seguranca_em_toda_resposta(api):
+    """Regressão ARES-QA-004 (S7): a API não mandava nosniff, anti-clickjacking nem CSP (o ZAP apontou o nosniff)."""
+    http, *_ = api
+    for r in (http.get("/saude"), http.get("/auth/sessao"), http.post("/auth/login", content=b"x" * (70 * 1024),
+                                                                      headers={"content-type": "application/json"})):
+        assert r.headers["x-content-type-options"] == "nosniff", r.status_code
+        assert r.headers["x-frame-options"] == "DENY"
+        assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
+        assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert "strict-transport-security" not in http.get("/saude").headers  # sem HTTPS (desenvolvimento), sem HSTS
+    assert "content-security-policy" not in http.get("/docs").headers  # o Swagger do desenvolvimento precisa do CDN

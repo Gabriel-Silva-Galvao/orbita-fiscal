@@ -74,6 +74,40 @@ class LimiteDeCorpo:
 class _CorpoGrande(Exception):
     pass
 
+
+class CabecalhosDeSeguranca:
+    """ARES-QA-004 (S7): cabeçalhos de segurança em toda resposta da API. A API só devolve JSON, então a CSP proíbe tudo;
+    a exceção é a documentação de desenvolvimento (/docs e /redoc carregam o Swagger de um CDN). HSTS só com HTTPS."""
+
+    BASE = [
+        (b"x-content-type-options", b"nosniff"),
+        (b"x-frame-options", b"DENY"),
+        (b"referrer-policy", b"strict-origin-when-cross-origin"),
+    ]
+    CSP = (b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+    HSTS = (b"strict-transport-security", b"max-age=31536000; includeSubDomains")
+    DOCS = ("/docs", "/redoc")
+
+    def __init__(self, app, hsts: bool):
+        self.app, self.hsts = app, hsts
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        extras = list(self.BASE)
+        if not scope.get("path", "").startswith(self.DOCS):
+            extras.append(self.CSP)
+        if self.hsts:
+            extras.append(self.HSTS)
+
+        async def enviar(msg):
+            if msg["type"] == "http.response.start":
+                ja = {n.lower() for n, _ in msg.get("headers", [])}
+                msg["headers"] = list(msg.get("headers", [])) + [(n, v) for n, v in extras if n not in ja]
+            await send(msg)
+
+        await self.app(scope, receive, enviar)
+
 def create_app(store: Store | None = None, banco: Banco | None = None, asaas: AsaasClient | None = None) -> FastAPI:
     settings = get_settings()
     # Item 17: a API se recusa a subir com configuração perigosa (simulação em produção, segredos de exemplo).
@@ -95,6 +129,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         app.state.banco.con.executescript(alertas.ESQUEMA)
     # Segurança (26/11/2026): nenhum pedido passa de 64 KB (os maiores, webhook do Asaas e contato, ficam bem abaixo).
     app.add_middleware(LimiteDeCorpo, maximo=64 * 1024)
+    app.add_middleware(CabecalhosDeSeguranca, hsts=settings.cookie_secure)  # por fora: vale até para o 413
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.site_url],
