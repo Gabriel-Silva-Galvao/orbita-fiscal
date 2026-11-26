@@ -81,3 +81,26 @@ def test_producao_sem_smtp_nao_sobe():
     """Regressão ARES-QA-007 (S4): sem SMTP, o código do 2FA ia para o log; em produção a API se recusa a subir."""
     assert any("SMTP_HOST vazio" in e for e in problemas_de_producao(conf(smtp_host="")))
     assert problemas_de_producao(conf(orbita_env="development", smtp_host="", asaas_sim_enabled=True, cookie_secure=False)) == []
+
+
+def test_docs_fechados_em_producao(monkeypatch, tmp_path, api):
+    """Regressão ARES-QA-005 (S6): /docs e /openapi.json mostravam todas as rotas a qualquer um, também em produção."""
+    from fastapi.testclient import TestClient
+
+    from app.db import Banco
+    from app.main import create_app
+
+    http, *_ = api  # desenvolvimento: continuam abertos
+    assert http.get("/docs").status_code == 200 and http.get("/openapi.json").status_code == 200
+
+    for k, v in {"ORBITA_ENV": "production", "ASAAS_SIM_ENABLED": "false", "COOKIE_SECURE": "true", "SMTP_HOST": "smtp.exemplo.test",
+                 "ASAAS_WEBHOOK_TOKEN": "x" * 40, "ASAAS_API_KEY": "$aact_prod_chave_de_verdade", "AUTH_CODIGO_NA_RESPOSTA": "false"}.items():
+        monkeypatch.setenv(k, v)
+    get_settings.cache_clear()
+    try:
+        prod = TestClient(create_app(banco=Banco(str(tmp_path / "prod.db"))))
+        for caminho in ("/docs", "/redoc", "/openapi.json"):
+            assert prod.get(caminho).status_code == 404, caminho
+        assert prod.get("/saude").status_code == 200
+    finally:
+        get_settings.cache_clear()

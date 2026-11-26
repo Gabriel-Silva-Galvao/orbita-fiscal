@@ -80,7 +80,12 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
     erros = problemas_de_producao(settings)
     if erros:
         raise RuntimeError("Configuração insegura da API:\n- " + "\n- ".join(erros))
-    app = FastAPI(title="API da Órbita", version="0.2.0")
+    # ARES-QA-005 (S6): em produção, sem /docs, /redoc e /openapi.json (o mapa de todas as rotas fica só no desenvolvimento).
+    dev = settings.orbita_env == "development"
+    app = FastAPI(
+        title="API da Órbita", version="0.2.0",
+        docs_url="/docs" if dev else None, redoc_url="/redoc" if dev else None, openapi_url="/openapi.json" if dev else None,
+    )
     app.state.banco = banco or Banco(settings.database_path)
     with app.state.banco.trava:
         app.state.banco.con.executescript(auth.ESQUEMA)

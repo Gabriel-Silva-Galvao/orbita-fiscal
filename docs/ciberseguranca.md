@@ -78,7 +78,7 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 | S3 | Cartão passa pela API | Alto | Tokenização do Asaas no navegador; a API recebe só o token. | Com o Sandbox (item 29) |
 | S5 | Limite de tentativas só na memória e só no login | Alto | Limite por IP e por e-mail em todo `/auth`, guardado no banco; CAPTCHA invisível depois de N falhas. | Antes de publicar |
 | S4 | Código do 2FA no log sem SMTP (**corrigido** em 26/11/2026: produção exige SMTP, ver 5.1) | ~~Alto~~ | — | — |
-| S6 | `/docs` aberto | Médio | Desligar em produção. | Antes de publicar |
+| S6 | `/docs` aberto (**corrigido** em 26/11/2026: só em desenvolvimento, ver 5.1) | ~~Médio~~ | — | — |
 | S7 | Sem cabeçalhos de segurança | Médio | HSTS, CSP restrita, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy` no proxy. | Antes de publicar |
 | S8 | CSRF por subdomínio | Médio | Conferir `Origin` nas rotas que mudam estado. | Antes de publicar |
 | S9 | Descoberta de contas pelo tempo do login | Médio | Rodar o scrypt também quando o e-mail não existe. | Antes de publicar |
@@ -117,6 +117,7 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 | CAND-05 (novo, a partir de um alerta do ZAP) | Não classificado | Os formulários não declaravam `method`, então o padrão era GET: se o script da página falhasse ou demorasse e a pessoa apertasse Enter, a senha (e, no Checkout, o número e o CVV do cartão) iam para o endereço, o histórico e o log do servidor. O ZAP viu `/entrar?email=…&senha=…`. | `method="post"` nos 12 formulários com dado pessoal (Entrar, Checkout, Conta e segurança, Alertas, forma de pagamento e os dois de contato). A busca do Portal continua GET de propósito. | Revisão do HTML (`grep "<form"`); o site ainda não tem teste de navegador |
 | ARES-SEC-006 (riscos S1 e S2) | Precisava validar | "Produção" era deduzida do `COOKIE_SECURE`: com `COOKIE_SECURE=false`, a simulação (acesso sem pagar, token público do webhook) subia num servidor público. | Variável `ORBITA_ENV` (`production` por padrão). Em produção: simulação proibida e `COOKIE_SECURE` obrigatório. Em qualquer ambiente: simulação só com site e API em localhost. O desenvolvimento declara `ORBITA_ENV=development` (`.claude/launch.json`, `api/.env.example`, testes). | `test_config.py::test_simulacao_em_producao_e_recusada_mesmo_sem_cookie_secure`, `test_producao_e_o_padrao`, `test_simulacao_so_roda_em_localhost` |
 | ARES-QA-007 (parte; riscos S4 e S5) | Informativa | Produção subia sem SMTP, e o código do 2FA ia para o log; e-mails entravam no log com `%s`. | Em produção a API se recusa a subir sem `SMTP_HOST`; e-mails no log com `%r`. **Pendente:** limite por IP em `/auth`, que depende de saber qual proxy vai na frente da API (mesma questão da SEC-009). | `test_config.py::test_producao_sem_smtp_nao_sobe` |
+| ARES-QA-005 (risco S6) | Informativa | `/docs`, `/redoc` e `/openapi.json` mostravam todas as rotas (inclusive as da simulação) a qualquer um. | Só existem com `ORBITA_ENV=development`; em produção, 404. | `test_config.py::test_docs_fechados_em_producao` |
 
 ## 6. Plano de testes de segurança
 
