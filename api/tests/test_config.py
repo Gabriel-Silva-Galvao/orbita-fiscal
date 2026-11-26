@@ -7,8 +7,8 @@ from app.config import CHAVE_SIMULACAO, TOKEN_WEBHOOK_EXEMPLO, Settings, get_set
 
 
 def conf(**k):
-    base = dict(asaas_sim_enabled=False, cookie_secure=True, asaas_webhook_token="x" * 40,
-                asaas_api_key="$aact_prod_chave_de_verdade", auth_codigo_na_resposta=False)
+    base = dict(orbita_env="production", asaas_sim_enabled=False, cookie_secure=True, asaas_webhook_token="x" * 40,
+                asaas_api_key="$aact_prod_chave_de_verdade", auth_codigo_na_resposta=False, smtp_host="smtp.exemplo.test")
     base.update(k)
     return Settings(_env_file=None, **base)
 
@@ -29,7 +29,7 @@ def test_segredos_de_exemplo_e_codigo_na_resposta_sao_recusados():
 
 
 def test_desenvolvimento_com_simulacao_sobe():
-    assert problemas_de_producao(conf(asaas_sim_enabled=True, cookie_secure=False, asaas_webhook_token=TOKEN_WEBHOOK_EXEMPLO,
+    assert problemas_de_producao(conf(orbita_env="development", smtp_host="", asaas_sim_enabled=True, cookie_secure=False, asaas_webhook_token=TOKEN_WEBHOOK_EXEMPLO,
                                       asaas_api_key=CHAVE_SIMULACAO, auth_codigo_na_resposta=True)) == []
 
 
@@ -75,3 +75,9 @@ def test_simulacao_so_roda_em_localhost():
     base = dict(orbita_env="development", asaas_sim_enabled=True, cookie_secure=False)
     assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, site_url="https://orbitafiscal.com.br")))
     assert any("fora de localhost" in e for e in problemas_de_producao(conf(**base, api_public_url="https://api.orbitafiscal.com.br")))
+
+
+def test_producao_sem_smtp_nao_sobe():
+    """Regressão ARES-QA-007 (S4): sem SMTP, o código do 2FA ia para o log; em produção a API se recusa a subir."""
+    assert any("SMTP_HOST vazio" in e for e in problemas_de_producao(conf(smtp_host="")))
+    assert problemas_de_producao(conf(orbita_env="development", smtp_host="", asaas_sim_enabled=True, cookie_secure=False)) == []

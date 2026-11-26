@@ -443,7 +443,7 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         email = dados.email.strip().lower()
         if banco(req).um("SELECT 1 FROM usuarios WHERE email=?", email):
             # Troca de senha por link: etapa futura. Por ora, só registra o pedido.
-            log.warning("Pedido de troca de senha para %s (envio do link: a definir)", email)
+            log.warning("Pedido de troca de senha para %r (envio do link: a definir)", email)
         return {"ok": True}
 
     @r.get("/sessao")

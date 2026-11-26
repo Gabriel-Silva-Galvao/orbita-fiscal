@@ -67,6 +67,9 @@ def problemas_de_producao(s: "Settings") -> list[str]:
             erros.append("ASAAS_SIM_ENABLED=true em produção (ORBITA_ENV=production): a simulação daria acesso sem pagar.")
         if not s.cookie_secure:
             erros.append("COOKIE_SECURE=false em produção (ORBITA_ENV=production): o cookie da sessão precisa de HTTPS.")
+        if not s.smtp_host:
+            # ARES-QA-007 (S4): sem SMTP, o código do 2FA vai para o log da API, onde quem lê o log entra na conta.
+            erros.append("SMTP_HOST vazio em produção (ORBITA_ENV=production): o código do 2FA iria para o log em vez do e-mail.")
     if s.asaas_sim_enabled and s.cookie_secure:
         erros.append("ASAAS_SIM_ENABLED=true com COOKIE_SECURE=true: a simulação do Asaas não pode rodar em produção.")
     if s.asaas_sim_enabled and not (_local(s.site_url) and _local(s.api_public_url)):
