@@ -1,16 +1,17 @@
 ---
 /**
- * Rodapé no padrão de sites: marca e redes à esquerda, colunas de links, resumo legal,
- * e uma barra final com © e configurações (tema e preferências de cookies).
- * Revelado ao final: fica preso atrás da página e aparece quando a folha do conteúdo sobe.
- * Só vira “revelado” quando cabe na tela (≥ 768 px de largura e mais baixo que a janela);
- * senão, é um rodapé comum no fim da página.
- * Sempre escuro, nos dois temas: redefine os tokens localmente.
+ * Rodapé do site (item 32 da rodada de testes, 26/11/2026), enxuto e no padrão de sites de produto:
+ *  1. marca (logo, uma frase, redes) e três colunas curtas: Produto, Suporte e Legal;
+ *  2. uma linha de confiança: formas de pagamento, Asaas e LGPD;
+ *  3. a linha final: ©, razão social e CNPJ (uma vez só), encarregado de dados, créditos, tema e cookies.
+ * Saíram o resumo de privacidade em parágrafos (fica na página de Privacidade), a coluna "Sua conta" (está no
+ * header) e as repetições. Para quem está logado, "Planos" vira "Minha conta" e "Mudar de plano".
+ * Revelado ao final quando cabe na tela; sempre escuro, nos dois temas (tokens redefinidos aqui dentro).
  */
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
 import Pending from './Pending.astro';
-import { company, contact, legalLinks, paymentMethods } from '../data/site';
+import { company, contact, paymentMethods } from '../data/site';
 import { photos } from '../data/photos';
 
 const year = new Date().getFullYear();
@@ -19,37 +20,32 @@ const columns = [
   {
     title: 'Produto',
     links: [
-      { href: '/#exemplo', label: 'Exemplo' },
-      { href: '/bases', label: 'O que a Órbita cobre' },
       { href: '/#como-funciona', label: 'Como funciona' },
-      { href: '/#planos', label: 'Planos e preços' },
-      { href: '/#duvidas', label: 'Dúvidas' },
-    ],
-  },
-  {
-    title: 'Sua conta',
-    links: [
-      { href: '/entrar', label: 'Entrar' },
-      { href: '/entrar?modo=criar', label: 'Criar conta' },
-      { href: '/conta', label: 'Portal do cliente' },
+      { href: '/bases', label: 'O que a Órbita cobre' },
+      { href: '/#planos', label: 'Planos e preços', anon: true },
+      { href: '/conta', label: 'Minha conta', logado: true },
+      { href: '/conta/plano', label: 'Mudar de plano', logado: true },
+      { href: '/empresas', label: 'Para empresas' },
       { href: '/instalar', label: 'Instalar o plugin' },
     ],
   },
   {
-    title: 'Ajuda',
+    title: 'Suporte',
     links: [
       { href: '/ajuda', label: 'Central de ajuda' },
       { href: '/ajuda#contato', label: 'Fale com a equipe' },
-      { href: '/empresas', label: 'Para escritórios e empresas' },
+      { href: '/#duvidas', label: 'Perguntas frequentes' },
     ],
   },
-  { title: 'Legal', links: legalLinks },
-];
-
-const summary = [
-  { title: 'Seus direitos', text: 'Acesso, correção, portabilidade e exclusão (LGPD, art. 18).' },
-  { title: 'Suas consultas', text: 'Guarda e uso em modelos na política de privacidade.', pending: 'definir' as const },
-  { title: 'Uso responsável', text: 'Respostas de IA exigem revisão profissional.' },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/termos', label: 'Termos de uso' },
+      { href: '/privacidade', label: 'Privacidade' },
+      { href: '/reembolso', label: 'Reembolso' },
+      { href: '/privacidade#cookies', label: 'Cookies' },
+    ],
+  },
 ];
 
 const credits = Object.values(photos);
@@ -61,9 +57,7 @@ const credits = Object.values(photos);
     <div class="f-top">
       <div class="f-brand">
         <Logo size="lg" />
-        <p class="small f-pitch">
-          Plugin para o Claude que liga a base de legislação e jurisprudência brasileira à pesquisa de advogados, contadores e empresários.
-        </p>
+        <p class="small f-pitch">Legislação e jurisprudência com a fonte, no Claude. Para advogados, contadores e empresários.</p>
         <div class="f-social">
           <a class="f-ico" href={contact.instagram} target="_blank" rel="noopener" aria-label={`Instagram ${contact.instagramHandle}, abre em nova aba`}>
             <Icon name="mdi:instagram" size={20} />
@@ -71,7 +65,6 @@ const credits = Object.values(photos);
           <a class="f-ico" href={`mailto:${contact.email}`} aria-label={`E-mail ${contact.email}`}>
             <Icon name="solar:letter-linear" size={20} />
           </a>
-          <span class="small f-handle">{contact.instagramHandle}<Pending kind="confirmar" /></span>
         </div>
       </div>
 
@@ -82,7 +75,7 @@ const credits = Object.values(photos);
               <p class="f-col-title">{c.title}</p>
               <ul>
                 {c.links.map((l) => (
-                  <li>
+                  <li data-f-anon={'anon' in l ? '' : undefined} data-f-logado={'logado' in l ? '' : undefined} hidden={'logado' in l}>
                     <a href={l.href}>{l.label}</a>
                   </li>
                 ))}
@@ -93,60 +86,22 @@ const credits = Object.values(photos);
       </nav>
     </div>
 
-    <section class="f-legal" aria-labelledby="resumo-legal">
-      <h2 id="resumo-legal" class="f-col-title">Privacidade e termos, em resumo</h2>
-      <ul>
-        {
-          summary.map((s) => (
-            <li>
-              <p class="small">
-                <strong>{s.title}.</strong> {s.text}
-                {s.pending && <Pending kind={s.pending} />}
-              </p>
-            </li>
-          ))
-        }
-      </ul>
-      <p class="small f-legal-note">
-        Encarregado de dados: <a href={`mailto:${contact.privacyEmail}`}>{contact.privacyEmail}</a><Pending kind="confirmar" />
-        <span class="f-sep" aria-hidden="true">·</span> Os textos completos prevalecem sobre este resumo.
-      </p>
-    </section>
-
-    <!-- Item 2 da rodada de testes: dados da empresa, atendimento e pagamento, como num rodapé de loja. -->
-    <section class="f-empresa" aria-label="Empresa, atendimento e pagamento">
-      <div>
-        <p class="f-col-title">Empresa</p>
-        <p class="small">
-          {company.legalName || 'Razão social'}{!company.legalName && <Pending kind="definir" />}<br />
-          CNPJ {company.cnpj}{!company.cnpj && <Pending kind="definir" />}<br />
-          {company.address || 'Endereço da sede'}{!company.address && <Pending kind="definir" />}
-        </p>
-      </div>
-      <div>
-        <p class="f-col-title">Atendimento</p>
-        <p class="small">
-          <a href={`mailto:${contact.email}`}>{contact.email}</a><Pending kind="confirmar" /><br />
-          {company.supportHours || 'Dias úteis'}{!company.supportHours && <Pending kind="definir" />}<br />
-          <a href="/ajuda#contato">Formulário de contato</a>
-        </p>
-      </div>
-      <div>
-        <p class="f-col-title">Pagamento</p>
-        <ul class="f-pay" aria-label="Formas de pagamento aceitas">
-          {paymentMethods.map((m) => <li>{m}</li>)}
-        </ul>
-        <p class="small f-asaas">
-          <Icon name="solar:shield-check-linear" size={16} /> Pagamento processado pelo Asaas, com conexão segura
-        </p>
-      </div>
-    </section>
+    <!-- Confiança, numa linha só. -->
+    <ul class="f-confianca small" aria-label="Pagamento e dados">
+      <li class="f-pay">
+        {paymentMethods.map((m) => <span>{m}</span>)}
+      </li>
+      <li><Icon name="solar:shield-check-linear" size={16} /> Pagamento processado pelo Asaas</li>
+      <li><Icon name="solar:lock-keyhole-linear" size={16} /> Dados tratados conforme a LGPD</li>
+    </ul>
 
     <div class="f-bottom">
       <div class="f-copy small">
-        <span>© {year} Órbita</span>
+        <span>© {year} {company.legalName || 'Órbita'}{!company.legalName && <Pending kind="definir" />}</span>
         <span class="f-sep" aria-hidden="true">·</span>
-        <span>CNPJ<Pending kind="definir" /></span>
+        <span>CNPJ {company.cnpj}{!company.cnpj && <Pending kind="definir" />}</span>
+        <span class="f-sep" aria-hidden="true">·</span>
+        <a class="f-link" href="/privacidade#encarregado">Encarregado de dados</a>
         <span class="f-sep" aria-hidden="true">·</span>
         <button type="button" class="f-link" data-open="dlg-creditos">Créditos</button>
       </div>
@@ -338,7 +293,7 @@ const credits = Object.values(photos);
   }
   @media (min-width: 720px) {
     .f-cols {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
   .f-col-title {
@@ -382,38 +337,6 @@ const credits = Object.values(photos);
   }
 
   /* Resumo legal em uma faixa */
-  .f-legal {
-    padding-top: var(--space-5);
-    border-top: 1px solid var(--line);
-  }
-  .f-legal ul {
-    display: grid;
-    gap: var(--space-3) var(--space-5);
-  }
-  @media (min-width: 720px) {
-    .f-legal ul {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  @media (min-width: 1100px) {
-    .f-legal ul {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  .f-legal li {
-    color: var(--mute);
-  }
-  .f-legal strong {
-    color: var(--ink);
-    font-weight: 600;
-  }
-  .f-legal-note {
-    margin-top: var(--space-3);
-    color: var(--mute);
-  }
-  .f-legal a {
-    color: var(--brand);
-  }
   .f-sep {
     margin-inline: 6px;
     color: var(--line-strong);
@@ -693,44 +616,46 @@ const credits = Object.values(photos);
   .footer-spacer {
     height: 0;
   }
-  /* Item 2: empresa, atendimento e pagamento. */
-  .f-empresa {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--space-5);
-    padding-block: var(--space-6);
-    border-top: 1px solid var(--line);
-  }
-  .f-empresa p {
-    margin: 0;
-    line-height: 1.7;
-  }
-  .f-empresa a {
-    color: var(--ink);
-  }
-  .f-pay {
+  /* Item 32: linha de confiança. */
+  .f-confianca {
     list-style: none;
-    margin: 0 0 var(--space-3);
-    padding: 0;
+    margin: 0;
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--line);
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+    color: var(--mute);
   }
-  .f-pay li {
-    padding: 4px 10px;
-    border: 1px solid var(--line-strong, var(--line));
-    border-radius: 6px;
-    font-size: 0.8125rem;
-  }
-  .f-asaas {
+  .f-confianca li {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--mute);
+  }
+  .f-pay {
+    gap: 6px !important;
+  }
+  .f-pay span {
+    padding: 3px 10px;
+    border: 1px solid var(--line-strong, var(--line));
+    border-radius: 6px;
+    color: var(--ink);
+    font-size: 0.8125rem;
   }
 </style>
 
 <script>
+  // Item 32: logado (cópia da sessão que o header guarda), "Planos" vira "Minha conta" e "Mudar de plano".
+  try {
+    if (sessionStorage.getItem('orbita:sessao') && sessionStorage.getItem('orbita:sessao') !== 'null') {
+      document.querySelectorAll<HTMLElement>('[data-f-anon]').forEach((el) => (el.hidden = true));
+      document.querySelectorAll<HTMLElement>('[data-f-logado]').forEach((el) => (el.hidden = false));
+    }
+  } catch {
+    /* sem armazenamento: fica a versão para quem não entrou */
+  }
+
   const root = document.documentElement;
   const footer = document.querySelector<HTMLElement>('#rodape');
   const spacer = document.querySelector<HTMLElement>('.footer-spacer');

@@ -528,7 +528,15 @@ que estava aplicado na lista lá embaixo.
   filtra pelo estado novo se a pessoa clicar em "Ver as bases de XX na lista".
 - Desmarcar o estado (segundo clique) também zera, como já faz hoje.
 
-### 32. Rodapé padronizado e enxuto — Lapidado com pesquisa (25/11/2026)
+### 32. Rodapé padronizado e enxuto — Executado e testado (26/11/2026)
+
+**Feito.** `Footer.astro`: marca (logo, uma frase com o público, redes) e três colunas: Produto (Como funciona, O que a
+Órbita cobre, Planos e preços, Para empresas, Instalar o plugin), Suporte (Central de ajuda, Fale com a equipe,
+Perguntas frequentes) e Legal (Termos, Privacidade, Reembolso, Cookies); uma linha de confiança (cartão, Pix, boleto ·
+Pagamento processado pelo Asaas · Dados tratados conforme a LGPD); linha final com © e razão social, CNPJ (uma vez só),
+Encarregado de dados, Créditos, tema e cookies. Saíram o resumo de privacidade em parágrafos, a coluna "Sua conta" e a
+faixa Empresa/Atendimento/Pagamento (repetições). Logado: "Planos e preços" vira "Minha conta" e "Mudar de plano".
+**Testes.** No computador, 544 px de altura (antes bem maior); colunas certas; versão logada; celular sem rolagem lateral.
 
 **O que a pesquisa mostra** (guias de UX e galerias de rodapés de SaaS): o rodapé deve ser um sistema organizado, não
 uma pilha de links; o essencial é links legais (privacidade, termos, cookies), aviso de copyright e dados da empresa,
