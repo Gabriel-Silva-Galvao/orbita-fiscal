@@ -197,6 +197,35 @@ export async function agir(acao: 'cancelar' | 'reativar' | 'reembolso'): Promise
   return true;
 }
 
+/**
+ * Itens 43 e 48: troca da forma de pagamento da assinatura (Pix ou boleto, PUT /billing/assinatura/forma).
+ * O cartão não passa por aqui: ele será trocado pela tokenização do Asaas no navegador (o número nunca chega
+ * à API da Órbita; a API guarda só o token e os 4 últimos dígitos).
+ */
+export async function trocarForma(nova: 'pix' | 'boleto'): Promise<boolean> {
+  if (!billing) {
+    const sub = getSub();
+    if (!sub) return false;
+    sub.metodo = nova;
+    saveSub(sub);
+    await recarregar();
+    return true;
+  }
+  try {
+    const r = await call(billing, '/assinatura/forma', 'PUT', { forma: nova });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      avisar(e.detail?.mensagem ?? 'Não conseguimos trocar a forma de pagamento agora. Tente de novo em instantes.');
+      return false;
+    }
+  } catch {
+    avisar('Não conseguimos falar com o servidor. Confira sua conexão e tente de novo.');
+    return false;
+  }
+  await recarregar();
+  return true;
+}
+
 /** Passos da instalação marcados na página Instalar (1 a 4). */
 export function passosInstalacao(): string[] {
   try {

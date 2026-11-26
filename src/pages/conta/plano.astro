@@ -6,6 +6,7 @@
  */
 import Portal from '../../layouts/Portal.astro';
 import Pending from '../../components/Pending.astro';
+import FormaPagamento from '../../components/FormaPagamento.astro';
 import { plans, brl, upgradeDe } from '../../data/plans';
 
 export const prerender = false;
@@ -48,8 +49,10 @@ const upgrades = JSON.stringify(
       <div><span>Próxima cobrança</span><strong data-proxima></strong></div>
       <div><span>Forma de pagamento</span><strong data-forma></strong></div>
     </div>
-    <p class="small mute">Para trocar a forma de pagamento, fale com o suporte por enquanto<Pending kind="definir" />.</p>
   </section>
+
+  <!-- Item 43: trocar a forma de pagamento aqui mesmo. -->
+  <FormaPagamento />
 
   <section class="cartao is-marca" data-upgrade data-upgrades={upgrades} hidden aria-labelledby="up-t">
     <h2 class="h2" id="up-t" data-up-titulo></h2>
@@ -74,24 +77,44 @@ const upgrades = JSON.stringify(
   </section>
 
   <section class="pt-secao" id="cancelar" data-ativo aria-labelledby="canc-t">
-    <h2 id="canc-t">Cancelar ou pedir reembolso</h2>
-    <article class="cartao">
-      <h3>Pedir reembolso</h3>
-      <p class="small" data-reemb-texto></p>
-      <div class="acoes" data-reemb-acoes></div>
-      <ol class="trilha small" data-reemb-trilha hidden>
-        <li class="is-on">Pedido recebido <span data-reemb-data></span></li>
-        <li>Em processamento no provedor de pagamento</li>
-        <li>Valor devolvido</li>
-      </ol>
-    </article>
+    <h2 id="canc-t" tabindex="-1">Encerrar a assinatura</h2>
     <article class="cartao">
       <h3>Cancelar a assinatura</h3>
       <p class="small" data-canc-texto></p>
       <div class="acoes" data-canc-acoes></div>
     </article>
+    <!-- Item 43: o reembolso virou uma linha discreta; o link abre a confirmação em dois passos. -->
+    <div class="reemb" data-reemb>
+      <p class="small mute" data-reemb-texto></p>
+      <ol class="trilha small" data-reemb-trilha hidden>
+        <li class="is-on">Pedido recebido <span data-reemb-data></span></li>
+        <li>Em processamento no provedor de pagamento</li>
+        <li>Valor devolvido</li>
+      </ol>
+    </div>
     <p class="small mute">Regras completas na <a href="/reembolso">Política de reembolso</a> e nos <a href="/termos#cancelamento">Termos de uso</a>.</p>
   </section>
+
+  <dialog class="dlg-reemb" data-reemb-dlg1 aria-labelledby="reemb1-t">
+    <h2 id="reemb1-t">Tem certeza que quer pedir o reembolso?</h2>
+    <p class="small">
+      Você recebe o valor integral de volta, pela mesma forma de pagamento, e não precisa explicar o motivo.{' '}
+      <strong>A assinatura é encerrada e o acesso à Órbita termina.</strong> Sua conta continua existindo.
+    </p>
+    <div class="acoes">
+      <button type="button" class="btn-alt" data-reemb-voltar>Não, manter minha assinatura</button>
+      <button type="button" class="btn-main" data-reemb-seguir>Sim, quero o reembolso</button>
+    </div>
+  </dialog>
+  <dialog class="dlg-reemb" data-reemb-dlg2 aria-labelledby="reemb2-t">
+    <h2 id="reemb2-t">Confirmar o pedido de reembolso</h2>
+    <p class="small" data-reemb-resumo></p>
+    <p class="small mute">Depois de confirmar, não dá para desfazer. Para usar a Órbita de novo, será preciso assinar outra vez.</p>
+    <div class="acoes">
+      <button type="button" class="btn-alt" data-reemb-cancelar>Cancelar</button>
+      <button type="button" class="btn-main" data-reemb-confirmar>Confirmar reembolso</button>
+    </div>
+  </dialog>
 </Portal>
 
 <style>
@@ -176,6 +199,49 @@ const upgrades = JSON.stringify(
   .situacao.is-alerta {
     color: var(--ink);
     font-weight: 700;
+  }
+  /* Item 43: linha discreta do reembolso e os dois pop-ups. */
+  .reemb {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .reemb :global(.link-reemb) {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .dlg-reemb {
+    width: min(460px, calc(100vw - 32px));
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+  }
+  .dlg-reemb::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+  .dlg-reemb h2 {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.375rem;
+  }
+  .dlg-reemb p {
+    margin: 0 0 var(--space-3);
+  }
+  .dlg-reemb .acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
   }
   .trilha {
     margin: 0;
@@ -303,30 +369,28 @@ const upgrades = JSON.stringify(
       a.textContent = `Fazer upgrade para o ${up.nome}`;
     }
 
-    // Reembolso: integral até 7 dias da compra, sem precisar explicar.
+    // Reembolso (item 43): uma linha discreta; o link abre dois pop-ups (certeza e confirmação final).
     const dias = Math.floor((Date.now() - desde.getTime()) / 86400000);
     const ate = new Date(desde.getTime() + 7 * 86400000);
     const rTexto = $('[data-reemb-texto]');
-    const rAcoes = $('[data-reemb-acoes]');
-    rAcoes.replaceChildren();
+    rTexto.replaceChildren();
     $('[data-reemb-trilha]').hidden = !sub.reembolso;
     if (sub.reembolso) {
-      rTexto.textContent = 'Recebemos seu pedido. O valor integral volta pela mesma forma de pagamento.';
+      rTexto.textContent = 'Reembolso pedido. O valor integral volta pela mesma forma de pagamento.';
       $('[data-reemb-data]').textContent = `em ${fmt(new Date(sub.reembolso))}`;
     } else if (dias <= 7) {
-      const faltam = 7 - dias;
-      rTexto.textContent = `Você pode pedir o reembolso integral até ${fmt(ate)} (${faltam === 0 ? 'último dia' : `faltam ${faltam} ${faltam === 1 ? 'dia' : 'dias'}`}). Não precisa explicar o motivo.`;
-      rAcoes.append(
-        botao('Pedir reembolso', 'btn-main', () => {
-          rAcoes.replaceChildren(
-            botao('Confirmar pedido de reembolso', 'btn-main', () => agir('reembolso').then(focar('[data-canc-acoes]'))),
-            botao('Voltar', 'btn-alt', () => render(ctx)),
-          );
-          (rAcoes.firstElementChild as HTMLElement).focus();
-        }),
-      );
+      const link = document.createElement('button');
+      link.type = 'button';
+      link.className = 'link-reemb';
+      link.textContent = 'Pedir reembolso';
+      link.addEventListener('click', () => {
+        dlg1.showModal();
+        $<HTMLButtonElement>('[data-reemb-voltar]').focus();
+      });
+      rTexto.append('Arrependeu-se? ', link, ` até ${fmt(ate)}, com o valor integral de volta.`);
+      $('[data-reemb-resumo]').textContent = `Plano ${plan.name}: o valor pago volta integralmente, pela mesma forma usada no pagamento. A assinatura é encerrada agora.`;
     } else {
-      rTexto.textContent = `O prazo de 7 dias terminou em ${fmt(ate)}. Você ainda pode cancelar abaixo, sem multa.`;
+      rTexto.textContent = `O prazo de reembolso terminou em ${fmt(ate)}.`;
     }
 
     // Cancelamento: para de renovar e o acesso segue até o fim do período pago.
@@ -352,6 +416,34 @@ const upgrades = JSON.stringify(
     }
   }
   aoCarregar(render);
+
+  // Item 43: os dois pop-ups do reembolso.
+  const dlg1 = $<HTMLDialogElement>('[data-reemb-dlg1]');
+  const dlg2 = $<HTMLDialogElement>('[data-reemb-dlg2]');
+  const voltarAoLink = () => document.querySelector<HTMLElement>('.link-reemb')?.focus();
+  $('[data-reemb-voltar]').addEventListener('click', () => {
+    dlg1.close();
+    voltarAoLink();
+  });
+  $('[data-reemb-seguir]').addEventListener('click', () => {
+    dlg1.close();
+    dlg2.showModal();
+    $<HTMLButtonElement>('[data-reemb-cancelar]').focus();
+  });
+  $('[data-reemb-cancelar]').addEventListener('click', () => {
+    dlg2.close();
+    voltarAoLink();
+  });
+  $('[data-reemb-confirmar]').addEventListener('click', async (e) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    b.disabled = true;
+    b.textContent = 'Enviando…';
+    await agir('reembolso');
+    b.disabled = false;
+    b.textContent = 'Confirmar reembolso';
+    dlg2.close();
+    document.getElementById('canc-t')?.focus();
+  });
 
   // Depois de uma ação, o botão clicado some: o foco vai para a primeira ação que sobrou no mesmo cartão.
   const focar = (sel: string) => () => document.querySelector<HTMLElement>(`${sel} button`)?.focus();

@@ -990,7 +990,7 @@ ajuda, navegar no Portal e voltar ao site, achar senha, aparelhos e sair. Corrig
 Ficou anotado (baixo): no celular, "Voltar ao site" do Portal fica só no menu da conta e no caminho; a 404 poderia ter um
 link direto para a Ajuda no corpo (ela já tem o botão "Ver a Ajuda").
 
-### 43. Minha compra: trocar a forma de pagamento e reembolso discreto — A lapidar
+### 43. Minha compra: trocar a forma de pagamento e reembolso discreto — Executado e testado (26/11/2026)
 
 Na página do plano (minha compra), permitir trocar a forma de pagamento da cobrança, com os dados guardados de forma segura.
 O botão de pedir reembolso vira uma linha pequena; ao clicar, abre um pop-up de confirmação ("tem certeza?") e depois a confirmação
@@ -1000,6 +1000,18 @@ o cartão (tokenização) e a API guardar só o token e os 4 últimos dígitos.
 
 **Decidido:** reembolso e exclusão da conta são coisas separadas. A linha "Pedir reembolso" abre um pop-up próprio
 ("Tem certeza que quer pedir o reembolso?") e depois a confirmação; não mexe na conta. A exclusão continua em Conta e segurança.
+
+**Feito (43 e 48):** componente `src/components/FormaPagamento.astro` (usado em Plano e pagamento e em Conta e segurança): mostra a
+forma atual e "Trocar a forma de pagamento" abre a escolha entre Pix e boleto (`PUT /billing/assinatura/forma`, que já existia;
+`trocarForma` em `src/scripts/portal.ts`). O cartão aparece desativado, com o motivo: a troca para cartão vem com a tokenização do
+Asaas no navegador, para o número nunca passar pela API nem ficar guardado nela (só os 4 últimos dígitos); isso depende da conta
+Sandbox (item 29) e fecha o risco S3. Some com assinatura pendente, cancelada ou reembolsada. Plano e pagamento: o cartão
+"Pedir reembolso" virou uma linha ("Arrependeu-se? Pedir reembolso até dd/mm…"); o link abre o pop-up "Tem certeza que quer pedir
+o reembolso?" (foco em "Não, manter") e depois "Confirmar o pedido de reembolso", que avisa que não dá para desfazer; a conta não é
+mexida. Conta e segurança: seção "Pagamento" com o mesmo componente e três linhas sobre a proteção do pagamento (Asaas, sem número
+do cartão guardado, link para faturas e reembolso). Testado com contas novas da simulação: Pix → boleto, reembolso pelos dois
+pop-ups até a trilha "Pedido recebido", seção em Conta e segurança, e a 375 px. Observação: ao reiniciar a API, a simulação do
+Asaas perde as assinaturas (fica na memória), e a troca de forma de contas antigas responde "Assinatura não encontrada".
 
 ### 44. Alertas e resumo mais completos — A lapidar
 
@@ -1038,7 +1050,7 @@ aparelho em uso vem num cartão próprio no topo, com ícone e o selo "Você est
 "último uso há X" e o selo "Mesmo navegador que este" (borda tracejada); botão "Sair dos outros aparelhos" e o aviso quando não
 há outros. Testado com a conta Ouro e uma sessão de iPhone aberta por fora, no desktop e a 375 px.
 
-### 48. Conta e segurança: pagamento reforçado e troca da forma de pagamento — A lapidar
+### 48. Conta e segurança: pagamento reforçado e troca da forma de pagamento — Executado e testado (26/11/2026)
 
 Em Conta e segurança, uma área de pagamento mais clara, com a forma atual e a opção de trocar. Junto com o item 43 (mesma troca,
 mesmo cuidado com o cartão).

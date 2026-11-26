@@ -1,0 +1,197 @@
+---
+/**
+ * Forma de pagamento da assinatura (itens 43 e 48 da rodada de testes, 26/11/2026). Usado em Plano e pagamento e em
+ * Conta e segurança. Mostra a forma atual e deixa trocar entre Pix e boleto (PUT /billing/assinatura/forma).
+ * Cartão: a troca vem com a tokenização do Asaas no navegador. O número do cartão nunca passa pela API da Órbita nem
+ * fica guardado nela: o Asaas guarda o cartão e a Órbita, só o token e os 4 últimos dígitos (risco S3). Até lá, a
+ * opção aparece desativada, com o motivo.
+ * Precisa estar dentro do layout Portal (usa aoCarregar). Some quando não há assinatura com acesso.
+ */
+interface Props {
+  /** Título do bloco (h2). */
+  titulo?: string;
+  id?: string;
+}
+const { titulo = 'Forma de pagamento', id = 'forma-pagamento' } = Astro.props;
+---
+
+<section class="fp cartao" id={id} data-fp hidden aria-labelledby={`${id}-t`}>
+  <div class="fp-topo">
+    <h2 id={`${id}-t`} class="fp-t">{titulo}</h2>
+    <p class="fp-atual">
+      <span class="small mute">Hoje</span>
+      <strong data-fp-atual></strong>
+    </p>
+  </div>
+
+  <button type="button" class="btn-alt fp-abrir" data-fp-abrir aria-expanded="false">Trocar a forma de pagamento</button>
+
+  <form class="fp-form" data-fp-form hidden>
+    <fieldset>
+      <legend class="small mute">Escolha a nova forma. Vale a partir da próxima cobrança, e a cobrança em aberto também muda.</legend>
+      <label class="fp-op">
+        <input type="radio" name="forma" value="pix" />
+        <span class="fp-op-t">Pix</span>
+        <span class="small mute">QR Code ou copia e cola a cada mês. Confirma na hora.</span>
+      </label>
+      <label class="fp-op">
+        <input type="radio" name="forma" value="boleto" />
+        <span class="fp-op-t">Boleto</span>
+        <span class="small mute">Pago em qualquer banco. Confirma em até 3 dias úteis.</span>
+      </label>
+      <label class="fp-op is-off">
+        <input type="radio" name="forma" value="cartao" disabled />
+        <span class="fp-op-t">Cartão de crédito</span>
+        <span class="small mute">
+          Chega com a integração do Asaas. O número do cartão é digitado num campo seguro do Asaas e nunca passa pelo
+          nosso servidor: guardamos só os 4 últimos dígitos.
+        </span>
+      </label>
+    </fieldset>
+    <div class="acoes">
+      <button type="submit" class="btn-main" data-fp-salvar>Salvar a nova forma</button>
+      <button type="button" class="btn-alt" data-fp-cancelar>Cancelar</button>
+    </div>
+  </form>
+  <p class="small" data-fp-msg role="status"></p>
+</section>
+
+<style>
+  .fp {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .fp-topo {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+  }
+  .fp-t {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.375rem;
+  }
+  .fp-atual {
+    margin: 0;
+    display: inline-flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .fp-form {
+    width: 100%;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .fp-form fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .fp-form legend {
+    margin-bottom: var(--space-2);
+  }
+  .fp-op {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+  }
+  .fp-op input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--brand);
+    grid-row: span 2;
+  }
+  .fp-op:has(input:checked) {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 8%, transparent);
+  }
+  .fp-op.is-off {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  .fp-op-t {
+    font-weight: 600;
+  }
+  .fp p {
+    margin: 0;
+  }
+</style>
+
+<script>
+  import { aoCarregar, trocarForma, forma, $ } from '../scripts/portal';
+
+  document.querySelectorAll<HTMLElement>('[data-fp]').forEach((caixa) => {
+    const form = $<HTMLFormElement>('[data-fp-form]', caixa);
+    const abrir = $<HTMLButtonElement>('[data-fp-abrir]', caixa);
+    const msg = $('[data-fp-msg]', caixa);
+    let atual = '';
+
+    const fechar = () => {
+      form.hidden = true;
+      abrir.hidden = false;
+      abrir.setAttribute('aria-expanded', 'false');
+    };
+
+    aoCarregar((ctx) => {
+      const sub = ctx.sub;
+      // Só com assinatura em dia: pendente, cancelada ou reembolsada não troca forma.
+      caixa.hidden = !sub || ctx.estado !== 'ativo' || !!sub.cancelada || !!sub.reembolso;
+      if (!sub) return;
+      atual = sub.metodo;
+      $('[data-fp-atual]', caixa).textContent = forma(sub);
+      form.querySelectorAll<HTMLInputElement>('input[name="forma"]').forEach((r) => {
+        r.checked = r.value === atual;
+        // A forma atual não é escolhível de novo.
+        if (r.value !== 'cartao') r.disabled = r.value === atual;
+      });
+    });
+
+    abrir.addEventListener('click', () => {
+      form.hidden = false;
+      abrir.hidden = true;
+      abrir.setAttribute('aria-expanded', 'true');
+      msg.textContent = '';
+      form.querySelector<HTMLInputElement>('input[name="forma"]:not(:disabled)')?.focus();
+    });
+    $('[data-fp-cancelar]', caixa).addEventListener('click', () => {
+      fechar();
+      abrir.focus();
+    });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nova = (form.elements.namedItem('forma') as RadioNodeList).value;
+      if (nova !== 'pix' && nova !== 'boleto') {
+        msg.textContent = 'Escolha o Pix ou o boleto.';
+        return;
+      }
+      if (nova === atual) {
+        fechar();
+        return;
+      }
+      const botao = $<HTMLButtonElement>('[data-fp-salvar]', caixa);
+      botao.disabled = true;
+      botao.textContent = 'Salvando…';
+      const ok = await trocarForma(nova);
+      botao.disabled = false;
+      botao.textContent = 'Salvar a nova forma';
+      if (ok) {
+        fechar();
+        msg.textContent = `Pronto: a forma de pagamento agora é ${nova === 'pix' ? 'Pix' : 'boleto'}.`;
+        abrir.focus();
+      }
+    });
+  });
+</script>

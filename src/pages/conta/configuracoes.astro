@@ -6,6 +6,7 @@
  */
 import Portal from '../../layouts/Portal.astro';
 import Pending from '../../components/Pending.astro';
+import FormaPagamento from '../../components/FormaPagamento.astro';
 
 export const prerender = false;
 ---
@@ -92,6 +93,14 @@ export const prerender = false;
       </form>
       <p class="small" data-prefs-msg role="status"></p>
     </section>
+
+    <!-- Item 48: pagamento reforçado, com a troca da forma de pagamento. -->
+    <FormaPagamento titulo="Pagamento" id="pagamento" />
+    <ul class="seg-pag small mute" aria-label="Como protegemos o seu pagamento">
+      <li>O pagamento é processado pelo Asaas, instituição de pagamento autorizada pelo Banco Central.</li>
+      <li>Não guardamos o número do cartão: só os 4 últimos dígitos, para você reconhecer qual é.</li>
+      <li>Faturas, cancelamento e reembolso ficam em <a href="/conta/plano">Plano e pagamento</a>.</li>
+    </ul>
 
     <section class="pt-secao" aria-labelledby="nota-t" data-so-api>
       <h2 id="nota-t">Dados da nota fiscal</h2>
@@ -215,6 +224,19 @@ export const prerender = false;
       opacity: 0;
       transform: translateY(-4px);
     }
+  }
+  .seg-pag {
+    margin: calc(-1 * var(--space-2)) 0 var(--space-5);
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 4px;
+  }
+  /* Sem assinatura em dia, o bloco de pagamento some e a lista vai junto. */
+  :global([data-fp][hidden]) + .seg-pag {
+    display: none;
+  }
+  .seg-pag a {
+    color: var(--brand);
   }
   .aparelhos {
     list-style: none;
