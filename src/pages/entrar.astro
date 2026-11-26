@@ -543,7 +543,7 @@ const planData = JSON.stringify(
         const manter = $<HTMLInputElement>('[data-manter]').checked;
         const r = await api('/codigo', { codigo, manter });
         if (r.status === 410) return showCodeError('Esse código expirou. Peça outro abaixo.');
-        if (r.status === 429) return showCodeError('Muitas tentativas. Peça um código novo e tente de novo.');
+        if (r.status === 429) return showCodeError('Muitas tentativas com o código. Espere alguns minutos e peça um código novo.');
         if (r.status === 400) {
           const { tentativas_restantes: left } = await r.json().catch(() => ({}));
           return showCodeError(

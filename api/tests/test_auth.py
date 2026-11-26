@@ -316,3 +316,22 @@ def test_sessoes_marcam_tipo_e_mesmo_aparelho_e_sair_dos_outros(api, caixa):
     assert http.get("/auth/sessao").status_code == 200
     assert antigo.get("/auth/sessao").status_code == 401 and celular.get("/auth/sessao").status_code == 401
     assert [s["atual"] for s in http.get("/auth/sessoes").json()] == [True]
+
+
+def test_codigo_tem_teto_por_conta_somando_os_logins(api, caixa):
+    """Regressão ARES-SEC-002: cada login com a senha certa dava mais 5 chutes do código, sem teto. Agora, com 10
+    códigos errados em 15 minutos (somando todos os desafios), nem o código certo passa e não sai desafio novo."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    http.post("/auth/sair")
+    login = {"email": "ana@exemplo.test", "senha": "senha-forte-1"}
+    erros = []
+    for _ in range(3):  # três logins seguidos: 4 + 4 + 2 códigos errados = 10 no total
+        assert http.post("/auth/login", json=login).status_code == 202
+        for _ in range(4 if len(erros) < 8 else 2):
+            erros.append(http.post("/auth/codigo", json={"codigo": "000000" if caixa["ana@exemplo.test"] != "000000" else "111111"}).status_code)
+    assert erros == [400] * 10, erros
+    # O 11º chute (mesmo o código certo do desafio aberto) é recusado, e um login novo não abre outro desafio.
+    assert http.post("/auth/codigo", json={"codigo": caixa["ana@exemplo.test"]}).status_code == 429
+    r = http.post("/auth/login", json=login)
+    assert r.status_code == 429 and r.json()["codigo"] == "muitas_tentativas"

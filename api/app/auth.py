@@ -62,6 +62,7 @@ SESSAO_CURTA = 12 * 3600  # sem "manter conectado"
 ULTIMO_USO_PASSO = 60  # grava o último uso no máximo uma vez por minuto
 LOGIN_JANELA, LOGIN_MAX_FALHAS = 15 * 60, 10
 SENHA_ATUAL_MAX_FALHAS = 5  # ARES-SEC-018: senha atual errada na troca de senha/e-mail, por conta, na mesma janela
+CODIGO_MAX_FALHAS_CONTA = 10  # ARES-SEC-002: códigos errados por e-mail, somando todos os desafios, na mesma janela
 # Segurança (26/11/2026): o regex antigo, r"^[^@\s]+@[^@\s]+\.[^@\s]+$", voltava atrás em tempo quadrático num domínio
 # longo cheio de pontos (ReDoS) e, como o regex segura o GIL, travava a API inteira. Este não volta atrás: os pedaços do
 # domínio não contêm ponto, e o ponto é literal entre eles. Além disso, o e-mail passa por limite de tamanho antes.
@@ -301,6 +302,9 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             falhas[email].append(time.time())
             return _erro(401, "credenciais", "E-mail ou senha não conferem.")
         falhas.pop(email, None)
+        if limite_login(f"codigo:{email}", CODIGO_MAX_FALHAS_CONTA):
+            # ARES-SEC-002: conta com códigos errados demais na janela não ganha desafio novo (nem mais 5 chutes).
+            return _erro(429, "muitas_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
         return novo_desafio(req, resp, "login", email)
 
     def conferir(req: Request, d: dict | None, codigo: str) -> JSONResponse | None:
@@ -309,12 +313,19 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             return _erro(410, "expirado", "O código expirou. Peça outro.")
         if d["tentativas"] <= 0:
             return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
+        # ARES-SEC-002: além das 5 tentativas de cada desafio, um teto por e-mail somando todos os desafios; sem ele,
+        # cada login novo dava mais 5 chutes e o código de 6 dígitos caía por força bruta com a senha já descoberta.
+        conta = f"codigo:{d['email']}"
+        if limite_login(conta, CODIGO_MAX_FALHAS_CONTA):
+            return _erro(429, "sem_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
         if not hmac.compare_digest(_sha(codigo.strip()), d["codigo_hash"]):
+            falhas[conta].append(time.time())
             restantes = d["tentativas"] - 1
             banco(req).executar("UPDATE desafios SET tentativas=? WHERE token_hash=?", restantes, d["token_hash"])
             if restantes <= 0:
                 return _erro(429, "sem_tentativas", "Muitas tentativas. Peça um código novo.")
             return _erro(400, "codigo_errado", "Código incorreto.", tentativas_restantes=restantes)
+        falhas.pop(conta, None)
         return None
 
     @r.post("/codigo")
