@@ -7,8 +7,10 @@ interface Props {
   links?: { href: string; label: string }[];
   cta?: { href: string; label: string };
   signIn?: string;
+  /** Item 49: na página inicial o header não leva às outras páginas (elas abrem pelos links da própria página). */
+  semPaginas?: boolean;
 }
-const { links = [], cta, signIn } = Astro.props;
+const { links = [], cta, signIn, semPaginas = false } = Astro.props;
 
 // Item 23 da rodada de testes: o header principal é o mesmo em todas as páginas públicas.
 const globais = [
@@ -29,15 +31,17 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 <header class="nav" data-nav>
   <div class="wrap nav-inner">
     <Logo />
-    <nav class="nav-links" aria-label="Principal">
-      {
-        globais.map((l) => (
-          <a href={l.href} aria-current={ehAtual(l.href) ? 'page' : undefined}>
-            <span>{l.label}</span>
-          </a>
-        ))
-      }
-    </nav>
+    {
+      !semPaginas && (
+        <nav class="nav-links" aria-label="Principal">
+          {globais.map((l) => (
+            <a href={l.href} aria-current={ehAtual(l.href) ? 'page' : undefined}>
+              <span>{l.label}</span>
+            </a>
+          ))}
+        </nav>
+      )
+    }
     <div class="nav-actions" data-nav-actions data-auth={authEndpoint} data-billing={billingEndpoint}>
       {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
       {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}

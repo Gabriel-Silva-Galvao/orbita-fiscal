@@ -1006,13 +1006,19 @@ há outros. Testado com a conta Ouro e uma sessão de iPhone aberta por fora, no
 Em Conta e segurança, uma área de pagamento mais clara, com a forma atual e a opção de trocar. Junto com o item 43 (mesma troca,
 mesmo cuidado com o cartão).
 
-### 49. Inicial: header só com a barra que aparece ao rolar — A lapidar
+### 49. Inicial: header só com a barra que aparece ao rolar — Executado e testado (26/11/2026)
 
 Na página inicial, tirar do header os links para as outras páginas (Como funciona, O que cobre, Planos, Ajuda) e deixar só a barra
 de seções que aparece ao rolar; as outras páginas passam a ser abertas pelos links dentro da própria página. Junto com o caminho
 de diretório do item 42. A lapidar: se "Entrar" e "Assinar" continuam no header.
 
 **Decidido:** "Entrar" e "Assinar" continuam no header; saem só os links das páginas.
+
+**Feito:** o `Nav` ganhou a opção `semPaginas`, usada só na inicial: o header fica com a logo, "Entrar" e "Assinar" (ou o avatar),
+e ao rolar aparece a barra de seções (O que consulta, Para quem é, Com e sem a Órbita, Como funciona, Funciona com, Planos, Dúvidas).
+As outras páginas abrem pelos links da própria inicial: /bases ("Ver tudo o que a Órbita cobre"), /planos ("Ver a página dos
+planos"), /empresas ("Saiba mais sobre o plano Empresarial") e /ajuda (prévia da Ajuda e Dúvidas). Nas demais páginas o header
+continua com os links. O caminho de diretório (breadcrumb) fica com o item 42. Testado no desktop e a 375 px.
 
 ### 50. Documentação de cibersegurança — A lapidar
 
