@@ -11,7 +11,8 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   PUT  /auth/conta            {nome}                       -> 200 | 422
   DELETE /auth/conta                                       -> 204 | 409 assinatura_ativa (cancele antes)
   POST /auth/sair                                          -> 204
-  GET  /auth/sessoes                                       -> 200 [{id, aparelho, criada, ultimo_uso, atual}]
+  GET  /auth/sessoes                                       -> 200 [{id, aparelho, tipo, criada, ultimo_uso, atual, mesmo_aparelho}]
+  POST /auth/sair-dos-outros                               -> 204 (encerra todas as sessões menos esta)
   DELETE /auth/sessoes/{id}                                -> 204 (sai daquele aparelho) | 404
   POST /auth/sair-de-todos                                 -> 204 (encerra todas, inclusive esta)
   POST /auth/senha/trocar     {atual, nova}                -> 202 código enviado ao e-mail | 401 senha atual errada
@@ -112,11 +113,21 @@ def migrar(con) -> None:
 def aparelho(user_agent: str) -> str:
     """Nome curto do aparelho, para a lista de sessões: navegador e sistema."""
     ua = user_agent or ""
-    nav = next((n for k, n in (("Edg/", "Edge"), ("OPR/", "Opera"), ("Firefox/", "Firefox"), ("Chrome/", "Chrome"),
+    nav = next((n for k, n in (("Edg/", "Edge"), ("OPR/", "Opera"), ("Firefox/", "Firefox"), ("FxiOS/", "Firefox"), ("CriOS/", "Chrome"),
+                               ("Chrome/", "Chrome"),
                                ("Safari/", "Safari")) if k in ua), "Navegador")
     so = next((n for k, n in (("Windows", "Windows"), ("Android", "Android"), ("iPhone", "iPhone"), ("iPad", "iPad"),
                               ("Mac OS", "macOS"), ("Linux", "Linux")) if k in ua), "")
     return f"{nav} no {so}" if so else nav
+
+
+def tipo_aparelho(nome: str) -> str:
+    """Item 47: computador, celular ou tablet, a partir do nome curto (para o ícone da lista)."""
+    if "iPad" in nome:
+        return "tablet"
+    if "iPhone" in nome or "Android" in nome:
+        return "celular"
+    return "computador"
 
 
 def _sha(v: str) -> str:
@@ -430,7 +441,26 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             "SELECT id, aparelho, criada, ultimo_uso, manter FROM sessoes WHERE usuario_id=? AND expira>? ORDER BY ultimo_uso DESC",
             s["id"], time.time(),
         )
-        return [{**l, "manter": bool(l["manter"]), "atual": l["id"] == s["sessao_id"]} for l in linhas]
+        # Item 47: "mesmo_aparelho" marca outra sessão aberta no mesmo navegador e sistema desta (um login antigo aqui).
+        este = aparelho(req.headers.get("user-agent", ""))
+        return [
+            {
+                **l,
+                "manter": bool(l["manter"]),
+                "tipo": tipo_aparelho(l["aparelho"] or ""),
+                "atual": l["id"] == s["sessao_id"],
+                "mesmo_aparelho": l["id"] != s["sessao_id"] and (l["aparelho"] or "") == este,
+            }
+            for l in linhas
+        ]
+
+    @r.post("/sair-dos-outros", status_code=204)
+    def sair_dos_outros(req: Request, orbita_sessao: str | None = Cookie(None)):
+        s = sessao_valida(banco(req), orbita_sessao)
+        if not s:
+            return _erro(401, "sem_sessao", "Entre na sua conta.")
+        banco(req).executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
+        return Response(status_code=204)
 
     @r.delete("/sessoes/{sid}", status_code=204)
     def encerrar(sid: str, req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):

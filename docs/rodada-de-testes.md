@@ -989,10 +989,17 @@ duas colunas têm exatamente a mesma largura e a mesma altura (518 × 704 px a 1
 altura do formulário, com o mesmo respiro interno dele. Saiu também a linha "Prazo de resposta", seguindo o item 45. No celular,
 o formulário ocupa a largura menos as margens (327 px a 375 px), sem rolagem lateral.
 
-### 47. Sessões: mostrar "este aparelho" — A lapidar
+### 47. Sessões: mostrar "este aparelho" — Executado e testado (26/11/2026)
 
 Em Conta e segurança, a lista de aparelhos conectados deve indicar com clareza qual é o aparelho que a pessoa está usando agora
 (e, se possível, o navegador e o sistema de cada sessão).
+
+**Feito:** API: `GET /auth/sessoes` devolve também `tipo` (computador, celular, tablet) e `mesmo_aparelho` (outra sessão aberta no
+mesmo navegador e sistema desta, como um login antigo aqui); novo `POST /auth/sair-dos-outros` (encerra todas menos esta);
+o nome do aparelho reconhece Chrome e Firefox no iPhone. Teste novo em `api/tests/test_auth.py` (83 testes passando). Tela: o
+aparelho em uso vem num cartão próprio no topo, com ícone e o selo "Você está usando este"; abaixo, "Outros aparelhos" com ícone,
+"último uso há X" e o selo "Mesmo navegador que este" (borda tracejada); botão "Sair dos outros aparelhos" e o aviso quando não
+há outros. Testado com a conta Ouro e uma sessão de iPhone aberta por fora, no desktop e a 375 px.
 
 ### 48. Conta e segurança: pagamento reforçado e troca da forma de pagamento — A lapidar
 

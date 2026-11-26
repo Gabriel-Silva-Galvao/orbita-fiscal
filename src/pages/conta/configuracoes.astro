@@ -70,11 +70,17 @@ export const prerender = false;
 
     <section class="pt-secao" aria-labelledby="aparelhos-t" data-so-api>
       <h2 id="aparelhos-t">Aparelhos conectados</h2>
+      <!-- Item 47: o aparelho que você está usando vem num cartão próprio, separado dos outros. -->
+      <div class="ap-atual" data-ap-atual aria-live="polite"></div>
+      <h3 class="ap-sub" data-ap-outros-t hidden>Outros aparelhos</h3>
       <ul class="aparelhos" data-aparelhos aria-live="polite"></ul>
+      <p class="small mute" data-ap-vazio hidden>Nenhum outro aparelho está conectado à sua conta.</p>
       <div class="acoes">
+        <button type="button" class="btn-alt" data-sair-outros hidden>Sair dos outros aparelhos</button>
         <button type="button" class="btn-alt" data-sair-todos>Sair de todos os aparelhos</button>
         <button type="button" class="btn-alt" data-sair>Sair deste aparelho</button>
       </div>
+      <p class="small" data-ap-msg role="status"></p>
     </section>
 
     <section class="pt-secao" aria-labelledby="pref-t" data-so-api>
@@ -217,26 +223,84 @@ export const prerender = false;
     display: grid;
     gap: 6px;
   }
-  .aparelhos li {
-    display: flex;
-    flex-wrap: wrap;
+  .aparelhos :global(li),
+  .ap-atual:not(:empty) {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
   }
-  .aparelhos .ap-nome {
+  /* O aparelho em uso: borda da marca e fundo levemente tingido. */
+  .ap-atual:not(:empty) {
+    margin-bottom: var(--space-4);
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 8%, transparent);
+  }
+  .aparelhos :global(li.is-mesmo) {
+    border-style: dashed;
+  }
+  .ap-atual :global(.ap-icone),
+  .aparelhos :global(.ap-icone) {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--soft);
+    color: var(--brand);
+  }
+  .ap-atual :global(svg),
+  .aparelhos :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+  .ap-atual :global(.ap-info),
+  .aparelhos :global(.ap-info) {
+    min-width: 0;
+  }
+  .ap-atual :global(.ap-nome),
+  .aparelhos :global(.ap-nome) {
     font-weight: 600;
   }
-  .aparelhos .ap-este {
-    margin-left: 6px;
-    padding: 1px 8px;
+  .ap-atual :global(.ap-quando),
+  .aparelhos :global(.ap-quando) {
+    margin: 2px 0 0;
+  }
+  .ap-atual :global(.ap-este),
+  .aparelhos :global(.ap-tag) {
+    padding: 2px 10px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--brand) 18%, transparent);
-    color: var(--brand);
     font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .ap-atual :global(.ap-este) {
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+  }
+  .aparelhos :global(.ap-tag) {
+    margin-left: 8px;
+    border: 1px solid var(--line-strong);
+    color: var(--mute);
+  }
+  .ap-sub {
+    margin: 0 0 var(--space-2);
+    font: 600 0.875rem/1.4 var(--font-body);
+    color: var(--mute);
+  }
+  @media (max-width: 560px) {
+    .aparelhos :global(li),
+    .ap-atual:not(:empty) {
+      grid-template-columns: auto 1fr;
+    }
+    .aparelhos :global(li > button),
+    .ap-atual :global(.ap-este) {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
   }
   .prefs {
     display: grid;
@@ -389,53 +453,121 @@ export const prerender = false;
   // Aparelhos conectados
   const dataHora = (seg: number) =>
     new Date(seg * 1000).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  type Sessao = {
+    id: string;
+    aparelho: string;
+    tipo?: 'computador' | 'celular' | 'tablet';
+    criada: number;
+    ultimo_uso: number;
+    atual: boolean;
+    mesmo_aparelho?: boolean;
+  };
+  const ICONES: Record<string, string> = {
+    computador: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    celular: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+    tablet: '<rect x="4.5" y="2.5" width="15" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  };
+  const icone = (tipo = 'computador') => {
+    const span = document.createElement('span');
+    span.className = 'ap-icone';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[tipo] ?? ICONES.computador}</svg>`;
+    return span;
+  };
+  const haQuanto = (seg: number) => {
+    const min = Math.max(0, Math.round((Date.now() / 1000 - seg) / 60));
+    if (min < 2) return 'agora há pouco';
+    if (min < 60) return `há ${min} minutos`;
+    const h = Math.round(min / 60);
+    if (h < 24) return h === 1 ? 'há 1 hora' : `há ${h} horas`;
+    const d = Math.round(h / 24);
+    return d === 1 ? 'ontem' : d < 30 ? `há ${d} dias` : `em ${dataHora(seg).slice(0, 10)}`;
+  };
+  function linhaSessao(s: Sessao) {
+    const info = document.createElement('div');
+    info.className = 'ap-info';
+    const nome = document.createElement('span');
+    nome.className = 'ap-nome';
+    nome.textContent = s.aparelho || 'Navegador';
+    info.append(nome);
+    if (s.mesmo_aparelho) {
+      const tag = document.createElement('span');
+      tag.className = 'ap-tag';
+      tag.textContent = 'Mesmo navegador que este';
+      tag.title = 'Provavelmente um login antigo neste mesmo aparelho.';
+      info.append(tag);
+    }
+    const quando = document.createElement('p');
+    quando.className = 'small mute ap-quando';
+    quando.textContent = s.atual
+      ? `Conectado agora · entrou em ${dataHora(s.criada)}`
+      : `Último uso ${haQuanto(s.ultimo_uso || s.criada)} · entrou em ${dataHora(s.criada)}`;
+    info.append(quando);
+    return info;
+  }
   async function carregarAparelhos() {
     if (!billing) return;
     const lista = $('[data-aparelhos]');
     try {
       const r = await call(authEndpoint, '/sessoes');
       if (!r.ok) return;
-      const sessoes = (await r.json()) as { id: string; aparelho: string; criada: number; ultimo_uso: number; atual: boolean }[];
+      const sessoes = (await r.json()) as Sessao[];
+      const atual = sessoes.find((s) => s.atual);
+      const outros = sessoes.filter((s) => !s.atual);
+
+      const caixa = $('[data-ap-atual]');
+      caixa.replaceChildren();
+      if (atual) {
+        const selo = document.createElement('span');
+        selo.className = 'ap-este';
+        selo.textContent = 'Você está usando este';
+        caixa.append(icone(atual.tipo), linhaSessao(atual), selo);
+      }
+
+      const renderOutros = () => {
+        const restantes = lista.children.length;
+        $('[data-ap-outros-t]').hidden = restantes === 0;
+        lista.hidden = restantes === 0;
+        $('[data-ap-vazio]').hidden = restantes > 0;
+        $('[data-sair-outros]').hidden = restantes === 0;
+      };
       lista.replaceChildren(
-        ...sessoes.map((s) => {
+        ...outros.map((s) => {
           const li = document.createElement('li');
-          const info = document.createElement('div');
-          const nome = document.createElement('span');
-          nome.className = 'ap-nome';
-          nome.textContent = s.aparelho || 'Navegador';
-          info.append(nome);
-          if (s.atual) {
-            const este = document.createElement('span');
-            este.className = 'ap-este';
-            este.textContent = 'Este aparelho';
-            info.append(este);
-          }
-          const quando = document.createElement('p');
-          quando.className = 'small mute';
-          quando.style.margin = '0';
-          quando.textContent = `Último uso: ${dataHora(s.ultimo_uso || s.criada)} · entrou em ${dataHora(s.criada)}`;
-          info.append(quando);
-          li.append(info);
-          if (!s.atual) {
-            const b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'btn-alt';
-            b.textContent = 'Sair deste aparelho';
-            b.addEventListener('click', async () => {
-              b.disabled = true;
-              const r2 = await call(authEndpoint, `/sessoes/${s.id}`, 'DELETE').catch(() => null);
-              if (r2?.ok || r2?.status === 404) li.remove();
-              else b.disabled = false;
-            });
-            li.append(b);
-          }
+          if (s.mesmo_aparelho) li.classList.add('is-mesmo');
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn-alt';
+          b.textContent = 'Sair deste aparelho';
+          b.setAttribute('aria-label', `Sair do aparelho ${s.aparelho || 'Navegador'}`);
+          b.addEventListener('click', async () => {
+            b.disabled = true;
+            const r2 = await call(authEndpoint, `/sessoes/${s.id}`, 'DELETE').catch(() => null);
+            if (r2?.ok || r2?.status === 404) {
+              li.remove();
+              renderOutros();
+            } else b.disabled = false;
+          });
+          li.append(icone(s.tipo), linhaSessao(s), b);
           return li;
         }),
       );
+      renderOutros();
     } catch {
       /* lista fica vazia; os botões continuam funcionando */
     }
   }
+  $('[data-sair-outros]').addEventListener('click', async (e) => {
+    const b = e.currentTarget as HTMLButtonElement;
+    const msg = $('[data-ap-msg]');
+    b.disabled = true;
+    const r = await call(authEndpoint, '/sair-dos-outros', 'POST').catch(() => null);
+    b.disabled = false;
+    if (r?.ok) {
+      msg.textContent = 'Pronto: os outros aparelhos saíram da conta. Este continua conectado.';
+      carregarAparelhos();
+    } else msg.textContent = 'Não deu para sair dos outros aparelhos agora. Tente de novo.';
+  });
   $('[data-sair-todos]').addEventListener('click', async () => {
     await call(authEndpoint, '/sair-de-todos', 'POST').catch(() => null);
     try {

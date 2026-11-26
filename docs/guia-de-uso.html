@@ -201,6 +201,7 @@ td:first-child{font-weight:700;white-space:nowrap}
       <p>Próximos passos (Bloco I, itens 40 a 52): status do plugin no Portal, instalação pela loja de cada IA com vídeo, caminho de navegação, troca da forma de pagamento, alertas e resumo, ajustes no suporte e nas sessões, e a documentação de cibersegurança, do suporte com login de admin e da administração.</p>
       <p>Item 45: o Suporte do Portal mostra só o e-mail, o atendimento e o pedido de ajuda, igual para todos os planos; não há mais prazo de resposta nem suporte prioritário no Ouro.</p>
       <p>Item 46: o formulário "Fale com a equipe" da Ajuda não tem mais foto; texto e formulário têm a mesma largura e altura, com o texto centrado.</p>
+      <p>Item 47: em Conta e segurança, o aparelho que você está usando aparece num cartão próprio no topo ("Você está usando este"); os outros mostram o último uso, o login antigo no mesmo navegador vem marcado e há o botão "Sair dos outros aparelhos".</p>
       <p>Falta só a animação de explosão do átomo.</p>
       <p>O que falta fora do código está em tópicos no <a href="https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm">painel de progresso</a>.</p>
       <p>Ajuste: o cabeçalho fica sempre fixo no topo. Ele não se esconde mais ao rolar para baixo, então o botão "Ver planos" continua sempre à vista.</p>
@@ -373,6 +374,7 @@ const rotas=[
  {g:'Conta e login (7a)',v:'DELETE',p:'/auth/conta',d:'Exclui a conta, o login e as sessões. Dados de cobrança ficam pelo prazo legal.',body:'',r:[['204','Conta excluída'],['409','Assinatura ainda renova: cancele antes',1]]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/sair',d:'Encerra a sessão, também no servidor.',body:'',r:[['204','Sessão apagada']]},
  {g:'Conta e login (7a)',v:'GET',p:'/auth/sessoes',d:'Aparelhos conectados da conta, marcando o atual (item 1).',body:'',r:[['200','Lista com aparelho, criada, último uso e manter'],['401','Sem sessão']]},
+ {g:'Conta e login (7a)',v:'POST',p:'/auth/sair-dos-outros',d:'Encerra todas as sessões da conta, menos a deste aparelho (item 47).',body:'',r:[['204','Os outros aparelhos saíram'],['401','Sem sessão',1]]},
  {g:'Conta e login (7a)',v:'DELETE',p:'/auth/sessoes/{id}',d:'Sai de um aparelho. Só acha sessões da própria conta.',body:'',r:[['204','Sessão encerrada'],['404','Já encerrada ou de outra conta']]},
  {g:'Conta e login (7a)',v:'POST',p:'/auth/sair-de-todos',d:'Encerra todas as sessões da conta, inclusive esta.',body:'',r:[['204','Todas encerradas']]},
  {g:'Cobrança (7c, pela sessão)',v:'POST',p:'/billing/assinatura',d:'Cria a assinatura da conta logada: pro R$ 50,00 ou max R$ 75,90; cartão, Pix ou boleto (vence em 3 dias). O e-mail vem da conta.',body:'{"plano":"pro","forma":"pix","nome":"Ana Souza","cpf_cnpj":"52998224725"}',r:[['201','Assinatura criada, com Pix ou boleto da cobrança'],['400','Cartão recusado, com a mensagem do banco',1],['401','Sem sessão',1],['409','ja_assinante',1]]},

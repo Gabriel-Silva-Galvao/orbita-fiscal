@@ -289,3 +289,30 @@ def test_aparelho_pelo_user_agent():
     assert auth.aparelho("Mozilla/5.0 (Windows NT 10.0; Win64) AppleWebKit Chrome/130 Safari/537 Edg/130") == "Edge no Windows"
     assert auth.aparelho("Mozilla/5.0 (iPhone; CPU iPhone OS 18) AppleWebKit Version/18 Safari/604") == "Safari no iPhone"
     assert auth.aparelho("") == "Navegador"
+
+
+def test_sessoes_marcam_tipo_e_mesmo_aparelho_e_sair_dos_outros(api, caixa):
+    """Item 47: tipo do aparelho, login antigo no mesmo navegador e "sair dos outros aparelhos"."""
+    from fastapi.testclient import TestClient
+
+    http, _, _ = api
+    pc = "Mozilla/5.0 (Windows NT 10.0) Chrome/130"
+    http.headers["user-agent"] = pc
+    cadastrar(http, caixa)
+    antigo = TestClient(http.app)
+    entrar_em(antigo, caixa, ua=pc)
+    celular = TestClient(http.app)
+    entrar_em(celular, caixa, ua="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0) CriOS/130 Mobile Safari/604.1")
+    lista = http.get("/auth/sessoes").json()
+    assert len(lista) == 3
+    atual = next(s for s in lista if s["atual"])
+    assert atual["tipo"] == "computador" and atual["mesmo_aparelho"] is False
+    cel = next(s for s in lista if s["aparelho"] == "Chrome no iPhone")
+    assert cel["tipo"] == "celular" and cel["mesmo_aparelho"] is False
+    assert sum(s["mesmo_aparelho"] for s in lista) == 1  # o login antigo no mesmo Chrome no Windows
+
+    assert TestClient(http.app).post("/auth/sair-dos-outros").status_code == 401
+    assert http.post("/auth/sair-dos-outros").status_code == 204
+    assert http.get("/auth/sessao").status_code == 200
+    assert antigo.get("/auth/sessao").status_code == 401 and celular.get("/auth/sessao").status_code == 401
+    assert [s["atual"] for s in http.get("/auth/sessoes").json()] == [True]
