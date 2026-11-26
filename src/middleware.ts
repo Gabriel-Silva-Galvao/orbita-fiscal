@@ -14,7 +14,7 @@ import type { APIContext, MiddlewareNext } from 'astro';
 import { defineMiddleware } from 'astro:middleware';
 import { API_URL } from 'astro:env/server';
 
-const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar', '/upgrade'];
+const PROTEGIDAS = ['/conta', '/instalar', '/app', '/assinar', '/upgrade', '/boas-vindas'];
 
 const protegida = (path: string) => PROTEGIDAS.some((p) => path === p || path.startsWith(`${p}/`));
 

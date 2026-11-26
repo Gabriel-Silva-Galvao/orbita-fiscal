@@ -1,0 +1,445 @@
+---
+/**
+ * Boas-vindas depois da compra (item 3 da rodada de testes, 26/11/2026). Diferente do Início do Portal:
+ * o checkout aprovado traz a pessoa para cá uma vez, e o Início guarda o atalho "Rever a apresentação".
+ * 1. Abertura com o nome e a animação de "acesso liberado" (lugar da explosão do átomo, que é a última etapa).
+ * 2. O que o plano dá. 3. Três passos guiados, com progresso salvo neste navegador. 4. Uma resposta real.
+ * 5. Por que confiar (os três pontos que saíram da landing no item 22, garantia, bases, contato humano).
+ * 6. Saída para o painel. Avaliações (item 28): só reais e autorizadas; a faixa existe e fica escondida
+ *    enquanto a lista estiver vazia.
+ */
+import Focus from '../layouts/Focus.astro';
+import Icon from '../components/Icon.astro';
+import MiniAtomo from '../components/MiniAtomo.astro';
+import { API_URL } from 'astro:env/server';
+import { plans, comum, type PlanSlug } from '../data/plans';
+import { contact } from '../data/site';
+import topo from '../data/topo.json';
+
+export const prerender = false;
+
+const nome = (Astro.locals.usuario?.nome ?? '').split(' ')[0];
+
+// O plano vem da API, com o cookie da pessoa. Sem API (demonstração), mostra o Prata.
+let slug: PlanSlug = 'prata';
+if (API_URL) {
+  try {
+    const r = await fetch(new URL('/billing/plano', API_URL), {
+      headers: { cookie: Astro.request.headers.get('cookie') ?? '', accept: 'application/json' },
+      signal: AbortSignal.timeout(5000),
+    });
+    const d = r.ok ? await r.json() : null;
+    if (!d?.plano) return Astro.redirect('/#planos');
+    slug = d.plano;
+  } catch {
+    /* API fora do ar: a página abre com o plano padrão; o Portal mostra o estado real */
+  }
+}
+const plano = plans[slug];
+const ouro = slug === 'ouro';
+const EXTRAS_OURO = [
+  { icon: 'solar:bell-bing-linear', titulo: 'Alertas por tema', texto: 'Escolha os assuntos e receba o que mudou neles.', href: '/conta/alertas' },
+  { icon: 'solar:letter-linear', titulo: 'Resumo semanal por área', texto: 'Um e-mail por semana com o que importa na sua área.', href: '/conta/alertas' },
+  { icon: 'solar:rocket-2-linear', titulo: 'Acesso antecipado', texto: 'Você testa as novidades antes de todo mundo.', href: '/conta/novidades' },
+];
+
+const exemplo = topo[0];
+
+/** Item 28: preencher só com avaliações reais, aprovadas e com autorização registrada. */
+const avaliacoes: { nome: string; area: string; cidade: string; nota: number; texto: string; data: string }[] = [];
+---
+
+<Focus title="Boas-vindas · Órbita" description="Seu acesso à Órbita foi liberado.">
+  <div class="bv" data-bv>
+    <!-- 1. Abertura -->
+    <section class="wrap bv-abre" aria-labelledby="bv-t">
+      <div class="liberado" aria-hidden="true">
+        <span class="anel a1"></span><span class="anel a2"></span>
+        <span class="nucleo"><Icon name="solar:check-read-linear" size={34} /></span>
+      </div>
+      <p class="overline">Acesso liberado · plano {plano.name}</p>
+      <h1 id="bv-t" class="display-lg">Bem-vindo à Órbita{nome && `, ${nome}`}</h1>
+      <p class="lead">A base inteira já responde dentro do Claude. Falta só instalar o plugin: são três passos.</p>
+    </section>
+
+    <!-- 2. O que o plano dá -->
+    <section class="wrap bv-secao" aria-labelledby="plano-t">
+      <h2 id="plano-t" class="h3">O que o {plano.name} liberou</h2>
+      <ul class="cartoes">
+        {comum.map((i) => <li class="cartao"><Icon name="solar:check-circle-linear" size={20} /> {i.text}</li>)}
+      </ul>
+      {ouro ? (
+        <div class="extras">
+          <p class="small mute">E o que só o Ouro tem:</p>
+          <ul class="cartoes">
+            {EXTRAS_OURO.map((e) => (
+              <li class="cartao is-ouro">
+                <Icon name={e.icon} size={22} />
+                <div><strong>{e.titulo}</strong><p class="small mute">{e.texto}</p><a class="small" href={e.href}>Configurar</a></div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p class="small mute">Alertas por tema, resumo semanal e acesso antecipado fazem parte do <a href="/upgrade/ouro">Ouro</a>.</p>
+      )}
+    </section>
+
+    <!-- 3. Três passos -->
+    <section class="wrap bv-secao" aria-labelledby="passos-t">
+      <h2 id="passos-t" class="h3">Comece por aqui</h2>
+      <p class="small mute" data-bv-contagem>0 de 3 feitos</p>
+      <ol class="passos" data-bv-passos>
+        <li data-passo="instalar">
+          <span class="num">1</span>
+          <div><strong>Instalar o plugin no Claude</strong><p class="small mute">Baixe e adicione o plugin da Órbita.</p></div>
+          <a class="btn-alt" href="/instalar">Abrir o guia</a>
+          <label class="feito"><input type="checkbox" /> Feito</label>
+        </li>
+        <li data-passo="conectar">
+          <span class="num">2</span>
+          <div><strong>Conectar a sua conta</strong><p class="small mute">Assim o Claude sabe que você assina.</p></div>
+          <a class="btn-alt" href="/conta/plugin">Plugin e conexões</a>
+          <label class="feito"><input type="checkbox" /> Feito</label>
+        </li>
+        <li data-passo="perguntar">
+          <span class="num">3</span>
+          <div><strong>Fazer a primeira pergunta</strong><p class="small mute">Pergunte algo da sua rotina e confira as fontes.</p></div>
+          <a class="btn-alt" href="/instalar">Pergunta de teste</a>
+          <label class="feito"><input type="checkbox" /> Feito</label>
+        </li>
+      </ol>
+    </section>
+
+    <!-- 4. Uma resposta real -->
+    <section class="wrap bv-secao" aria-labelledby="resp-t">
+      <h2 id="resp-t" class="h3">É assim que a resposta chega</h2>
+      <figure class="resposta">
+        <p class="r-q"><span class="small mute">Pergunta no Claude</span>{exemplo.pergunta}</p>
+        <p class="r-quem"><MiniAtomo size={20} /> Claude com a Órbita</p>
+        <p class="r-txt">{exemplo.trecho}</p>
+        <ul class="r-fontes">{exemplo.fontes.map((f, i) => <li style={`--i:${i}`}>{f}</li>)}</ul>
+        <figcaption class="small mute">Resposta real ({exemplo.tribunal}). Cada fonte aparece no texto para você conferir.</figcaption>
+      </figure>
+    </section>
+
+    <!-- 5. Por que confiar -->
+    <section class="wrap bv-secao" aria-labelledby="confia-t">
+      <h2 id="confia-t" class="h3">Por que dá para confiar</h2>
+      <ul class="cartoes tres">
+        <li class="cartao"><Icon name="solar:document-text-linear" size={22} /><div><strong>A fonte para conferir</strong><p class="small mute">Toda resposta cita a lei ou o julgado de onde saiu.</p></div></li>
+        <li class="cartao"><Icon name="solar:pen-new-square-linear" size={22} /><div><strong>Rascunho, não sentença</strong><p class="small mute">A Órbita adianta a pesquisa; a decisão continua sua.</p></div></li>
+        <li class="cartao"><Icon name="solar:shield-user-linear" size={22} /><div><strong>Seus dados são seus</strong><p class="small mute">Não vendemos nem usamos suas perguntas para treinar modelos.</p></div></li>
+      </ul>
+      <p class="small mute garantia">
+        Não gostou? <a href="/reembolso">Reembolso integral em até 7 dias</a>. Veja <a href="/bases">as bases consultadas</a> ou fale com uma pessoa em <a href={`mailto:${contact.email}`}>{contact.email}</a>.
+      </p>
+    </section>
+
+    {avaliacoes.length > 0 && (
+      <section class="wrap bv-secao" aria-labelledby="aval-t">
+        <h2 id="aval-t" class="h3">O que dizem advogados, contadores e empresários que usam a Órbita</h2>
+        <ul class="cartoes tres">
+          {avaliacoes.slice(0, 3).map((a) => (
+            <li class="cartao aval">
+              <span aria-label={`Nota ${a.nota} de 5`}>{'★'.repeat(a.nota)}</span>
+              <p>{a.texto}</p>
+              <p class="small mute">{a.nome} · {a.area} · {a.cidade} · {a.data}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- 6. Saída -->
+    <section class="wrap bv-sai">
+      <a class="btn-main" href="/conta">Ir para o meu painel</a>
+      <p class="small mute">Esta apresentação fica no Início do painel, em "Rever a apresentação".</p>
+    </section>
+  </div>
+</Focus>
+
+<script>
+  const CHAVE = 'orbita:boas-vindas';
+  const lista = document.querySelectorAll<HTMLLIElement>('[data-bv-passos] li');
+  let feitos: string[] = [];
+  try {
+    feitos = JSON.parse(localStorage.getItem(CHAVE) ?? '[]');
+  } catch {}
+  const atualizar = () => {
+    lista.forEach((li) => li.classList.toggle('is-feito', feitos.includes(li.dataset.passo!)));
+    document.querySelector('[data-bv-contagem]')!.textContent = `${feitos.length} de 3 feitos`;
+    try {
+      localStorage.setItem(CHAVE, JSON.stringify(feitos));
+    } catch {}
+  };
+  lista.forEach((li) => {
+    const c = li.querySelector('input')!;
+    c.checked = feitos.includes(li.dataset.passo!);
+    c.addEventListener('change', () => {
+      feitos = c.checked ? [...new Set([...feitos, li.dataset.passo!])] : feitos.filter((p) => p !== li.dataset.passo);
+      atualizar();
+    });
+  });
+  atualizar();
+
+  // Seções entram ao aparecer na tela.
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add('is-visivel'), io.unobserve(e.target))), {
+    threshold: 0.15,
+  });
+  document.querySelectorAll('.bv-secao').forEach((s) => io.observe(s));
+</script>
+
+<style>
+  .bv {
+    padding-bottom: var(--space-8, 64px);
+  }
+  .bv-abre {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--space-3);
+    padding-block: var(--space-7, 48px) var(--space-5);
+  }
+  .bv-abre .lead {
+    max-width: 52ch;
+  }
+  /* "Acesso liberado": anéis que se abrem em volta do núcleo. A explosão do átomo entra aqui no fim do projeto. */
+  .liberado {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: grid;
+    place-items: center;
+  }
+  .anel {
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--brand);
+    border-radius: 50%;
+    opacity: 0;
+    animation: bv-anel 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  .a2 {
+    animation-delay: 0.25s;
+  }
+  .nucleo {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--on-brand);
+    animation: bv-nucleo 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  }
+  @keyframes bv-anel {
+    0% {
+      transform: scale(0.5);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+  @keyframes bv-nucleo {
+    from {
+      transform: scale(0.3);
+      opacity: 0;
+    }
+  }
+  .bv-abre > :not(.liberado) {
+    animation: bv-sobe 0.6s ease-out both;
+    animation-delay: 0.35s;
+  }
+  @keyframes bv-sobe {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  .bv-secao {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+  .bv-secao.is-visivel {
+    opacity: 1;
+    transform: none;
+  }
+  .cartoes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+  }
+  .cartao {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .cartao p {
+    margin: 4px 0;
+  }
+  .cartao :global(svg) {
+    flex: none;
+    color: var(--brand);
+  }
+  .cartao.is-ouro {
+    border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  }
+  .aval {
+    flex-direction: column;
+  }
+  .extras {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .passos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .passos li {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .passos p {
+    margin: 2px 0 0;
+  }
+  .num {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong, var(--line));
+    font-weight: 700;
+    transition: background 0.3s, color 0.3s;
+  }
+  .passos li.is-feito {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 6%, transparent);
+  }
+  .passos li.is-feito .num {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+  }
+  .feito {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+  .feito input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand);
+  }
+
+  .resposta {
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .r-q {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .r-quem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: var(--space-2) 0 0;
+    font-size: 0.875rem;
+  }
+  .r-txt {
+    margin: 0;
+  }
+  .r-fontes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .r-fontes li {
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 0.8125rem;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    transition-delay: calc(0.4s + var(--i) * 0.15s);
+  }
+  .is-visivel .r-fontes li {
+    opacity: 1;
+    transform: none;
+  }
+  .garantia {
+    margin: 0;
+  }
+  .bv-sai {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-6, 40px);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .passos li {
+      grid-template-columns: auto 1fr;
+    }
+    .passos li > .btn-alt,
+    .passos li > .feito {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .anel,
+    .nucleo,
+    .bv-abre > *,
+    .bv-secao,
+    .r-fontes li {
+      animation: none !important;
+      transition: none !important;
+      opacity: 1;
+      transform: none;
+    }
+    .anel {
+      opacity: 0;
+    }
+  }
+</style>

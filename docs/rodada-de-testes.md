@@ -626,7 +626,9 @@ comparação, alto) → 29 (Sandbox, quando a conta existir) → 28 (avaliaçõe
 
 ## Bloco C: plataforma do assinante
 
-### 3. Página de boas-vindas depois da compra — Fechado na teoria (25/11/2026)
+### 3. Página de boas-vindas depois da compra — Fechado na teoria (25/11/2026) · Executado (26/11/2026)
+
+**Feito.** Página `/boas-vindas` (rota protegida; sem plano vai para `/#planos`). O pagamento aprovado no checkout leva a ela pelo botão "Continuar", e o Início do Portal ganhou o atalho "Rever a apresentação". Ela tem, na ordem: a abertura com o nome e a animação de "acesso liberado" (onde entra a explosão do átomo no fim do projeto); o que o plano liberou, com os três extras e o atalho "Configurar" no Ouro e uma linha discreta sobre o Ouro nos outros planos; os três passos com progresso salvo no navegador; uma resposta real do `topo.json` com as fontes aparecendo uma a uma; os três pontos de confiança, a garantia de 7 dias, as bases e o contato. A faixa de avaliações (item 28) já está no código, mas fica escondida enquanto não houver avaliações reais autorizadas. **Testado** com conta Ouro local, no computador e no celular (375 px, sem rolagem lateral).
 
 **Pedido.** Página receptiva depois da compra, com animações como as da landing, apresentando o produto, o que a
 compra liberou e por que confiar.
