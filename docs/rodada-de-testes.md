@@ -479,7 +479,17 @@ assinatura, cartão de teste, Pix e boleto, estorno e webhooks, sem dinheiro de 
 **Teste.** Assinatura nas três formas pelo Sandbox, webhook chegando pelo túnel, acesso liberado, cancelamento e
 reembolso refletidos no painel do Asaas.
 
-### 30. FAQ: bug no clique do "+" e animação suave — Diagnosticado (25/11/2026)
+### 30. FAQ: bug no clique do "+" e animação suave — Executado e testado (26/11/2026)
+
+**Feito.** `src/components/Faq.astro` refeito: estado próprio aplicado no clique (`data-estado` e `aria-expanded`),
+"+" desenhado com duas barras que vira "−" num círculo cheio junto com o conteúdo; altura animada só em CSS (grade de
+0fr a 1fr, 300 ms, mesma curva para abrir e fechar) com o texto entrando com fade e leve deslize; clique no meio da
+animação ignorado; compensação da rolagem quando a pergunta que fecha está acima; resposta fechada sem foco de teclado
+(`inert`); sem JavaScript, volta a ser `<details>` comum; movimento reduzido sem animação. A resposta "O que a base
+cobre?" passou a apontar para `/bases`.
+**Testes.** Estado inicial (primeira aberta), abrir outra fecha a anterior, clique rápido ignorado, fechar, altura 0 na
+fechada, teclado; no celular, a pergunta clicada não sai do lugar (0 px) e sem rolagem lateral. **Não visto na tela:**
+a fluidez da animação (o painel de teste estava oculto).
 
 **O que acontece hoje** (`src/components/Faq.astro`):
 - Ao fechar, o "+" só gira de volta **depois** que a animação de fechar termina (o `open` do `<details>` só sai no fim):

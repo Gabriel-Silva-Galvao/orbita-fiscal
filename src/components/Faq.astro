@@ -1,5 +1,15 @@
 ---
-/** Perguntas em <details>, uma aberta por vez; a primeira começa aberta. Abre e fecha deslizando. */
+/**
+ * Perguntas frequentes: uma aberta por vez; a primeira começa aberta.
+ * Item 30 da rodada de testes (26/11/2026): refeito para tirar o bug do "+" e deixar abrir e fechar suaves.
+ * - Sem JavaScript: <details> comum, que abre e fecha na hora.
+ * - Com JavaScript: os <details> ficam sempre abertos por baixo e o estado é nosso (data-estado no <details> e
+ *   aria-expanded no <summary>), aplicado NO CLIQUE: o "+" gira junto com o conteúdo, nunca depois.
+ * - A altura anima só em CSS (grade de 0fr para 1fr), com a mesma curva e duração para abrir e fechar.
+ * - Clique durante a animação é ignorado; quando a pergunta que fecha está acima, a página compensa a rolagem
+ *   para a pergunta clicada não sair do lugar.
+ * - Movimento reduzido: abre e fecha sem animação.
+ */
 interface Props {
   name?: string;
 }
@@ -12,6 +22,8 @@ const { name = 'faq' } = Astro.props;
 
 <style>
   .faq {
+    --faq-dur: 300ms;
+    --faq-ease: cubic-bezier(0.22, 1, 0.36, 1);
     border-top: 1px solid var(--line);
   }
   .faq :global(details) {
@@ -29,43 +41,50 @@ const { name = 'faq' } = Astro.props;
     font-weight: 500;
     cursor: pointer;
     list-style: none;
-    transition: color 280ms ease-out;
+    transition: color 200ms ease-out;
+    -webkit-tap-highlight-color: transparent;
   }
   .faq :global(summary:hover) {
     color: var(--brand);
   }
+  .faq :global(summary:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
   .faq :global(summary::-webkit-details-marker) {
     display: none;
   }
+  /* O "+" é desenhado com duas barras: a vertical some ao abrir e vira "−", sem girar o glifo. */
   .faq :global(summary::after) {
-    content: '+';
+    content: '';
     flex: none;
-    display: grid;
-    place-items: center;
     width: 32px;
     height: 32px;
     border-radius: var(--radius-round);
     border: 1px solid var(--line-strong);
-    font-family: var(--font-body);
-    font-size: 20px;
-    line-height: 1;
-    font-weight: 400;
-    color: var(--brand);
+    background:
+      linear-gradient(var(--brand), var(--brand)) center / 12px 2px no-repeat,
+      linear-gradient(var(--brand), var(--brand)) center / 2px 12px no-repeat;
     transition:
-      transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1),
-      background-color 300ms ease-out,
-      color 300ms ease-out;
+      background-size var(--faq-dur) var(--faq-ease),
+      background-color var(--faq-dur) var(--faq-ease),
+      border-color var(--faq-dur) var(--faq-ease),
+      transform var(--faq-dur) var(--faq-ease);
   }
-  .faq :global(details[open] summary::after) {
-    transform: rotate(135deg);
-    background: var(--brand);
-    color: var(--on-brand);
+  /* Aberta: sem JS, pelo atributo open; com JS, pelo nosso estado. */
+  :global(html:not(.js)) .faq :global(details[open] summary::after),
+  .faq :global(details[data-estado='aberto'] summary::after) {
+    transform: rotate(180deg);
+    background:
+      linear-gradient(var(--on-brand), var(--on-brand)) center / 12px 2px no-repeat,
+      linear-gradient(var(--on-brand), var(--on-brand)) center / 2px 0 no-repeat;
+    background-color: var(--brand);
     border-color: var(--brand);
   }
-  .faq :global(.faq-a) {
-    overflow: hidden;
-  }
+
   .faq :global(.faq-a p) {
+    margin: 0;
     padding: 0 0 22px;
     max-width: 720px;
     font: var(--text-body);
@@ -76,44 +95,95 @@ const { name = 'faq' } = Astro.props;
   .faq :global(.faq-a a) {
     color: var(--brand);
   }
+
+  /* Com JS: a resposta é uma grade que vai de 0fr a 1fr; o conteúdo entra com fade e um leve deslize. */
+  .faq :global(details[data-estado] .faq-a) {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--faq-dur) var(--faq-ease);
+  }
+  .faq :global(details[data-estado] .faq-a > .faq-dentro) {
+    min-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity calc(var(--faq-dur) * 0.7) var(--faq-ease),
+      transform var(--faq-dur) var(--faq-ease);
+  }
+  .faq :global(details[data-estado='aberto'] .faq-a) {
+    grid-template-rows: 1fr;
+  }
+  .faq :global(details[data-estado='aberto'] .faq-a > .faq-dentro) {
+    opacity: 1;
+    transform: none;
+    transition-delay: 60ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq {
+      --faq-dur: 0ms;
+    }
+  }
 </style>
 
 <script>
-  // Uma pergunta aberta por vez, com altura animada (sem animação se a pessoa pediu movimento reduzido).
-  const animate = document.documentElement.classList.contains('anim');
-  const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)';
-
-  const close = (d: HTMLDetailsElement) => {
-    const body = d.querySelector<HTMLElement>('.faq-a');
-    if (!animate || !body) return void (d.open = false);
-    const h = body.offsetHeight;
-    body.animate([{ height: `${h}px`, opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 220, easing: EASE }).onfinish =
-      () => (d.open = false);
-  };
-  const open = (d: HTMLDetailsElement) => {
-    d.open = true;
-    const body = d.querySelector<HTMLElement>('.faq-a');
-    if (!animate || !body) return;
-    const h = body.offsetHeight;
-    body.animate(
-      [
-        { height: '0px', opacity: 0 },
-        { height: `${h}px`, opacity: 1 },
-      ],
-      { duration: 300, easing: EASE },
-    );
-  };
+  const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll<HTMLElement>('[data-faq]').forEach((root) => {
-    const items = Array.from(root.querySelectorAll<HTMLDetailsElement>('details'));
-    items.forEach((d) => {
-      d.querySelector('summary')?.addEventListener('click', (e) => {
+    const itens = Array.from(root.querySelectorAll<HTMLDetailsElement>(':scope > details'));
+    const dur = () => (reduzido() ? 0 : 300);
+    let ocupado = false;
+
+    // Prepara cada pergunta: conteúdo dentro de um invólucro (para a grade animar) e o estado inicial.
+    itens.forEach((d) => {
+      const corpo = d.querySelector<HTMLElement>('.faq-a');
+      const sum = d.querySelector<HTMLElement>('summary');
+      if (!corpo || !sum) return;
+      const dentro = document.createElement('div');
+      dentro.className = 'faq-dentro';
+      dentro.append(...Array.from(corpo.childNodes));
+      corpo.append(dentro);
+      const aberto = d.open;
+      d.dataset.estado = aberto ? 'aberto' : 'fechado';
+      d.open = true; // por baixo, sempre aberto: quem mostra ou esconde é a grade
+      sum.setAttribute('aria-expanded', String(aberto));
+      corpo.id ||= `${root.dataset.faq}-r${itens.indexOf(d)}`;
+      sum.setAttribute('aria-controls', corpo.id);
+      dentro.inert = !aberto; // links da resposta fechada não recebem o foco
+    });
+
+    const definir = (d: HTMLDetailsElement, aberto: boolean) => {
+      d.dataset.estado = aberto ? 'aberto' : 'fechado';
+      d.querySelector('summary')!.setAttribute('aria-expanded', String(aberto));
+      const dentro = d.querySelector<HTMLElement>('.faq-dentro');
+      if (dentro) dentro.inert = !aberto;
+    };
+
+    itens.forEach((d) => {
+      const sum = d.querySelector<HTMLElement>('summary');
+      sum?.addEventListener('click', (e) => {
         e.preventDefault();
-        if (d.open) close(d);
-        else {
-          items.forEach((o) => o !== d && o.open && close(o));
-          open(d);
-        }
+        if (ocupado) return; // clique no meio da animação: ignora
+        const abrindo = d.dataset.estado !== 'aberto';
+        const outra = abrindo ? itens.find((o) => o !== d && o.dataset.estado === 'aberto') : undefined;
+        // A pergunta clicada não pode "fugir" quando uma aberta acima dela fecha.
+        const compensar = !!outra && outra.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING;
+        const topoAntes = sum.getBoundingClientRect().top;
+
+        ocupado = true;
+        if (outra) definir(outra, false);
+        definir(d, abrindo);
+
+        const fim = performance.now() + dur() + 40;
+        const seguir = () => {
+          if (compensar) {
+            const desvio = sum.getBoundingClientRect().top - topoAntes;
+            if (Math.abs(desvio) > 0.5) window.scrollBy({ top: desvio, behavior: 'instant' as ScrollBehavior });
+          }
+          if (performance.now() < fim) requestAnimationFrame(seguir);
+        };
+        if (compensar) requestAnimationFrame(seguir);
+        window.setTimeout(() => (ocupado = false), dur() + 40);
       });
     });
   });
