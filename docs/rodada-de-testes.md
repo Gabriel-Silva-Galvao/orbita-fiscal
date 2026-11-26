@@ -865,12 +865,17 @@ saem do painel da pesquisa?
 
 ## Bloco H: pedidos de 26/11/2026 — A lapidar
 
-### 34. Planos empresariais no estilo Claude e ChatGPT — A lapidar
+### 34. Planos empresariais no estilo Claude e ChatGPT — Executado e testado (26/11/2026)
 
 Trocar a área de planos empresariais por um card no mesmo formato dos outros planos (como Claude e ChatGPT oferecem o plano Team/Enterprise),
 sem preço, com o botão "Entre em contato para mais informações" bem destacado.
 
 **Decidido:** faixa larga e destacada logo abaixo dos três planos (como o Claude faz com Team/Enterprise).
+
+**Feito:** `EmpresasFaixa.astro` virou o card "Empresarial", na mesma família dos cards dos planos (branco, borda verde e sombra
+do plano em destaque), em três colunas no desktop: nome e frase, vantagens, e "Preço sob consulta" com o botão verde "Entre em
+contato para mais informações" (abre o contato animado). Na página inicial ele subiu para logo abaixo dos três planos, antes da
+comparação. Testado a 1366 px, 800 px e 375 px (sem rolagem lateral), na inicial e em /empresas.
 
 ### 35. Botões de ajuda que não funcionam direito — Executado e testado (26/11/2026)
 
