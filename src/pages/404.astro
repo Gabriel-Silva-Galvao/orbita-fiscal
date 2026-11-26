@@ -5,28 +5,42 @@
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import Button from '../components/Button.astro';
 ---
 
 <Base title="Página não encontrada · Órbita" description="O endereço que você abriu não existe na Órbita." noindex>
+  <div class="page-sheet nf-sheet">
   <Nav
     signIn="/entrar"
     cta={{ href: '/#planos', label: 'Assinar' }}
   />
-  <main id="conteudo" class="section">
+  <main id="conteudo" class="section nf-main">
     <div class="wrap nf">
       <p class="overline">Erro 404</p>
       <h1 class="display-lg">Esta página não existe</h1>
       <p class="lead">O endereço pode ter mudado ou ter sido digitado com algum erro.</p>
       <div class="row">
-        <a class="btn-main" href="/">Ir para o início</a>
-        <a class="btn-alt" href="/ajuda">Ver a Ajuda</a>
+        <Button href="/">Ir para o início</Button>
+        <Button href="/ajuda" variant="secondary">Ver a Ajuda</Button>
       </div>
     </div>
   </main>
+  </div>
   <Footer />
 </Base>
 
 <style>
+  /* Item 36: a folha ocupa pelo menos a tela toda, então o rodapé só aparece embaixo, depois do conteúdo. */
+  .nf-sheet {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  .nf-main {
+    flex: 1;
+    display: grid;
+    align-items: center;
+  }
   .nf {
     display: grid;
     gap: var(--space-4);

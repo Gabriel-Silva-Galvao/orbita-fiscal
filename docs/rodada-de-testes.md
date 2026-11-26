@@ -863,6 +863,43 @@ saem do painel da pesquisa?
 
 ---
 
+## Bloco H: pedidos de 26/11/2026 — A lapidar
+
+### 34. Planos empresariais no estilo Claude e ChatGPT — A lapidar
+
+Trocar a área de planos empresariais por um card no mesmo formato dos outros planos (como Claude e ChatGPT oferecem o plano Team/Enterprise),
+sem preço, com o botão "Entre em contato para mais informações" bem destacado.
+
+**Decidido:** faixa larga e destacada logo abaixo dos três planos (como o Claude faz com Team/Enterprise).
+
+### 35. Botões de ajuda que não funcionam direito — A lapidar
+
+Conferir os dois botões de ajuda quando clicados. Na prévia da Ajuda da página inicial, "Ver a Ajuda" e "Escrever para a equipe" recebem
+o clique (conferido em 26/11/2026); **Decidido:** são esses dois da prévia da página inicial; conferir o que acontece depois do clique (rolagem até o formulário, âncora #contato).
+
+### 36. 404 com o rodapé invadindo o conteúdo — Executado e testado (26/11/2026)
+
+O rodapé sobe por cima do conteúdo da 404. Deixar o rodapé sempre embaixo da página (colado no fim da tela quando o conteúdo é curto).
+
+**Feito:** a 404 não tinha a folha `.page-sheet` que cobre o rodapé fixo. Agora tem, com altura mínima de uma tela e o texto centrado
+na vertical; o rodapé só aparece rolando até o fim. Os dois botões passaram a usar o componente `Button`. Testado no desktop e a 375 px.
+
+### 37. Revisão de segurança da assinatura com o Asaas — A lapidar
+
+Quando a assinatura estiver ligada ao Asaas (item 29), rodar o security-review em tudo o que envolve cobrança e conferir, principalmente,
+se a mesma pessoa consegue assinar mais de uma vez (cliques repetidos, duas abas, duas compras ao mesmo tempo, webhook repetido).
+
+### 38. Página própria dos planos — A lapidar
+
+Página nova só para os planos, com foco total no design e na comparação entre Bronze, Prata, Ouro e Empresarial, e um botão ou mini seção
+na página inicial que leva até ela.
+
+### 39. Página inicial sem o exemplo e com o texto centralizado — A lapidar
+
+Tirar o exemplo da página inicial para não repetir, centralizar o texto e testar algumas versões de design para escolher a melhor.
+
+**Decidido:** montar só a versão com o texto centralizado.
+
 ## Ordem proposta de execução
 
 1. ~~Bloco A~~ feito: 1 e 10, 2, 4, 6, 14, 15, 19, 21 a 24.
@@ -874,4 +911,5 @@ saem do painel da pesquisa?
 6. **Bloco F**: 30 → 31 → 32 → 33 → 29 (com a conta Sandbox do Asaas) → 28 (com a boas-vindas).
    **Bloco G** (ideias da revisão do Portal): conforme o que for decidido.
 7. Riscos altos de segurança (S3 a S5) antes de publicar.
-8. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
+8. **Bloco H**: 36 → 35 → 34 → 38 → 39; o 37 depois do 29.
+9. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.
