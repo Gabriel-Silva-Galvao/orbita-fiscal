@@ -8,6 +8,7 @@
  */
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
+import Caminho from '../components/Caminho.astro';
 import Footer from '../components/Footer.astro';
 import Button from '../components/Button.astro';
 import cobertura from '../data/cobertura.json';
@@ -57,10 +58,11 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
         { href: '#todas', label: 'Todas as bases' },
       ]}
       signIn="/entrar"
-      cta={{ href: '/#planos', label: 'Assinar' }}
+      cta={{ href: '/planos', label: 'Assinar' }}
     />
 
     <main id="conteudo">
+      <div class="wrap caminho-topo"><Caminho itens={[{ label: 'Órbita', href: '/' }, { label: 'O que a Órbita cobre' }]} /></div>
       <!-- Topo de venda: os totais -->
       <section class="section cb-top" aria-labelledby="cb-title">
         <div class="wrap">
@@ -78,7 +80,7 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
             <li><strong data-count={ufsCobertas.size}>{ufsCobertas.size}</strong><span>estados com base própria</span></li>
           </ul>
           <div class="cb-actions">
-            <Button href="/#planos">Assinar a partir de {aPartirDe}/mês</Button>
+            <Button href="/planos">Assinar a partir de {aPartirDe}/mês</Button>
             <Button href="#todas" variant="secondary">Ver todas as bases</Button>
           </div>
         </div>
@@ -233,7 +235,7 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
           <h2 class="display-lg">Tudo isso dentro do Claude, a partir de {aPartirDe}/mês</h2>
           <p class="lead">Reembolso integral em até 7 dias. Cancele quando quiser.</p>
           <div class="cb-actions">
-            <Button href="/#planos">Ver os três planos</Button>
+            <Button href="/planos">Ver os três planos</Button>
             <Button href="/empresas" variant="secondary">Planos empresariais</Button>
           </div>
           <p class="small mute">

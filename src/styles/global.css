@@ -466,3 +466,15 @@ header.nav {
     animation: none;
   }
 }
+
+/* Item 42: caminho de diretório no topo das páginas. */
+.caminho-topo {
+  padding-top: var(--space-5);
+}
+.focus-caminho {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-2);
+}
+.pt-caminho {
+  margin-bottom: var(--space-4);
+}

@@ -6,6 +6,7 @@
  */
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
+import Caminho from '../components/Caminho.astro';
 import PlanCard from '../components/PlanCard.astro';
 import EmpresasFaixa from '../components/EmpresasFaixa.astro';
 import ComparePlanos from '../components/ComparePlanos.astro';
@@ -38,6 +39,7 @@ const ritmos = [
       ]}
     />
     <main id="conteudo">
+      <div class="wrap caminho-topo"><Caminho itens={[{ label: 'Órbita', href: '/' }, { label: 'Planos e preços' }]} /></div>
       <section class="section pl-topo">
         <div class="wrap pl-topo-in" data-reveal>
           <p class="overline">Planos e preços</p>

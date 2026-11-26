@@ -29,7 +29,7 @@ const planData = JSON.stringify(
 );
 ---
 
-<Focus title="Entrar · Órbita" description="Entre ou crie sua conta na Órbita com e-mail e senha, com verificação em duas etapas.">
+<Focus caminho={[{ label: 'Órbita', href: '/' }, { label: 'Entrar' }]} title="Entrar · Órbita" description="Entre ou crie sua conta na Órbita com e-mail e senha, com verificação em duas etapas.">
   <div class="wrap auth" data-auth data-endpoint={endpoint} data-plans={planData}>
     <div class="auth-card">
       <p class="plan-band" data-plan-band hidden>

@@ -8,6 +8,7 @@ import Base from './Base.astro';
 import Logo from '../components/Logo.astro';
 import Pending from '../components/Pending.astro';
 import { company } from '../data/site';
+import Caminho, { type Passo } from '../components/Caminho.astro';
 
 const year = new Date().getFullYear();
 import '../styles/forms.css';
@@ -15,8 +16,10 @@ import '../styles/forms.css';
 interface Props {
   title: string;
   description: string;
+  /** Item 42: caminho de diretório, logo abaixo do topo. */
+  caminho?: Passo[];
 }
-const { title, description } = Astro.props;
+const { title, description, caminho } = Astro.props;
 ---
 
 <Base title={title} description={description} noindex>
@@ -28,6 +31,7 @@ const { title, description } = Astro.props;
     </div>
   </header>
   <main id="conteudo" class="focus">
+    {caminho && <div class="wrap focus-caminho"><Caminho itens={caminho} /></div>}
     <slot />
   </main>
   <footer class="focus-foot">

@@ -28,7 +28,7 @@ const ganhos = planList
 const diferenca = atual ? novo.cents - atual.cents : novo.cents;
 ---
 
-<Focus title={`Upgrade para o ${novo.name} · Órbita`} description={`Troque para o plano ${novo.name} da Órbita.`}>
+<Focus caminho={[{ label: 'Órbita', href: '/' }, { label: 'Minha conta', href: '/conta' }, { label: 'Plano e pagamento', href: '/conta/plano' }, { label: `Upgrade para o ${novo.name}` }]} title={`Upgrade para o ${novo.name} · Órbita`} description={`Troque para o plano ${novo.name} da Órbita.`}>
   <div class="wrap up" data-up data-billing={billing} data-alvo={alvo}>
     <p class="overline">Upgrade de plano</p>
     <h1 class="display-md">{atual ? `Do ${atual.name} para o ${novo.name}` : `Assinar o ${novo.name}`}</h1>

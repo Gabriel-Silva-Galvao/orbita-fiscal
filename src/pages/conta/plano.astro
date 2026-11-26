@@ -37,7 +37,7 @@ const upgrades = JSON.stringify(
       </div>
     </div>
     <p class="small mute">Depois do pagamento, o acesso é liberado assim que o banco confirmar: na hora no Pix, em até 3 dias úteis no boleto.</p>
-    <a class="btn-alt" data-pend-checkout href="/#planos">Ir para o pagamento</a>
+    <a class="btn-alt" data-pend-checkout href="/planos">Ir para o pagamento</a>
   </section>
 
   <section class="cartao is-marca" data-ativo aria-labelledby="atual-t">
@@ -54,7 +54,7 @@ const upgrades = JSON.stringify(
   <section class="cartao is-marca" data-upgrade data-upgrades={upgrades} hidden aria-labelledby="up-t">
     <h2 class="h2" id="up-t" data-up-titulo></h2>
     <p class="small" data-up-texto></p>
-    <a class="btn-main" data-up-link href="/#planos"></a>
+    <a class="btn-main" data-up-link href="/planos"></a>
     <p class="small mute">Como fica a cobrança ao trocar de plano no meio do mês<Pending kind="definir" />.</p>
   </section>
 
@@ -238,7 +238,7 @@ const upgrades = JSON.stringify(
     }
     const checkout = $<HTMLAnchorElement>('[data-pend-checkout]');
     checkout.hidden = !!aberta;
-    checkout.href = ctx.plano ? `/assinar/${ctx.plano}` : '/#planos';
+    checkout.href = ctx.plano ? `/assinar/${ctx.plano}` : '/planos';
   }
 
   function faturas(ctx: PortalCtx) {

@@ -19,6 +19,7 @@ import { artigos } from '../data/ajuda';
 import { novidades } from '../data/novidades';
 import type { Estado } from '../scripts/portal';
 import '../styles/forms.css';
+import Caminho from '../components/Caminho.astro';
 
 export type PaginaPortal = 'inicio' | 'plugin' | 'plano' | 'alertas' | 'novidades' | 'suporte' | 'configuracoes';
 
@@ -135,6 +136,12 @@ const year = new Date().getFullYear();
       </header>
 
       <main id="conteudo" class="pt-main">
+        <Caminho
+          class="pt-caminho"
+          itens={pagina === 'inicio'
+            ? [{ label: 'Órbita', href: '/' }, { label: 'Minha conta' }]
+            : [{ label: 'Órbita', href: '/' }, { label: 'Minha conta', href: '/conta' }, { label: paginas.find((p) => p.id === pagina)?.label ?? titulo }]}
+        />
         {!billing && (
           <p class="demo"><strong>Modo de demonstração.</strong> Os dados existem só neste navegador. Nada é cobrado nem devolvido de verdade.</p>
         )}
@@ -145,7 +152,7 @@ const year = new Date().getFullYear();
           <p class="mute" data-vazio-texto></p>
           {usuario && <p class="mute small">Você entrou como <strong>{usuario.email}</strong>.</p>}
           <div class="pt-acoes">
-            <a class="btn-main" href="/#planos" data-vazio-cta>Ver planos</a>
+            <a class="btn-main" href="/planos" data-vazio-cta>Ver planos</a>
             <a class="btn-alt" href="/conta/configuracoes" data-vazio-conta>Conta e segurança</a>
           </div>
         </section>
@@ -990,13 +997,13 @@ const year = new Date().getFullYear();
 
   // Estado vazio para cada situação em que a página não abre.
   const VAZIO: Record<string, { titulo: string; texto: string; cta?: { href: string; label: string } }> = {
-    sem: { titulo: 'Você ainda não tem um plano ativo', texto: 'Escolha o Bronze, o Prata ou o Ouro para começar.', cta: { href: '/#planos', label: 'Ver planos' } },
+    sem: { titulo: 'Você ainda não tem um plano ativo', texto: 'Escolha o Bronze, o Prata ou o Ouro para começar.', cta: { href: '/planos', label: 'Ver planos' } },
     pendente: {
       titulo: 'Seu pagamento ainda não foi confirmado',
       texto: 'O acesso começa quando o Pix ou o boleto for confirmado. Veja o pagamento em Plano e pagamento.',
       cta: { href: '/conta/plano', label: 'Ver o pagamento' },
     },
-    encerrado: { titulo: 'Sua assinatura terminou', texto: 'Para voltar a usar a Órbita, escolha um plano.', cta: { href: '/#planos', label: 'Ver planos' } },
+    encerrado: { titulo: 'Sua assinatura terminou', texto: 'Para voltar a usar a Órbita, escolha um plano.', cta: { href: '/planos', label: 'Ver planos' } },
     erro: { titulo: 'Não conseguimos carregar sua assinatura', texto: 'Pode ser a conexão ou o servidor. Atualize a página em instantes.', cta: { href: location.pathname, label: 'Tentar de novo' } },
   };
 

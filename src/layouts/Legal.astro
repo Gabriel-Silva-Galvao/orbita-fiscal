@@ -8,6 +8,7 @@ import Base from './Base.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Pending from '../components/Pending.astro';
+import Caminho from '../components/Caminho.astro';
 
 interface Props {
   title: string;
@@ -24,13 +25,13 @@ const { title, description, heading, intro, updated, sections } = Astro.props;
   <div class="page-sheet">
     <Nav
       signIn="/entrar"
-      cta={{ href: '/#planos', label: 'Assinar' }}
+      cta={{ href: '/planos', label: 'Assinar' }}
     />
 
     <main id="conteudo" class="legal">
       <div class="wrap legal-grid">
         <div class="legal-head">
-          <a class="back" href="/" data-back>← Voltar</a>
+          <Caminho itens={[{ label: 'Órbita', href: '/' }, { label: heading }]} />
           <h1 class="display-lg">{heading}</h1>
           <p class="legal-dates small">
             <span>Vigente a partir de <Pending kind="definir" /></span>
@@ -98,15 +99,6 @@ const { title, description, heading, intro, updated, sections } = Astro.props;
     display: grid;
     gap: var(--space-4);
     max-width: 68ch;
-  }
-  .back {
-    width: fit-content;
-    font: var(--text-small);
-    color: var(--mute);
-    text-decoration: none;
-  }
-  .back:hover {
-    color: var(--ink);
   }
   .legal-dates {
     display: flex;
@@ -252,14 +244,6 @@ const { title, description, heading, intro, updated, sections } = Astro.props;
 </style>
 
 <script>
-  // Voltar à página de origem quando ela é deste site.
-  const back = document.querySelector<HTMLAnchorElement>('[data-back]');
-  try {
-    const ref = document.referrer ? new URL(document.referrer) : null;
-    if (back && ref && ref.origin === location.origin && ref.pathname !== location.pathname) {
-      back.href = ref.pathname + ref.hash;
-    }
-  } catch {}
 
   // Índice: marca a seção que está sendo lida.
   const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc a'));

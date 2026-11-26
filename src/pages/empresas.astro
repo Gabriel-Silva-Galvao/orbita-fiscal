@@ -5,6 +5,7 @@
  */
 import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
+import Caminho from '../components/Caminho.astro';
 import Footer from '../components/Footer.astro';
 import EmpresasFaixa from '../components/EmpresasFaixa.astro';
 import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
@@ -30,8 +31,9 @@ const publicos = [
   description="Órbita para escritórios de advocacia, contabilidades e empresas: vários usuários, uma cobrança e condições sob medida. Fale com a equipe."
 >
   <div class="page-sheet">
-    <Nav signIn="/entrar" cta={{ href: '/#planos', label: 'Assinar' }} />
+    <Nav signIn="/entrar" cta={{ href: '/planos', label: 'Assinar' }} />
     <main id="conteudo">
+      <div class="wrap caminho-topo"><Caminho itens={[{ label: 'Órbita', href: '/' }, { label: 'Plano Empresarial' }]} /></div>
       <section class="section emp-topo">
         <div class="wrap">
           <p class="overline">Planos empresariais</p>
@@ -79,7 +81,7 @@ const publicos = [
             }
           </ol>
           <p class="small mute emp-nota">
-            Prefere um plano individual? Veja os <a href="/#planos">planos Bronze, Prata e Ouro</a>.
+            Prefere um plano individual? Veja os <a href="/planos">planos Bronze, Prata e Ouro</a>.
           </p>
         </div>
       </section>

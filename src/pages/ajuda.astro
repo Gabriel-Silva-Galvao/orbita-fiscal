@@ -11,6 +11,7 @@ import Footer from '../components/Footer.astro';
 import Pending from '../components/Pending.astro';
 import Contact from '../components/Contact.astro';
 import Faq from '../components/Faq.astro';
+import Caminho from '../components/Caminho.astro';
 import { contact } from '../data/site';
 ---
 
@@ -18,11 +19,11 @@ import { contact } from '../data/site';
   <div class="page-sheet">
     <Nav
       signIn="/entrar"
-      cta={{ href: '/#planos', label: 'Assinar' }}
+      cta={{ href: '/planos', label: 'Assinar' }}
     />
     <main id="conteudo" class="help">
       <div class="wrap help-in">
-        <a class="back small" href="/" data-back>← Voltar</a>
+        <Caminho itens={[{ label: 'Órbita', href: '/' }, { label: 'Ajuda' }]} />
         <h1 class="display-lg">Ajuda</h1>
         <p class="lead">Respostas curtas para instalar, conectar e entender a cobrança. Toque na pergunta para abrir.</p>
 
@@ -107,14 +108,6 @@ import { contact } from '../data/site';
     display: grid;
     gap: var(--space-4);
   }
-  .back {
-    width: fit-content;
-    color: var(--mute);
-    text-decoration: none;
-  }
-  .back:hover {
-    color: var(--ink);
-  }
   .articles {
     margin-top: var(--space-4);
     border-top: 1px solid var(--line);
@@ -153,7 +146,7 @@ import { contact } from '../data/site';
     color: var(--ink);
     font-weight: 600;
   }
-  .help a:not(.back) {
+  .help a:not(.caminho a) {
     color: var(--brand);
   }
   .contact {
@@ -168,13 +161,4 @@ import { contact } from '../data/site';
   }
 </style>
 
-<script>
-  // Voltar à página de origem quando ela é deste site.
-  const back = document.querySelector<HTMLAnchorElement>('[data-back]');
-  try {
-    const ref = document.referrer ? new URL(document.referrer) : null;
-    if (back && ref && ref.origin === location.origin && ref.pathname !== location.pathname) back.href = ref.pathname + ref.hash;
-  } catch {}
-
-  // O endereço abre o artigo certo (#nao-aparece, #conectar…): quem abre é o componente Faq.
-</script>
+<!-- O endereço abre o artigo certo (#nao-aparece, #conectar…): quem abre é o componente Faq. -->

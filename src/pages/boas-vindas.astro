@@ -29,7 +29,7 @@ if (API_URL) {
       signal: AbortSignal.timeout(5000),
     });
     const d = r.ok ? await r.json() : null;
-    if (!d?.plano) return Astro.redirect('/#planos');
+    if (!d?.plano) return Astro.redirect('/planos');
     slug = d.plano;
   } catch {
     /* API fora do ar: a página abre com o plano padrão; o Portal mostra o estado real */

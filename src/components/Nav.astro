@@ -45,7 +45,7 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     <div class="nav-actions" data-nav-actions data-auth={authEndpoint} data-billing={billingEndpoint}>
       {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
       {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}
-      <Button href="/#planos" class="nav-plano" data-nav-plano hidden>Assinar</Button>
+      <Button href="/planos" class="nav-plano" data-nav-plano hidden>Assinar</Button>
       <div class="nav-user" data-nav-user hidden>
         <button
           type="button"
@@ -169,7 +169,7 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   // - Ouro: selo "Ouro" no avatar e atalho para o que é só do Ouro: "Criar alerta" (alertas por tema).
   //   (Item 25: Bronze, Prata e Ouro substituem Pro e Max.)
   const ACOES: Record<string, { rotulo: string; href: string; destaque?: boolean }> = {
-    sem: { rotulo: 'Assinar', href: '/#planos', destaque: true },
+    sem: { rotulo: 'Assinar', href: '/planos', destaque: true },
     pendente: { rotulo: 'Concluir assinatura', href: '/conta/plano', destaque: true },
     bronze: { rotulo: 'Upgrade para o Prata', href: '/conta/plano', destaque: true },
     prata: { rotulo: 'Upgrade para o Ouro', href: '/conta/plano', destaque: true },
@@ -541,6 +541,15 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     .nav-links a {
       flex: none;
       white-space: nowrap;
+    }
+  }
+  /* Item 42 (auditoria de navegação): no toque, cada link do header e da barra de seções tem pelo menos 44 px de altura. */
+  @media (pointer: coarse), (max-width: 760px) {
+    .nav-links a,
+    .nav-secoes a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
     }
   }
 </style>

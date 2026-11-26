@@ -947,11 +947,29 @@ mostra o passo a passo e o vídeo tutorial da IA escolhida. Um vídeo por IA (o 
 por IA). A lapidar: links das lojas, os passos reais de cada uma (hoje há "a confirmar") e quem grava os vídeos; até lá, espaço
 reservado para o vídeo.
 
-### 42. Navegação: caminho de diretório e revisão de UI/UX — A lapidar
+### 42. Navegação: caminho de diretório e revisão de UI/UX — Executado e testado (26/11/2026)
 
 Colocar em todo o site o caminho de onde a pessoa está (breadcrumb, ex.: Início › Conta › Plano) e revisar a navegação inteira do
 ponto de vista do usuário: consegue chegar, voltar e fazer o que precisa? Usar as skills de revisão de design disponíveis
 (design-audit, audit-ai-design-slop) e registrar o que for achado. Inclui a parte do item 49 sobre a navegação da inicial.
+
+**Feito (caminho):** novo componente `src/components/Caminho.astro`: "Início › … › página atual", o último item sem link e com
+`aria-current="page"`, separador desenhado e, no celular, os itens do meio viram "…". Também gera o BreadcrumbList (schema.org)
+para o Google. Onde aparece: /bases, /planos, /empresas, /ajuda e os textos legais (no lugar do antigo "← Voltar"); Entrar,
+Assinar (no lugar de "← Voltar aos planos"), Instalar e Upgrade (pelo layout Focus); e todo o Portal ("Site › Minha conta ›
+página"). Fica fora da inicial, da 404 e da boas-vindas. Conferido página por página (texto do caminho e o BreadcrumbList), no
+desktop e a 375 px.
+
+**Revisão de navegação (skill design-audit, 21 rotas, desktop e 375 px):** todas as páginas são alcançáveis (inclusive com o
+header da inicial sem links, item 49) e as tarefas principais funcionam: entender e chegar aos planos, ir ao checkout, achar
+ajuda, navegar no Portal e voltar ao site, achar senha, aparelhos e sair. Corrigido na hora:
+- Raiz do caminho: "Início" no site e "Site" no Portal se confundiam com a página "Início" do Portal; agora a raiz é "Órbita"
+  em todo lugar.
+- "Assinar" e "Ver planos" fora da inicial (header, Portal sem plano ou encerrado, Plano e pagamento, legais, 404, /bases,
+  /empresas, boas-vindas) levavam a /#planos, no meio da landing; agora levam a /planos.
+- Alvos de toque no celular: links do header, da barra de seções e do caminho passaram de 12 a 33 px para 44 px.
+Ficou anotado (baixo): no celular, "Voltar ao site" do Portal fica só no menu da conta e no caminho; a 404 poderia ter um
+link direto para a Ajuda no corpo (ela já tem o botão "Ver a Ajuda").
 
 ### 43. Minha compra: trocar a forma de pagamento e reembolso discreto — A lapidar
 

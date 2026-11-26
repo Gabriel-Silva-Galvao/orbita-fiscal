@@ -1,0 +1,124 @@
+---
+/**
+ * Caminho de diretório (item 42 da rodada de testes, 26/11/2026): mostra onde a pessoa está, ex.: Início › Minha conta › Plano.
+ * O último item é a página atual (sem link, com aria-current). Cada item anterior é um link para voltar um nível.
+ * Também gera o BreadcrumbList (schema.org) para o Google mostrar o caminho no resultado da busca.
+ * No celular, os itens do meio somem e fica "… › página atual", com o primeiro link para voltar.
+ */
+export interface Passo {
+  label: string;
+  href?: string;
+}
+interface Props {
+  itens: Passo[];
+  class?: string;
+}
+const { itens, class: cls } = Astro.props;
+const base = (Astro.site?.toString() ?? '').replace(/\/$/, '');
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: itens.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: p.label,
+    ...(p.href ? { item: `${base}${p.href}` } : {}),
+  })),
+};
+---
+
+<nav class:list={['caminho', cls]} aria-label="Você está aqui">
+  <ol>
+    {
+      itens.map((p, i) => {
+        const ultimo = i === itens.length - 1;
+        return (
+          <li class:list={{ 'is-meio': i > 0 && i < itens.length - 1 && itens.length > 2 }}>
+            {ultimo || !p.href ? (
+              <span aria-current={ultimo ? 'page' : undefined}>{p.label}</span>
+            ) : (
+              <a href={p.href}>{p.label}</a>
+            )}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(ld).replace(/</g, '\\u003c')} />
+
+<style>
+  .caminho {
+    font: var(--text-small);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+  .caminho ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .caminho li {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+  /* Separador desenhado, não lido pelo leitor de tela. */
+  .caminho li + li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    margin: 0 10px;
+    border-top: 1.5px solid var(--line-strong);
+    border-right: 1.5px solid var(--line-strong);
+    transform: rotate(45deg);
+    flex: none;
+  }
+  .caminho a {
+    color: var(--mute);
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 2px 0;
+  }
+  .caminho a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .caminho a:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .caminho [aria-current='page'] {
+    color: var(--ink);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    /* Área de toque de 44 px para voltar um nível pelo dedo. */
+    .caminho a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding-inline: 4px;
+    }
+    .caminho li.is-meio {
+      display: none;
+    }
+    .caminho li.is-meio + li:not(.is-meio)::before {
+      content: '…';
+      width: auto;
+      height: auto;
+      border: 0;
+      transform: none;
+      margin: 0 8px;
+      color: var(--mute);
+    }
+  }
+</style>

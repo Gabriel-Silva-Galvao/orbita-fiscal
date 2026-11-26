@@ -34,10 +34,9 @@ const provider = import.meta.env.PUBLIC_PAYMENT_PROVIDER ?? '';
 const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 ---
 
-<Focus title={`Assinar o ${plan.name} · Órbita`} description={`Assine o plano ${plan.name} da Órbita por ${price} por mês.`}>
+<Focus caminho={[{ label: 'Órbita', href: '/' }, { label: 'Planos', href: '/planos' }, { label: `Assinar o ${plan.name}` }]} title={`Assinar o ${plan.name} · Órbita`} description={`Assine o plano ${plan.name} da Órbita por ${price} por mês.`}>
   <!-- Item 11 da rodada de testes (26/11/2026): checkout com cara de pagamento, sempre branco. -->
   <nav class="wrap passos" aria-label="Etapas do pagamento">
-    <a class="voltar" href="/#planos">← Voltar aos planos</a>
     <ol data-passos>
       <li class="is-atual" data-passo="1"><span>1</span> Dados da nota</li>
       <li data-passo="2"><span>2</span> Pagamento</li>
@@ -520,18 +519,9 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: var(--space-3);
     padding-top: var(--space-5);
-  }
-  .voltar {
-    color: var(--mute);
-    font-size: 0.9375rem;
-    text-decoration: none;
-  }
-  .voltar:hover {
-    color: var(--ink);
-    text-decoration: underline;
   }
   .passos ol {
     list-style: none;
