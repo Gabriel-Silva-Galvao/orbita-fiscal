@@ -74,7 +74,7 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 
 | # | Risco | Gravidade | O que fazer | Quando |
 |---|---|---|---|---|
-| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026; **corrigido** em 26/11/2026, ver 5.1) | ~~Alto~~ | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
+| S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026; **corrigido** em 26/11/2026, ver 4.1 e 5.1) | ~~Alto~~ | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
 | S3 | Cartão passa pela API | Alto | Tokenização do Asaas no navegador; a API recebe só o token. | Com o Sandbox (item 29) |
 | S5 | Limite de tentativas só na memória e só no login | Alto | Limite por IP e por e-mail em todo `/auth`, guardado no banco; CAPTCHA invisível depois de N falhas. | Antes de publicar |
 | S4 | Código do 2FA no log sem SMTP (**corrigido** em 26/11/2026: produção exige SMTP, ver 5.1) | ~~Alto~~ | — | — |
@@ -85,6 +85,43 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 | S10, S11 | CPF/CNPJ legível; SQLite | Médio | Disco e backups criptografados; PostgreSQL ao crescer. | Infra |
 | S12 | Sessões e desafios vencidos ficam no banco | Baixo | Rotina diária de limpeza. | Infra |
 | S16 | Dependências | Baixo | `pip-audit` e `npm audit` mensais. | Rotina |
+
+## 4.1 Correção do S18: assinatura em dobro (feita em 26/11/2026)
+
+**O problema, passo a passo** (`api/app/billing.py`, `criar_assinatura`, antes da correção):
+1. Lia `assinaturas` e, se já houvesse assinatura viva, respondia 409.
+2. Criava o cliente no Asaas (se ainda não existia) e gravava em `assinantes`.
+3. Criava a assinatura no Asaas (`asaas.criar_assinatura`).
+4. Gravava em `assinaturas` com `INSERT OR REPLACE`.
+
+Entre o passo 1 e o 4 passa o tempo da chamada ao Asaas (centenas de milissegundos). Dois pedidos no mesmo intervalo
+(clique duplo, duas abas, repetição automática do navegador) passavam os dois pelo passo 1: duas assinaturas no Asaas, a
+segunda substituía a primeira no nosso banco e a primeira ficava órfã, cobrando todo mês sem aparecer no Portal. O passo 2
+tinha o mesmo defeito: dois clientes no Asaas para a mesma pessoa e um erro 500 no segundo `INSERT`.
+
+**O que foi feito** (commit `81e7a5c`, ARES-QA-003; estendido às outras rotas de cobrança em `2f10846`, CAND-01 a 03):
+1. **Reserva por conta antes de chamar o Asaas:** `uma_operacao_por_vez` faz `INSERT` na tabela `operacoes_cobranca`
+   (chave `usuario_id`); se a linha já existe, o pedido recebe **409 `em_andamento`**. A chave primária do SQLite garante
+   isso mesmo com mais de um processo da API.
+2. **A conferência de "já é assinante" acontece dentro da reserva,** sem janela entre as duas.
+3. **A reserva sai no fim do pedido** (`finally`), com sucesso ou erro; reserva com mais de 120 s é tratada como
+   abandonada e apagada.
+4. **Cliente do Asaas criado uma vez só,** porque a criação também fica dentro da reserva.
+5. **No site:** com o 409 `em_andamento`, o Checkout mostra o aviso e o link para Plano e pagamento, sem mexer no pedido da
+   outra aba.
+6. **Testes:** `test_pedidos_simultaneos_criam_uma_assinatura_so` (falha no código antigo com 4× 201),
+   `test_reserva_esquecida_expira` e `test_reembolsos_simultaneos_estornam_uma_vez_so`.
+
+**O que ficou do plano e ainda não foi feito:**
+- O `INSERT OR REPLACE` continua; hoje só substitui assinatura em estado final, porque a conferência já roda dentro da
+  reserva. Trocar por `INSERT` + `UPDATE` explícito deixaria isso garantido pelo código, não pela ordem das linhas.
+- **Rede de segurança no Asaas:** ao criar, consultar se já existe assinatura ativa com a mesma `externalReference` e
+  reaproveitar; conferir se o Asaas aceita chave de idempotência quando o Sandbox estiver ligado (item 29).
+- Testes que faltam: nova assinatura depois de uma cancelada ou reembolsada, e erro do Asaas no meio do pedido liberando a
+  reserva para o pedido seguinte.
+
+**Fica para o item 37** (precisa do Sandbox): webhook repetido e fora de ordem com o Asaas real, troca de plano e de forma
+ao mesmo tempo, e a conferência periódica de assinaturas órfãs no Asaas (relatório para o Admin, item 52).
 
 ## 5. Incidentes
 
