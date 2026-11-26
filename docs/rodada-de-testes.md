@@ -768,7 +768,18 @@ de fora desta rodada.
 **Fica para depois.** "Baixar meus dados" (direito de acesso da LGPD): enquanto não houver o botão, o pedido é atendido
 pelo suporte, e a Política de privacidade precisa dizer isso.
 
-### 11. Checkout com cara de pagamento — Fechado na teoria (25/11/2026)
+### 11. Checkout com cara de pagamento — Executado e testado (26/11/2026)
+
+**Feito** (`src/pages/assinar/[plano].astro`): tema próprio aplicado à página de foco inteira (cabeçalho, conteúdo e
+rodapé curto), sempre claro também com o site no modo escuro: fundo cinza muito claro, cartões brancos com sombra leve,
+texto quase preto, tipografia do sistema, azul só nas ações (botão de pagar, passo atual) e verde só no "Pagamento
+aprovado"; logo no verde da marca; sem animação. "← Voltar aos planos" e passos numerados (1 Dados da nota · 2 Pagamento
+· 3 Confirmação), que acompanham a tela (formulário, espera do Pix/boleto, aprovado); dados da nota antes da forma de
+pagamento; selos abaixo do botão (conexão criptografada, processado pelo Asaas, reembolso em 7 dias). A lógica de
+pagamento não mudou.
+**Testes.** Conta sem plano: Pix com QR, passos 1 → 2 → 3 e aprovação em verde; com o site forçado no modo escuro o
+checkout continua branco; celular sem rolagem lateral. **Não testado:** cartão e boleto nesta rodada (a lógica é a mesma
+de antes).
 
 **Decisão.** Sempre branco, mesmo com o site no modo escuro (como Amazon e Mercado Livre).
 

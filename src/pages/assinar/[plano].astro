@@ -35,6 +35,15 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 ---
 
 <Focus title={`Assinar o ${plan.name} · Órbita`} description={`Assine o plano ${plan.name} da Órbita por ${price} por mês.`}>
+  <!-- Item 11 da rodada de testes (26/11/2026): checkout com cara de pagamento, sempre branco. -->
+  <nav class="wrap passos" aria-label="Etapas do pagamento">
+    <a class="voltar" href="/#planos">← Voltar aos planos</a>
+    <ol data-passos>
+      <li class="is-atual" data-passo="1"><span>1</span> Dados da nota</li>
+      <li data-passo="2"><span>2</span> Pagamento</li>
+      <li data-passo="3"><span>3</span> Confirmação</li>
+    </ol>
+  </nav>
   <div class="wrap checkout" data-checkout data-plan={slug} data-price={price} data-provider={provider} data-session-email={accountEmail} data-billing={billing}>
     <aside class="summary" aria-labelledby="sum-title">
       <h1 id="sum-title" class="display-md">Assinar o {plan.name}</h1>
@@ -86,7 +95,21 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
         </fieldset>
 
         <fieldset class="group">
-          <legend class="group-title">Pagamento</legend>
+          <legend class="group-title"><span class="n">1</span> Dados para a nota fiscal</legend>
+          <div class="field">
+            <label for="c-nome">Nome ou razão social</label>
+            <input id="c-nome" name="nome" autocomplete="name" aria-describedby="c-nome-msg" />
+            <p class="msg" id="c-nome-msg" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label for="c-doc">CPF ou CNPJ</label>
+            <input id="c-doc" name="documento" inputmode="numeric" aria-describedby="c-doc-msg" />
+            <p class="msg" id="c-doc-msg" aria-live="polite"></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="group-title"><span class="n">2</span> Forma de pagamento</legend>
           <div class="methods" role="radiogroup" aria-label="Forma de pagamento">
             <label class="method"><input type="radio" name="metodo" value="cartao" checked /> <Icon name="solar:card-linear" size={18} /> Cartão de crédito</label>
             <label class="method"><input type="radio" name="metodo" value="pix" /> <Icon name="solar:qr-code-linear" size={18} /> Pix</label>
@@ -127,25 +150,17 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
           </div>
         </fieldset>
 
-        <fieldset class="group">
-          <legend class="group-title">Dados para a nota fiscal</legend>
-          <div class="field">
-            <label for="c-nome">Nome ou razão social</label>
-            <input id="c-nome" name="nome" autocomplete="name" aria-describedby="c-nome-msg" />
-            <p class="msg" id="c-nome-msg" aria-live="polite"></p>
-          </div>
-          <div class="field">
-            <label for="c-doc">CPF ou CNPJ</label>
-            <input id="c-doc" name="documento" inputmode="numeric" aria-describedby="c-doc-msg" />
-            <p class="msg" id="c-doc-msg" aria-live="polite"></p>
-          </div>
-        </fieldset>
 
         <p class="notice is-error" data-error role="alert" hidden></p>
 
         <button type="submit" class="btn-main" data-submit>
           <span data-submit-label>Pagar {price} e receber o plugin</span>
         </button>
+        <ul class="selos small" aria-label="Segurança do pagamento">
+          <li><Icon name="solar:lock-keyhole-linear" size={16} /> Pagamento seguro, com conexão criptografada</li>
+          <li><Icon name="solar:shield-check-linear" size={16} /> Processado pelo Asaas, instituição de pagamento</li>
+          <li><Icon name="solar:refresh-circle-linear" size={16} /> Reembolso integral em até 7 dias</li>
+        </ul>
         <p class="small mute fine">
           Ao pagar, você concorda com os <a href="/termos">Termos de uso</a> e a <a href="/reembolso">Política de reembolso</a>.
         </p>
@@ -447,7 +462,175 @@ const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
+
+  /* ---------- Item 11: tema de pagamento, sempre claro e sóbrio ---------- */
+  /* Os tokens valem para a página inteira de foco (cabeçalho, conteúdo e rodapé curto), em qualquer tema do site. */
+  :global(.focus-shell:has([data-checkout])) {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --soft: #f1f3f5;
+    --ink: #111827;
+    --mute: #5b6472;
+    --line: #e3e6ea;
+    --line-strong: #c9ced6;
+    --brand: #1a56db;
+    --on-brand: #ffffff;
+    color-scheme: light;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  :global(.focus-shell:has([data-checkout]) .display-md),
+  :global(.focus-shell:has([data-checkout]) .group-title),
+  :global(.focus-shell:has([data-checkout]) .title) {
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  :global(.focus-shell:has([data-checkout]) .focus-top) {
+    --brand: #10634f; /* a logo continua no verde da marca; o azul é só para as ações do pagamento */
+    background: #ffffff;
+  }
+  :global(.focus-shell:has([data-checkout]) *) {
+    animation: none !important;
+  }
+  /* Aprovado em verde, o único lugar com verde. */
+  :global(.focus-shell:has([data-checkout]) .notice.is-ok) {
+    background: #ecfdf3;
+    border-color: #a6e9c0;
+    color: #05603a;
+  }
+  .checkout {
+    padding-top: var(--space-5);
+  }
+  .summary,
+  .pay {
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 0.05);
+  }
+  .price .value {
+    font-family: inherit;
+    font-weight: 700;
+  }
+
+  .passos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+  }
+  .voltar {
+    color: var(--mute);
+    font-size: 0.9375rem;
+    text-decoration: none;
+  }
+  .voltar:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .passos ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: var(--space-4);
+    font-size: 0.9375rem;
+    color: var(--mute);
+  }
+  .passos li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .passos li span {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-strong);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .passos li.is-atual {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .passos li.is-atual span {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #ffffff;
+  }
+  .passos li.is-feito span {
+    border-color: #12b76a;
+    background: #12b76a;
+    color: #ffffff;
+  }
+  .group-title .n {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #ffffff;
+    font-size: 0.75rem;
+    vertical-align: 2px;
+  }
+  .selos {
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3) 0 0;
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 6px;
+    color: var(--mute);
+  }
+  .selos li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  @media (max-width: 640px) {
+    .passos ol {
+      width: 100%;
+      justify-content: space-between;
+      gap: var(--space-2);
+      font-size: 0.8125rem;
+    }
+    .summary,
+    .pay {
+      padding: var(--space-4);
+    }
+  }
 </style>
+
+<script>
+  // Item 11: o passo aceso acompanha a tela (formulário → espera do Pix/boleto → aprovado).
+  {
+    const passos = document.querySelectorAll<HTMLElement>('[data-passos] li');
+    const telas = ['[data-pix]', '[data-boleto]', '[data-done]'].map((q) => document.querySelector<HTMLElement>(q));
+    const marcar = () => {
+      const feito = telas[2] && !telas[2].hidden;
+      const esperando = telas.slice(0, 2).some((t) => t && !t.hidden);
+      const atual = feito ? 3 : esperando ? 2 : 1;
+      passos.forEach((li) => {
+        const n = Number(li.dataset.passo);
+        li.classList.toggle('is-atual', n === atual);
+        li.classList.toggle('is-feito', n < atual);
+      });
+    };
+    const obs = new MutationObserver(marcar);
+    telas.forEach((t) => t && obs.observe(t, { attributes: true, attributeFilter: ['hidden'] }));
+    marcar();
+  }
+</script>
 
 <script>
   import { isCPF, isCNPJ, maskDoc, isCard, maskCard, maskExpiry, isExpiry, digits } from '../../scripts/validate';
