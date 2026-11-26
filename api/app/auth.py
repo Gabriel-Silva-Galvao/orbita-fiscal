@@ -156,6 +156,11 @@ def confere_senha(senha: str, guardado: str) -> bool:
     return hmac.compare_digest(novo.hex(), dk)
 
 
+# ARES-SEC-007: hash de uma senha qualquer, conferido quando o e-mail do login não existe, para o tempo da resposta
+# ser o mesmo nos dois casos (sem isso, a resposta rápida revelava que a conta não existe).
+SENHA_FICTICIA = hash_senha(secrets.token_hex(16))
+
+
 def sessao_valida(banco, token: str | None) -> dict | None:
     """Sessão do cookie, se existe e não expirou; marca o último uso (no máximo uma vez por minuto)."""
     if not token:
@@ -351,7 +356,8 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if limite_login(email):
             return _erro(429, "muitas_tentativas", "Muitas tentativas. Espere alguns minutos.")
         u = banco(req).um("SELECT * FROM usuarios WHERE email=?", email)
-        if not u or not confere_senha(dados.senha, u["senha_hash"]):
+        senha_ok = confere_senha(dados.senha, u["senha_hash"] if u else SENHA_FICTICIA)  # sempre roda o scrypt
+        if not u or not senha_ok:
             falhas.falhou(email, LOGIN_MAX_FALHAS)
             return _erro(401, "credenciais", "E-mail ou senha não conferem.")
         falhas.zerar(email)

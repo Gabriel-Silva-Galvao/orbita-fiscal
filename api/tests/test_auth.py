@@ -344,7 +344,8 @@ def test_limitador_de_login_nao_cresce_sem_limite(api, monkeypatch):
 
     http, *_ = api
     lim = http.app.state.limitador_login
-    for i in range(300):  # e-mails que não existem: falham sem scrypt, como no ataque de volume
+    monkeypatch.setattr(auth, "confere_senha", lambda s, h: False)  # o teste mede memória, não o scrypt
+    for i in range(300):  # e-mails que não existem, como no ataque de volume
         assert http.post("/auth/login", json={"email": f"x{i}@exemplo.test", "senha": "qualquer-1"}).status_code == 401
     assert len(lim.filas) == 300
     assert all(len(q) <= auth.LOGIN_MAX_FALHAS for q in lim.filas.values())
@@ -363,3 +364,17 @@ def test_limitador_guarda_no_maximo_o_teto_por_chave():
         lim.falhou("alvo@exemplo.test", 10)
     assert lim.bloqueado("alvo@exemplo.test", 10) and len(lim.filas) == 1
     assert len(next(iter(lim.filas.values()))) == 10
+
+
+def test_login_com_email_inexistente_tambem_roda_o_scrypt(api, caixa, monkeypatch):
+    """Regressão ARES-SEC-007 (parte do login): sem conta, a resposta vinha sem o scrypt e era mais rápida,
+    revelando quais e-mails têm conta. Agora a senha é conferida nos dois casos."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    chamadas = []
+    original = auth.confere_senha
+    monkeypatch.setattr(auth, "confere_senha", lambda s, h: chamadas.append(h) or original(s, h))
+    r1 = http.post("/auth/login", json={"email": "ninguem@exemplo.test", "senha": "qualquer-1"})
+    r2 = http.post("/auth/login", json={"email": "ana@exemplo.test", "senha": "errada-123"})
+    assert r1.status_code == r2.status_code == 401 and r1.json() == r2.json()
+    assert len(chamadas) == 2 and chamadas[0] == auth.SENHA_FICTICIA
