@@ -931,13 +931,22 @@ Testado no desktop e a 375 px, sem rolagem lateral.
 Regra deste bloco: lapidar primeiro, depois executar um item por vez, testado, com commit e push em cada etapa. Os itens 51 e 52
 (suporte com login de admin e página de administração) ficam por último, juntos.
 
-### 40. Status do plugin embaixo da logo — A lapidar
+### 40. Status do plugin embaixo da logo — Executado e testado (26/11/2026)
 
 No Portal, no canto superior esquerdo, logo abaixo da logo: o status do plugin, "Ativo" ou "Inativo".
 A lapidar: o que conta como "ativo" (plano pago e plugin já conectado ao menos uma vez, ou só plano pago) e de onde vem o dado
 (a API sabe quando o plugin pergunta; ainda não existe essa marca).
 
 **Decidido:** "Ativo" = plano pago e plugin já conectado (a API passa a registrar a primeira pergunta feita com a conta).
+
+**Feito:** API (`api/app/plugin.py`): tabela `plugin_conexoes` (primeira e última vez, IA); `POST /plugin/uso`, que o servidor
+MCP chama a cada pergunta, protegido pelo segredo `PLUGIN_SERVIDOR_TOKEN` no cabeçalho `X-Orbita-Servidor` (comparação em tempo
+constante; sem o segredo configurado a rota responde 503; em produção, se definido, precisa ter 32+ caracteres);
+`GET /plugin/status` (sessão); e `POST /plugin/simular-conexao`, só com a simulação ligada, para testar. 2 testes novos (85
+passando). Portal: selo "Plugin ativo" (verde) ou "Plugin inativo" logo abaixo da logo, com link para Plugin e conexões e dica
+com o último uso ou o que falta; no celular, um ponto verde ou cinza sobre o átomo. Testado com a conta Ouro antes e depois de
+simular a conexão, no desktop e a 375 px. **Falta do lado do servidor MCP:** chamar `POST /plugin/uso` com o e-mail da conta
+e a IA, com o segredo; o servidor MCP não é construído aqui.
 
 ### 41. Instalação pela loja de cada IA, com escolha da IA e vídeo — A lapidar
 

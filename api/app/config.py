@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     smtp_from: str = "Órbita <nao-responda@orbitafiscal.com.br>"
     # Item 26: para onde vão as mensagens de planos empresariais (e-mail da Órbita, a confirmar).
     contato_email: str = "contato@orbitafiscal.com.br"
+    # Item 40: segredo que o servidor MCP da Órbita manda no cabeçalho X-Orbita-Servidor ao avisar que o plugin
+    # de um assinante fez uma pergunta (POST /plugin/uso). Vazio = rota desligada. Mínimo de 32 caracteres.
+    plugin_servidor_token: str = ""
 
 
 # Valores de exemplo que estão no repositório: em produção, nenhum deles pode ser usado.
@@ -55,6 +58,8 @@ def problemas_de_producao(s: "Settings") -> list[str]:
             erros.append("ASAAS_WEBHOOK_TOKEN é o de exemplo (ou tem menos de 32 caracteres): gere um segredo próprio.")
         if s.asaas_api_key == CHAVE_SIMULACAO:
             erros.append("ASAAS_API_KEY é a chave da simulação: use a chave do Asaas (sandbox ou produção).")
+        if s.plugin_servidor_token and len(s.plugin_servidor_token) < 32:
+            erros.append("PLUGIN_SERVIDOR_TOKEN tem menos de 32 caracteres: gere um segredo maior.")
         if s.auth_codigo_na_resposta:
             erros.append("AUTH_CODIGO_NA_RESPOSTA=true fora da simulação: o código do 2FA não pode ir na resposta.")
     return erros

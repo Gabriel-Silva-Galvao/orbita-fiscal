@@ -53,3 +53,47 @@ def test_link_expira_e_link_desconhecido(api):
     assert http.get(url).status_code == 410
     assert http.get("/plugin/baixar/nao-existe").status_code == 404
     assert banco.um("SELECT token_hash FROM downloads")["token_hash"] not in url  # só o hash fica guardado
+
+
+# ---------- Item 40: status do plugin ----------
+SEGREDO = "segredo-do-servidor-mcp-com-mais-de-32-caracteres"
+
+
+def test_status_do_plugin_so_fica_ativo_com_plano_e_conexao(api, monkeypatch):
+    from app.config import get_settings
+    from tests.conftest import entrar
+    from tests.test_billing import assinar
+
+    http, _, banco = api
+    monkeypatch.setattr(get_settings(), "plugin_servidor_token", SEGREDO)
+    assert http.get("/plugin/status").status_code == 401
+    entrar(http, banco, email="ana@exemplo.test")
+    st = http.get("/plugin/status").json()
+    assert st == {"ativo": False, "plano_ativo": False, "conectado": False, "primeira": None, "ultima": None, "ia": None}
+
+    # O servidor MCP avisa o uso: precisa do segredo certo.
+    corpo = {"email": "Ana@Exemplo.test", "ia": "claude"}
+    assert http.post("/plugin/uso", json=corpo).status_code == 401
+    assert http.post("/plugin/uso", json=corpo, headers={"X-Orbita-Servidor": "errado"}).status_code == 401
+    assert http.post("/plugin/uso", json={"email": "ninguem@exemplo.test"}, headers={"X-Orbita-Servidor": SEGREDO}).status_code == 404
+    assert http.post("/plugin/uso", json=corpo, headers={"X-Orbita-Servidor": SEGREDO}).status_code == 204
+    st = http.get("/plugin/status").json()
+    assert st["conectado"] is True and st["ia"] == "claude" and st["ativo"] is False  # conectado, mas sem plano
+
+    assinar(http, "pix")
+    http.post("/billing/assinatura/simular-pagamento")
+    assert http.get("/plugin/status").json()["ativo"] is True
+
+
+def test_uso_desligado_sem_segredo_e_simulacao_so_no_dev(api, monkeypatch):
+    from app.config import get_settings
+    from tests.conftest import entrar
+
+    http, _, banco = api
+    monkeypatch.setattr(get_settings(), "plugin_servidor_token", "")
+    assert http.post("/plugin/uso", json={"email": "a@b.c"}, headers={"X-Orbita-Servidor": ""}).status_code == 503
+    entrar(http, banco)
+    assert http.post("/plugin/simular-conexao").status_code == 204
+    assert http.get("/plugin/status").json()["conectado"] is True
+    monkeypatch.setattr(get_settings(), "asaas_sim_enabled", False)
+    assert http.post("/plugin/simular-conexao").status_code == 404

@@ -69,6 +69,11 @@ const year = new Date().getFullYear();
   >
     <aside class="pt-side" aria-label="Portal">
       <div class="pt-side-logo"><Logo /></div>
+      <!-- Item 40: status do plugin. Ativo = plano com acesso e plugin já conectado (GET /plugin/status). -->
+      <a class="pt-plugin" href="/conta/plugin" data-plugin-status data-estado="inativo" hidden>
+        <span class="pt-plugin-ponto" aria-hidden="true"></span>
+        <span data-plugin-texto>Plugin inativo</span>
+      </a>
       <p class="pt-plano" data-portal-plano aria-live="polite">&nbsp;</p>
       <nav class="pt-menu" aria-label="Páginas da conta">
         {paginas.map((p) => (
@@ -86,7 +91,7 @@ const year = new Date().getFullYear();
 
     <div class="pt-corpo">
       <header class="pt-head">
-        <div class="pt-head-logo"><Logo /></div>
+        <div class="pt-head-logo"><Logo /><span class="pt-plugin-mini" data-plugin-mini data-estado="inativo" hidden></span></div>
         <h1 class="pt-titulo">{titulo}</h1>
         <form class="pt-busca" action="/ajuda" role="search" data-busca>
           <label class="sr-only" for="pt-busca">Buscar na Ajuda</label>
@@ -247,6 +252,58 @@ const year = new Date().getFullYear();
   }
   .pt-head-logo :global(.logo) {
     --mark: 38px;
+  }
+  /* Item 40: selo do plugin embaixo da logo. */
+  .pt-plugin {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    margin: -4px 0 0 10px;
+    padding: 4px 12px 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--mute);
+    font: 600 0.75rem/1.4 var(--font-body);
+    text-decoration: none;
+    transition: border-color 200ms, color 200ms;
+  }
+  .pt-plugin:hover {
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  .pt-plugin:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .pt-plugin-ponto,
+  .pt-plugin-mini {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line-strong);
+    flex: none;
+  }
+  .pt-plugin[data-estado='ativo'] {
+    border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+    color: var(--brand);
+  }
+  .pt-plugin[data-estado='ativo'] .pt-plugin-ponto,
+  .pt-plugin-mini[data-estado='ativo'] {
+    background: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 25%, transparent);
+  }
+  .pt-head-logo {
+    position: relative;
+  }
+  /* No celular, um ponto sobre o átomo: verde = plugin ativo, cinza = inativo. */
+  .pt-plugin-mini {
+    position: absolute;
+    right: -2px;
+    bottom: 2px;
+    border: 2px solid var(--bg);
+    width: 12px;
+    height: 12px;
   }
   .pt-plano {
     margin: 0;
@@ -990,7 +1047,7 @@ const year = new Date().getFullYear();
 </style>
 
 <script>
-  import { aoCarregar, plans, usuario, sair, novidadesVistas, $ } from '../scripts/portal';
+  import { aoCarregar, plans, usuario, sair, novidadesVistas, apiBase, $ } from '../scripts/portal';
 
   const root = $('[data-portal]');
   const aceita = (root.dataset.aceita ?? 'ativo').split(' ');
@@ -1043,6 +1100,35 @@ const year = new Date().getFullYear();
 
     // Bloco G, ideia 7: o selo "Ouro" do menu só aparece para quem ainda não é Ouro.
     document.querySelectorAll<HTMLElement>('.pt-tag').forEach((t) => (t.hidden = ctx.ouro));
+
+    // Item 40: status do plugin embaixo da logo (some na demonstração, sem API).
+    if (apiBase) {
+      fetch(`${apiBase}/plugin/status`, { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((st: { ativo: boolean; plano_ativo: boolean; conectado: boolean; ultima: number | null } | null) => {
+          if (!st) return;
+          const estado = st.ativo ? 'ativo' : 'inativo';
+          const texto = st.ativo ? 'Plugin ativo' : 'Plugin inativo';
+          const dica = st.ativo
+            ? `Plugin conectado. Último uso: ${new Date((st.ultima ?? 0) * 1000).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}.`
+            : st.plano_ativo
+              ? 'Instale o plugin e faça a primeira pergunta para ativar.'
+              : 'O plugin fica ativo com o plano em dia e a primeira pergunta feita.';
+          const selo = $('[data-plugin-status]');
+          selo.dataset.estado = estado;
+          selo.title = dica;
+          selo.setAttribute('aria-label', `${texto}. ${dica}`);
+          $('[data-plugin-texto]').textContent = texto;
+          selo.hidden = false;
+          const mini = $('[data-plugin-mini]');
+          mini.dataset.estado = estado;
+          mini.title = `${texto}. ${dica}`;
+          mini.setAttribute('role', 'img');
+          mini.setAttribute('aria-label', texto);
+          mini.hidden = false;
+        })
+        .catch(() => {});
+    }
 
     // Plano no menu lateral.
     const plano = $('[data-portal-plano]');
