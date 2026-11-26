@@ -948,13 +948,23 @@ com o último uso ou o que falta; no celular, um ponto verde ou cinza sobre o á
 simular a conexão, no desktop e a 375 px. **Falta do lado do servidor MCP:** chamar `POST /plugin/uso` com o e-mail da conta
 e a IA, com o segredo; o servidor MCP não é construído aqui.
 
-### 41. Instalação pela loja de cada IA, com escolha da IA e vídeo — A lapidar
+### 41. Instalação pela loja de cada IA, com escolha da IA e vídeo — Executado e testado (26/11/2026)
 
 A instalação passa a ser pela loja de cada IA (a do Claude e a das outras). A página de instalação pergunta primeiro "Em qual IA
 você vai instalar?", só com as 4 já definidas (Claude, ChatGPT, Microsoft Copilot e Gemini, as de `src/data/tutoriais.ts`), e
 mostra o passo a passo e o vídeo tutorial da IA escolhida. Um vídeo por IA (o item 7, do vídeo de instalação, passa a ser um vídeo
 por IA). A lapidar: links das lojas, os passos reais de cada uma (hoje há "a confirmar") e quem grava os vídeos; até lá, espaço
 reservado para o vídeo.
+
+**Feito:** `src/data/tutoriais.ts` ganhou, por IA, a loja (nome, caminho no menu, link da Órbita, quem instala: a pessoa ou o
+TI), os passos de instalação e o endereço do vídeo. `/instalar` foi refeita: "Instale a Órbita na sua IA" → "Em qual IA você vai
+instalar?" (4 cartões: Claude, ChatGPT, Microsoft Copilot, Gemini) → vídeo 16:9 da IA (espaço "Em produção" até existir) → onde
+fica a loja (com "a confirmar") e o botão "Abrir a Órbita na loja" quando houver link → aviso para enviar ao TI no Copilot e no
+Gemini → passos marcáveis da IA + a pergunta de teste. A escolha fica no endereço (`?ia=copilot`) e no navegador; o progresso
+é guardado por IA (o do Claude continua na chave que o Portal lê). Saíram o download do arquivo e o código de conexão de
+demonstração. Testado: troca entre as 4 IAs, passo marcado que continua depois de recarregar, desktop e 375 px.
+**Para decidir:** o Portal (Plugin e conexões) ainda tem "Baixar o plugin" (zip de demonstração); com a instalação pela loja,
+essa seção pode sair ou virar "Instalar pela loja". Faltam os links das lojas, os nomes exatos dos menus e os vídeos.
 
 ### 42. Navegação: caminho de diretório e revisão de UI/UX — Executado e testado (26/11/2026)
 

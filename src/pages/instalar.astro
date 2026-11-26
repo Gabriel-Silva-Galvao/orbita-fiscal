@@ -1,13 +1,15 @@
 ---
 /**
- * Instalar o plugin (briefing, Página 4): da compra à primeira pergunta respondida pela base.
- * Quatro passos que a pessoa marca como feitos (lembrado neste navegador), pergunta de teste
- * copiável e o fechamento “Deu certo?”. Formato de entrega, nomes dos menus do Claude e planos
- * do Claude que aceitam plugins ainda estão pendentes: aparecem com rótulo tracejado.
+ * Instalar (briefing, Página 4; item 41 da rodada de testes, 26/11/2026): a instalação é pela loja de cada IA.
+ * Primeiro a pessoa escolhe a IA (Claude, ChatGPT, Microsoft Copilot ou Gemini); a página mostra o vídeo e os
+ * passos daquela IA (src/data/tutoriais.ts), marcados como feitos e lembrados neste navegador, por IA.
+ * O último passo, a pergunta de teste, é o mesmo em todas. A escolha fica no endereço (?ia=chatgpt).
+ * Nomes das lojas e dos menus e os vídeos ficam "a confirmar" até a Órbita ser publicada em cada loja.
  */
 import Focus from '../layouts/Focus.astro';
 import Pending from '../components/Pending.astro';
 import { plans, brl } from '../data/plans';
+import { tutoriais } from '../data/tutoriais';
 
 // Rota do assinante: roda no servidor, atrás do middleware de sessão (src/middleware.ts).
 export const prerender = false;
@@ -22,76 +24,97 @@ const testQuestion =
 <Focus caminho={[{ label: 'Órbita', href: '/' }, { label: 'Minha conta', href: '/conta' }, { label: 'Instalar o plugin' }]} title="Instalar o plugin · Órbita" description="Instale o plugin da Órbita no Claude, conecte sua conta e faça a primeira pergunta.">
   <div class="wrap install" data-install data-plans={planData} data-billing={billing} data-user-email={userEmail}>
     <header class="install-head">
-      <h1 class="display-lg">Seu plugin está pronto</h1>
-      <p class="lead" data-plan-line>Quatro passos, poucos minutos. Marque cada um quando terminar.</p>
-      <p class="demo"><strong>Modo de demonstração.</strong> Nenhum arquivo é baixado e nenhuma conta é conectada de verdade.</p>
-      <div class="meter" aria-hidden="true"><span data-meter></span></div>
-      <p class="small mute" data-meter-text>0 de 4 passos feitos</p>
+      <h1 class="display-lg">Instale a Órbita na sua IA</h1>
+      <p class="lead" data-plan-line>A instalação é pela loja da própria IA, sem baixar arquivo. Escolha a sua para ver o passo a passo.</p>
     </header>
 
-    <ol class="steps">
-      <li class="step" data-step="1">
-        <div class="step-head">
-          <span class="n">1</span>
-          <h2 class="title">Baixe o arquivo do plugin</h2>
-        </div>
-        <div class="step-body">
-          <p>Versão atual<Pending kind="definir" />. O formato do arquivo<Pending kind="definir" /> é o que o Claude aceita para plugins.</p>
-          <button type="button" class="btn-main" data-download>Baixar o plugin</button>
-          <p class="notice" data-download-msg role="status" hidden></p>
-          <label class="done"><input type="checkbox" data-done="1" /> Já baixei</label>
-        </div>
-      </li>
+    <!-- 1. Escolha da IA -->
+    <fieldset class="escolha">
+      <legend class="escolha-t">Em qual IA você vai instalar?</legend>
+      <div class="escolha-op">
+        {
+          tutoriais.map((t, i) => (
+            <label class="ia-op">
+              <input type="radio" name="ia" value={t.id} checked={i === 0} data-ia-radio />
+              <span class="ia-op-nome">{t.nome}</span>
+              <span class="ia-op-quem small">{t.loja.quemInstala === 'admin' ? 'Instalado pelo TI da empresa' : 'Você mesmo instala'}</span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
 
-      <li class="step" data-step="2">
-        <div class="step-head">
-          <span class="n">2</span>
-          <h2 class="title">Envie o arquivo no Claude</h2>
-        </div>
-        <div class="step-body">
-          <p>No Claude, abra o menu de plugins e envie o arquivo que você baixou.</p>
-          <p class="path" aria-label="Caminho no Claude">
-            <span>Claude</span><span>Configurações</span><span>Plugins</span><span>Enviar plugin</span>
-            <Pending kind="confirmar" />
-          </p>
-          <details class="aside">
-            <summary>Não encontro o menu de plugins</summary>
-            <p>
-              Alguns planos do Claude não permitem instalar plugins<Pending kind="confirmar" />. Veja na Ajuda{' '}<a href="/ajuda#nao-aparece">o que fazer se o plugin não aparece</a>.
+    {
+      tutoriais.map((t, i) => (
+        <section class="ia-bloco" data-ia-bloco={t.id} hidden={i !== 0} aria-label={`Instalar no ${t.nome}`}>
+          {/* 2. Vídeo da IA escolhida */}
+          <figure class="video">
+            {t.video ? (
+              <video controls preload="metadata" src={t.video} />
+            ) : (
+              <div class="video-vazio" role="img" aria-label={`Vídeo do passo a passo no ${t.nome}, em produção`}>
+                <span class="video-play" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor" /></svg>
+                </span>
+                <span class="video-t">Vídeo: instalando a Órbita no {t.nome}</span>
+                <span class="small mute">Em produção<Pending kind="definir" /></span>
+              </div>
+            )}
+          </figure>
+
+          {/* 3. Onde fica a loja */}
+          <div class="loja">
+            <p class="small mute">
+              Onde fica: <strong>{t.loja.nome}</strong><Pending kind="confirmar" />
             </p>
-          </details>
-          <label class="done"><input type="checkbox" data-done="2" /> Já enviei</label>
-        </div>
-      </li>
-
-      <li class="step" data-step="3">
-        <div class="step-head">
-          <span class="n">3</span>
-          <h2 class="title">Conecte sua conta Órbita</h2>
-        </div>
-        <div class="step-body">
-          <p>Instalar o plugin não conecta o serviço sozinho. Na primeira pergunta, o Claude pede para você entrar; use o mesmo e-mail da assinatura<span data-email-hint></span>.</p>
-          <button type="button" class="btn-alt" data-connect>Gerar código de conexão</button>
-          <p class="notice" data-connect-msg role="status" hidden></p>
-          <label class="done"><input type="checkbox" data-done="3" /> Já conectei</label>
-        </div>
-      </li>
-
-      <li class="step" data-step="4">
-        <div class="step-head">
-          <span class="n">4</span>
-          <h2 class="title">Faça a primeira pergunta</h2>
-        </div>
-        <div class="step-body">
-          <p>Cole esta pergunta no Claude. A resposta deve trazer as fontes consultadas na base.</p>
-          <div class="copy-row">
-            <p class="question" data-question>{testQuestion}</p>
-            <button type="button" class="btn-alt copy" data-copy>Copiar pergunta</button>
+            <p class="path" aria-label={`Caminho no ${t.nome}`}>
+              {t.loja.caminho.map((c) => <span>{c}</span>)}
+            </p>
+            {t.loja.url ? (
+              <a class="btn-main" href={t.loja.url} target="_blank" rel="noopener">Abrir a Órbita na loja</a>
+            ) : (
+              <p class="small mute">O link direto para a Órbita na loja aparece aqui quando a publicação for aprovada.</p>
+            )}
+            {t.loja.quemInstala === 'admin' && (
+              <p class="notice">No {t.nome}, quem instala é o administrador da empresa. Envie esta página para o TI.</p>
+            )}
           </div>
-          <label class="done"><input type="checkbox" data-done="4" /> Recebi a resposta com as fontes</label>
-        </div>
-      </li>
-    </ol>
+
+          <div class="meter" aria-hidden="true"><span data-meter></span></div>
+          <p class="small mute" data-meter-text>0 de {t.instalacao.length + 1} passos feitos</p>
+
+          {/* 4. Passos da IA escolhida */}
+          <ol class="steps">
+            {t.instalacao.map((p, n) => (
+              <li class="step">
+                <div class="step-head">
+                  <span class="n">{n + 1}</span>
+                  <h2 class="title">{p.titulo}</h2>
+                </div>
+                <div class="step-body">
+                  <p>{p.texto}</p>
+                  <label class="done"><input type="checkbox" data-done={String(n + 1)} /> Feito</label>
+                </div>
+              </li>
+            ))}
+            <li class="step">
+              <div class="step-head">
+                <span class="n">{t.instalacao.length + 1}</span>
+                <h2 class="title">Faça a primeira pergunta</h2>
+              </div>
+              <div class="step-body">
+                <p>Cole esta pergunta no {t.nome}. A resposta deve trazer as fontes consultadas na base.</p>
+                <div class="copy-row">
+                  <p class="question" data-question>{testQuestion}</p>
+                  <button type="button" class="btn-alt copy" data-copy>Copiar pergunta</button>
+                </div>
+                <label class="done"><input type="checkbox" data-done={String(t.instalacao.length + 1)} /> Recebi a resposta com as fontes</label>
+              </div>
+            </li>
+          </ol>
+        </section>
+      ))
+    }
 
     <section class="closing" aria-labelledby="ok-t">
       <h2 id="ok-t" class="display-md">Deu certo?</h2>
@@ -126,6 +149,117 @@ const testQuestion =
     width: 0;
     background: var(--brand);
     transition: width 400ms var(--ease-out);
+  }
+  /* Item 41: escolha da IA. */
+  .escolha {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .escolha-t {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    color: var(--ink);
+  }
+  .escolha-op {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-3);
+  }
+  .ia-op {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    padding: var(--space-4);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 200ms, background-color 200ms;
+  }
+  .ia-op:hover {
+    border-color: var(--line-strong);
+  }
+  .ia-op input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ia-op:has(input:checked) {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 10%, var(--surface));
+  }
+  .ia-op:has(input:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .ia-op-nome {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .ia-op-quem {
+    color: var(--mute);
+  }
+  .ia-bloco {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .ia-bloco[hidden] {
+    display: none;
+  }
+  /* Vídeo 16:9 (ou o espaço reservado enquanto o vídeo é gravado). */
+  .video {
+    margin: 0;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .video video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #000;
+  }
+  .video-vazio {
+    height: 100%;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+  }
+  .video-play {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+  .video-play svg {
+    width: 28px;
+    height: 28px;
+    margin-left: 3px;
+  }
+  .video-t {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    color: var(--ink);
+  }
+  .loja {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+  }
+  .loja .notice {
+    width: 100%;
   }
   .steps {
     list-style: none;
@@ -270,8 +404,7 @@ const testQuestion =
   const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const plans = JSON.parse(root.dataset.plans ?? '{}') as Record<string, string>;
   const showPlan = (plano: string, email: string) => {
-    $('[data-plan-line]').textContent = `Plano ${plans[plano]}. Quatro passos, poucos minutos. Marque cada um quando terminar.`;
-    if (email) $('[data-email-hint]').textContent = ` (${email})`;
+    $('[data-plan-line]').textContent = `Plano ${plans[plano]}. A instalação é pela loja da própria IA, sem baixar arquivo. Escolha a sua para ver o passo a passo.`;
   };
   const billing = root.dataset.billing ?? '';
   if (billing) {
@@ -285,111 +418,86 @@ const testQuestion =
     if (sub) showPlan(sub.plano, sub.email);
   }
 
-  // Passos marcados, lembrados neste navegador.
-  const KEY = 'of-demo-instalacao';
-  const boxes = Array.from(root.querySelectorAll<HTMLInputElement>('[data-done]'));
-  let done: string[] = [];
-  try {
-    done = JSON.parse(localStorage.getItem(KEY) ?? '[]');
-  } catch {}
-  const paint = () => {
+  // Item 41: escolha da IA (no endereço, ?ia=…, e lembrada neste navegador) e passos marcados por IA.
+  const IA_KEY = 'of-instalar-ia';
+  const radios = Array.from(root.querySelectorAll<HTMLInputElement>('[data-ia-radio]'));
+  const blocos = Array.from(root.querySelectorAll<HTMLElement>('[data-ia-bloco]'));
+  // O Claude continua na chave antiga: o Portal lê esse progresso (passosInstalacao).
+  const chave = (ia: string) => (ia === 'claude' ? 'of-demo-instalacao' : `of-demo-instalacao-${ia}`);
+  const ajuda: Record<string, string> = { '1': 'instalar', '2': 'nao-aparece', '3': 'conectar', '4': 'conectar' };
+
+  function pintar(bloco: HTMLElement) {
+    const ia = bloco.dataset.iaBloco!;
+    const boxes = Array.from(bloco.querySelectorAll<HTMLInputElement>('[data-done]'));
+    let feitos: string[] = [];
+    try {
+      feitos = JSON.parse(localStorage.getItem(chave(ia)) ?? '[]');
+    } catch {}
     boxes.forEach((b) => {
-      b.checked = done.includes(b.dataset.done!);
+      b.checked = feitos.includes(b.dataset.done!);
       b.closest('.step')!.classList.toggle('is-done', b.checked);
     });
-    const n = done.length;
-    $('[data-meter]').style.width = `${(n / 4) * 100}%`;
-    $('[data-meter-text]').textContent = `${n} de 4 passos feitos`;
-    // Quem trava aqui vai para a Ajuda no passo certo.
-    const first = ['1', '2', '3', '4'].find((s) => !done.includes(s));
-    const anchors: Record<string, string> = { '1': 'instalar', '2': 'nao-aparece', '3': 'conectar', '4': 'conectar' };
-    $<HTMLAnchorElement>('[data-help]').href = `/ajuda#${anchors[first ?? '4']}`;
-  };
-  boxes.forEach((b) =>
-    b.addEventListener('change', () => {
-      done = b.checked ? [...new Set([...done, b.dataset.done!])] : done.filter((d) => d !== b.dataset.done);
-      try {
-        localStorage.setItem(KEY, JSON.stringify(done));
-      } catch {}
-      paint();
-    }),
-  );
-  paint();
+    const total = boxes.length;
+    const n = boxes.filter((b) => b.checked).length;
+    bloco.querySelector<HTMLElement>('[data-meter]')!.style.width = `${(n / total) * 100}%`;
+    bloco.querySelector<HTMLElement>('[data-meter-text]')!.textContent = `${n} de ${total} passos feitos`;
+    const primeiro = boxes.find((b) => !b.checked)?.dataset.done ?? String(total);
+    $<HTMLAnchorElement>('[data-help]').href = `/ajuda#${ajuda[primeiro] ?? 'conectar'}`;
+  }
 
-  // Download (item 6): com a API, pede um link que vale 15 minutos e baixa o zip de demonstração.
-  // Sem API (modo de demonstração do site), só simula os estados.
-  const dl = $<HTMLButtonElement>('[data-download]');
-  const dlMsg = $('[data-download-msg]');
-  const apiBase = (document.querySelector<HTMLElement>('[data-install]')?.dataset.billing ?? '').replace(/\/billing\/?$/, '');
-  const avisar = (texto: string, ok = true) => {
-    dlMsg.className = ok ? 'notice is-ok' : 'notice is-error';
-    dlMsg.textContent = texto;
-    dlMsg.hidden = false;
-  };
-  dl.addEventListener('click', async () => {
-    dl.disabled = true;
-    dl.setAttribute('aria-busy', 'true');
-    dl.textContent = 'Preparando o arquivo…';
-    dlMsg.hidden = true;
+  function mostrar(ia: string, gravar = true) {
+    if (!blocos.some((b) => b.dataset.iaBloco === ia)) ia = 'claude';
+    radios.forEach((r) => (r.checked = r.value === ia));
+    blocos.forEach((b) => (b.hidden = b.dataset.iaBloco !== ia));
+    pintar(blocos.find((b) => b.dataset.iaBloco === ia)!);
+    if (!gravar) return;
     try {
-      if (!apiBase) {
-        await new Promise((r) => setTimeout(r, 1200));
-        avisar('Arquivo pronto. Na versão real, o download começa agora e o link vale por 15 minutos.');
-        return;
-      }
-      const r = await fetch(`${apiBase}/plugin/link`, { method: 'POST', credentials: 'include' });
-      if (r.status === 403) {
-        avisar('O download fica disponível quando a assinatura estiver ativa. Confira em Minha conta.', false);
-        return;
-      }
-      if (!r.ok) throw new Error(String(r.status));
-      const link = await r.json();
-      // O navegador baixa o arquivo sem sair desta página (o servidor manda como anexo).
-      const a = document.createElement('a');
-      a.href = link.url;
-      a.download = link.arquivo;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      const hora = new Date(link.expira_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      avisar(
-        `Download iniciado: ${link.arquivo}. É um pacote de DEMONSTRAÇÃO: o plugin real chega quando o servidor da Órbita estiver no ar. O link vale até ${hora}.`,
-      );
-    } catch {
-      avisar('Não deu para preparar o arquivo agora. Tente de novo em instantes.', false);
-    } finally {
-      dl.disabled = false;
-      dl.removeAttribute('aria-busy');
-      dl.textContent = 'Baixar de novo';
-    }
-  });
+      localStorage.setItem(IA_KEY, ia);
+    } catch {}
+    const url = new URL(location.href);
+    url.searchParams.set('ia', ia);
+    history.replaceState(null, '', url);
+  }
 
-  // Conexão: código curto para digitar no Claude quando ele pedir.
-  $('[data-connect]').addEventListener('click', () => {
-    const code = Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
-    const msg = $('[data-connect-msg]');
-    msg.className = 'notice';
-    msg.textContent = '';
-    const strong = document.createElement('strong');
-    strong.textContent = `Código: ${code.slice(0, 3)}-${code.slice(3)}`;
-    const span = document.createElement('span');
-    span.textContent = 'Digite no Claude quando ele pedir para conectar a Órbita. Vale por 10 minutos. Exemplo de demonstração.';
-    msg.append(strong, span);
-    msg.hidden = false;
+  blocos.forEach((bloco) => {
+    const ia = bloco.dataset.iaBloco!;
+    bloco.querySelectorAll<HTMLInputElement>('[data-done]').forEach((b) =>
+      b.addEventListener('change', () => {
+        let feitos: string[] = [];
+        try {
+          feitos = JSON.parse(localStorage.getItem(chave(ia)) ?? '[]');
+        } catch {}
+        feitos = b.checked ? [...new Set([...feitos, b.dataset.done!])] : feitos.filter((d) => d !== b.dataset.done);
+        try {
+          localStorage.setItem(chave(ia), JSON.stringify(feitos));
+        } catch {}
+        pintar(bloco);
+      }),
+    );
   });
+  radios.forEach((r) => r.addEventListener('change', () => r.checked && mostrar(r.value)));
+  let inicial = new URLSearchParams(location.search).get('ia') ?? '';
+  if (!inicial) {
+    try {
+      inicial = localStorage.getItem(IA_KEY) ?? '';
+    } catch {}
+  }
+  mostrar(inicial || 'claude', false);
 
   // Copiar a pergunta de teste
-  $('[data-copy]').addEventListener('click', async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement;
-    try {
-      await navigator.clipboard.writeText($('[data-question]').textContent ?? '');
-      btn.textContent = 'Copiada';
-      setTimeout(() => (btn.textContent = 'Copiar pergunta'), 2000);
-    } catch {
-      const r = document.createRange();
-      r.selectNodeContents($('[data-question]'));
-      getSelection()?.removeAllRanges();
-      getSelection()?.addRange(r);
-    }
-  });
+  root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
+    btn.addEventListener('click', async () => {
+      const q = btn.closest('.copy-row')!.querySelector<HTMLElement>('[data-question]')!;
+      try {
+        await navigator.clipboard.writeText(q.textContent ?? '');
+        btn.textContent = 'Copiada';
+        setTimeout(() => (btn.textContent = 'Copiar pergunta'), 2000);
+      } catch {
+        const r = document.createRange();
+        r.selectNodeContents(q);
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(r);
+      }
+    }),
+  );
 </script>
