@@ -509,7 +509,13 @@ a fluidez da animação (o painel de teste estava oculto).
 - Teclado (Enter/espaço), leitor de tela (`aria-expanded`) e movimento reduzido (abre sem animação).
 - Testar nas 6 perguntas da landing e nas da Ajuda, no computador e no celular, clicando rápido várias vezes.
 
-### 31. /bases: fade nos cards e o estado novo zera o filtro — Lapidado (25/11/2026)
+### 31. /bases: fade nos cards e o estado novo zera o filtro — Executado e testado (26/11/2026)
+
+**Feito.** Ao filtrar, buscar ou trocar de página, os cards que saem fazem fade out e descem 6 px (180 ms) e só então
+os novos entram com a animação de entrada; uma troca nova cancela a anterior; movimento reduzido troca direto.
+Escolher outro estado no mapa zera estado, tipo, busca e página da lista (o painel do estado novo abre normalmente).
+**Testes.** 8 cards com o fade durante a troca e nenhum depois; com tipo + busca + estado BA aplicados, clicar em MG
+voltou a 108 bases, página 1, sem filtro de estado, sem busca e com "Todas".
 
 **Pedido.** Animação de saída (fade out) nos cards de cada base; ao clicar num estado novo no mapa, zerar o filtro
 que estava aplicado na lista lá embaixo.

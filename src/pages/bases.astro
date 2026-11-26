@@ -286,16 +286,36 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
   let pagina = 1;
   let achadas: HTMLElement[] = cards;
 
+  // Item 31: os cards que saem fazem fade out (180 ms) antes dos novos entrarem; uma troca nova cancela a anterior.
+  let troca = 0;
+  function trocarCards(visiveis: Set<HTMLElement>) {
+    const id = ++troca;
+    const saindo = cards.filter((c) => !c.hidden && !visiveis.has(c));
+    const aplicar = () => {
+      if (id !== troca) return;
+      cards.forEach((c) => {
+        const v = visiveis.has(c);
+        const novo = v && c.hidden;
+        c.classList.remove('is-saindo');
+        c.hidden = !v;
+        if (novo && !reduzido) {
+          c.classList.remove('is-new');
+          void c.offsetWidth; // recomeça a animação de entrada
+          c.classList.add('is-new');
+        }
+      });
+    };
+    if (reduzido || !saindo.length) return aplicar();
+    saindo.forEach((c) => c.classList.add('is-saindo'));
+    window.setTimeout(aplicar, 180);
+  }
+
   function mostrar(rolar = false) {
     const paginas = Math.max(1, Math.ceil(achadas.length / POR_PAGINA));
     pagina = Math.min(pagina, paginas);
     const ini = (pagina - 1) * POR_PAGINA;
     const visiveis = new Set(achadas.slice(ini, ini + POR_PAGINA));
-    cards.forEach((c) => {
-      const v = visiveis.has(c);
-      c.hidden = !v;
-      c.classList.toggle('is-new', v && !reduzido);
-    });
+    trocarCards(visiveis);
     pager.replaceChildren();
     if (paginas > 1) {
       const botao = (rotulo: string, alvo: number, opts: { atual?: boolean; off?: boolean; aria?: string } = {}) => {
@@ -455,6 +475,13 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
         filtrar();
       }
       return;
+    }
+    // Item 31: escolher outro estado zera os filtros da lista (estado, tipo, busca e página).
+    if (estado.uf || estado.tipo || estado.q) {
+      estado.uf = '';
+      estado.q = '';
+      busca.value = '';
+      escolherTipo('');
     }
     fixo = b;
     ufs.forEach((x) => x.classList.toggle('is-on', x === b));
@@ -1044,6 +1071,14 @@ const maxUf = Math.max(...estados.map((e) => docsUf(e.uf)));
   .cb-card-n strong {
     font-size: 1.375rem;
     font-variant-numeric: tabular-nums;
+  }
+  .cb-card.is-saindo {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 180ms ease-in,
+      transform 180ms ease-in;
+    pointer-events: none;
   }
   .cb-card.is-new {
     animation: cb-painel 300ms var(--ease-out, ease);
