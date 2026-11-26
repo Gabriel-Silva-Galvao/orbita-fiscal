@@ -65,3 +65,32 @@ def test_mensagem_fica_registrada_mesmo_se_o_envio_falhar(api, monkeypatch):
     with pytest.raises(RuntimeError):
         http.post("/contato/empresarial", json=OK)
     assert banco.um("SELECT empresa, enviado FROM contatos") == {"empresa": "Souza Contabilidade", "enviado": 0}
+
+
+def test_confirmacao_nao_repete_o_texto_de_quem_escreveu(api, monkeypatch):
+    """Regressão ARES-SEC-009: a confirmação ia para o e-mail informado com o nome e a empresa digitados, então dava
+    para mandar a qualquer pessoa um texto escolhido por um estranho, assinado pela Órbita."""
+    http, *_ = api
+    enviados = []
+    monkeypatch.setattr(correio, "enviar", lambda m: enviados.append(m) or True)
+    isca = {**OK, "nome": "Clique em http://golpe.example", "empresa": "Seu banco: conta bloqueada", "email": "vitima@exemplo.test"}
+    assert http.post("/contato/empresarial", json=isca).status_code == 202
+    confirmacao = enviados[1]
+    assert confirmacao["To"] == "vitima@exemplo.test"
+    texto = confirmacao.get_content()
+    assert "golpe.example" not in texto and "conta bloqueada" not in texto
+    assert "golpe.example" not in confirmacao["Subject"]
+
+
+def test_limite_por_destino_mesmo_mudando_de_ip(api):
+    """Regressão ARES-SEC-009: o limite era só por IP; trocando de IP, a mesma vítima recebia confirmações sem fim."""
+    from fastapi.testclient import TestClient
+
+    http, *_ = api
+    codigos = []
+    for i in range(6):
+        outro_ip = TestClient(http.app, client=(f"203.0.113.{i + 1}", 50000))
+        codigos.append(outro_ip.post("/contato/empresarial", json={**OK, "email": "vitima@exemplo.test"}).status_code)
+    assert codigos == [202] * 5 + [429], codigos
+    # Outro destino, do mesmo IP do 6º pedido, continua passando.
+    assert TestClient(http.app, client=("203.0.113.6", 50000)).post("/contato/empresarial", json=OK).status_code == 202

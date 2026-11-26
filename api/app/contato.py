@@ -11,8 +11,6 @@ por SMTP para CONTATO_EMAIL, com Reply-To de quem escreveu, e uma confirmação 
 from __future__ import annotations
 
 import re
-import time
-from collections import defaultdict, deque
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -35,8 +33,8 @@ CREATE TABLE IF NOT EXISTS contatos (
 );
 """
 
-# Mesmo regex seguro de app/auth.py (sem ReDoS).
-from app.auth import EMAIL_RE  # noqa: E402
+# Mesmo regex seguro de app/auth.py (sem ReDoS) e o mesmo contador com memória limitada (ARES-SEC-016).
+from app.auth import EMAIL_RE, Limitador  # noqa: E402
 JANELA, MAXIMO = 3600, 5
 # ARES-QA-002: nome e empresa vão para o assunto e o texto do e-mail; quebra de linha ali fazia o EmailMessage
 # recusar o cabeçalho (ValueError), a rota responder 500 e a mensagem se perder. Caractere de controle é recusado.
@@ -54,7 +52,9 @@ class Mensagem(BaseModel):
 
 def criar_router() -> APIRouter:
     r = APIRouter(prefix="/contato", tags=["Contato"])
-    envios: dict[str, deque] = defaultdict(deque)
+    # ARES-SEC-009: além do limite por IP, um limite por endereço de destino, para a confirmação não virar
+    # disparo de e-mails para uma mesma vítima (o IP muda fácil; o destino não).
+    por_ip, por_destino = Limitador(JANELA), Limitador(JANELA)
 
     @r.post("/empresarial", status_code=202)
     def empresarial(dados: Mensagem, req: Request):
@@ -69,15 +69,13 @@ def criar_router() -> APIRouter:
                 status_code=422,
             )
         ip = req.client.host if req.client else "?"
-        q, agora = envios[ip], time.time()
-        while q and agora - q[0] > JANELA:
-            q.popleft()
-        if len(q) >= MAXIMO:
+        if por_ip.bloqueado(ip, MAXIMO) or por_destino.bloqueado(email, MAXIMO):
             return JSONResponse(
                 {"codigo": "muitas_mensagens", "descricao": "Muitas mensagens em pouco tempo. Tente de novo mais tarde."},
                 status_code=429,
             )
-        q.append(agora)
+        por_ip.falhou(ip, MAXIMO)
+        por_destino.falhou(email, MAXIMO)
 
         # Grava antes de enviar: se o envio falhar, a mensagem continua registrada (ARES-QA-002).
         banco = req.app.state.banco
@@ -96,8 +94,11 @@ def criar_router() -> APIRouter:
                 correio.texto_simples(
                     email,
                     "Recebemos sua mensagem · Órbita",
-                    f"Olá, {nome}.\n\nRecebemos sua mensagem sobre planos empresariais para {empresa}. "
-                    "Uma pessoa da equipe responde por este e-mail.\n\nEquipe Órbita\n",
+                    # ARES-SEC-009: sem nome nem empresa (texto de quem escreveu): o formulário aceita qualquer
+                    # endereço, e a confirmação não pode levar a outra pessoa um texto escolhido por um estranho.
+                    "Olá,\n\nRecebemos sua mensagem sobre os planos empresariais da Órbita. "
+                    "Uma pessoa da equipe responde por este e-mail.\n\n"
+                    "Se você não escreveu para a Órbita, pode ignorar esta mensagem.\n\nEquipe Órbita\n",
                 )
             )
         if enviado:
