@@ -1013,10 +1013,20 @@ do cartão guardado, link para faturas e reembolso). Testado com contas novas da
 pop-ups até a trilha "Pedido recebido", seção em Conta e segurança, e a 375 px. Observação: ao reiniciar a API, a simulação do
 Asaas perde as assinaturas (fica na memória), e a troca de forma de contas antigas responde "Assinatura não encontrada".
 
-### 44. Alertas e resumo mais completos — A lapidar
+### 44. Alertas e resumo mais completos — Executado e testado (26/11/2026)
 
 Explorar mais as áreas de alertas por tema e resumo semanal do Portal. A lapidar: o que falta hoje (temas, frequência, prévia do
 resumo, histórico dos alertas enviados) e o que depende de dados reais.
+
+**Feito:** API nova `api/app/alertas.py`: `GET /alertas` (sessão) e `PUT /alertas/temas` e `PUT /alertas/resumo` (só Ouro,
+conferido no servidor: 403 nos outros planos). Temas de 3 a 60 caracteres, até 20, sem repetir; fontes, frequência, áreas e dia
+de listas fechadas (422 fora delas). 3 testes novos (92 passando). Página: temas saem do navegador e vão para a conta; cada tema
+vira um cartão com onde acompanhar (STF e STJ, CARF e conselhos, Receita e normas, TRFs e TJs) e quando avisar (na hora, uma vez
+por dia, só no resumo), salvos na hora; contador "x de 20"; "Alertas enviados" com o estado vazio. Resumo: áreas e dia da
+semana, salvos na hora, e uma prévia marcada "Exemplo" que muda com as áreas e o dia. Na demonstração (sem API), tudo fica no
+navegador e os temas antigos são aproveitados. Testado com conta Ouro nova: tema por sugestão e por texto, fonte desmarcada,
+frequência, áreas e dia, conferidos na API; desktop e 375 px. **Depende de dados reais:** o envio dos alertas e do resumo e o
+histórico, que vêm do servidor MCP e da base.
 
 ### 45. Suporte: só "Atendimento" e sem suporte prioritário — Executado e testado (26/11/2026)
 

@@ -1,8 +1,10 @@
 ---
 /**
  * Alertas e resumo (itens 5 e 8): alertas por tema e resumo semanal, recursos do Ouro.
- * Nos outros planos, a página mostra o que o Ouro dá, com o upgrade. Na demonstração, temas e áreas
- * ficam neste navegador; depois, na API.
+ * Nos outros planos, a página mostra o que o Ouro dá, com o upgrade.
+ * Item 44 (26/11/2026): temas e resumo ficam na conta (GET/PUT /alertas, gravação só no Ouro, conferida na API).
+ * Cada tema tem as fontes que acompanha e quando avisar; o resumo tem as áreas e o dia da semana, com uma prévia de
+ * exemplo; e há o histórico dos alertas enviados. Sem API (demonstração), tudo fica neste navegador.
  */
 import Portal from '../../layouts/Portal.astro';
 import Pending from '../../components/Pending.astro';
@@ -11,6 +13,14 @@ import { plans, brl } from '../../data/plans';
 export const prerender = false;
 const sugestoes = ['ICMS-ST', 'Exclusão do ICMS do PIS/Cofins', 'Prescrição intercorrente', 'Reforma tributária (IBS e CBS)'];
 const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'Previdenciário', 'Processo tributário', 'Reforma tributária (IBS e CBS)'];
+const dias = [
+  ['segunda', 'Segunda'],
+  ['terca', 'Terça'],
+  ['quarta', 'Quarta'],
+  ['quinta', 'Quinta'],
+  ['sexta', 'Sexta'],
+];
+const billing = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 ---
 
 <Portal titulo="Alertas e resumo" descricao="Alertas por tema e resumo semanal por área, no plano Ouro." pagina="alertas">
@@ -31,9 +41,9 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
     <a class="btn-main" href="/assinar/ouro">Fazer upgrade para o Ouro ({brl(plans.ouro.cents)} por mês)</a>
   </section>
 
-  <section class="pt-secao" data-liberado hidden aria-labelledby="alertas-t">
+  <section class="pt-secao" data-liberado hidden aria-labelledby="alertas-t" data-billing={billing}>
     <h2 id="alertas-t">Alertas por tema</h2>
-    <p class="pt-intro small mute">Salve os temas que você acompanha. Quando sair julgado ou norma nova sobre eles, avisamos aqui e por e-mail<Pending kind="confirmar" />.</p>
+    <p class="pt-intro small mute">Salve os temas que você acompanha. Para cada um, escolha onde acompanhar e quando avisar. Os alertas chegam aqui e por e-mail<Pending kind="confirmar" />.</p>
     <form class="tema-form" data-tema-form novalidate>
       <div class="field">
         <label for="tema">Novo tema</label>
@@ -46,21 +56,37 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
     <div class="filtros">
       {sugestoes.map((s) => <button type="button" data-sugestao={s}>+ {s}</button>)}
     </div>
-    <h3 class="h3">Seus temas</h3>
-    <ul class="chips" data-temas></ul>
+    <h3 class="h3">Seus temas <span class="small mute" data-temas-conta></span></h3>
+    <ul class="temas" data-temas></ul>
     <p class="vazio small" data-temas-vazio>Nenhum tema salvo ainda.</p>
-    <p class="vazio small">Os alertas aparecem aqui quando houver decisão ou norma nova sobre os seus temas.</p>
+    <p class="small mute" data-temas-msg role="status"></p>
+
+    <h3 class="h3">Alertas enviados</h3>
+    <p class="vazio small" data-enviados-vazio>Os alertas aparecem aqui, com a data e o link para a fonte, quando houver decisão ou norma nova sobre os seus temas<Pending kind="definir" />.</p>
   </section>
 
   <section class="pt-secao" data-liberado hidden aria-labelledby="resumo-t">
     <h2 id="resumo-t">Resumo semanal</h2>
-    <p class="pt-intro small mute">Escolha as áreas. O resumo chega toda semana<Pending kind="confirmar" />, aqui e por e-mail.</p>
+    <p class="pt-intro small mute">Escolha as áreas e o dia. O resumo chega toda semana, aqui e por e-mail<Pending kind="confirmar" />.</p>
     <fieldset class="areas" data-areas>
       <legend class="sr-only">Áreas do resumo</legend>
       {areas.map((a) => <label class="area"><input type="checkbox" value={a} /> {a}</label>)}
     </fieldset>
+    <div class="dia">
+      <label for="dia-resumo">Dia da semana</label>
+      <select id="dia-resumo" data-dia>
+        {dias.map(([v, r]) => <option value={v}>{r}</option>)}
+      </select>
+    </div>
     <p class="small mute" data-areas-msg role="status"></p>
-    <p class="vazio small">O primeiro resumo aparece aqui na semana seguinte à escolha das áreas.</p>
+
+    <figure class="previa" aria-label="Exemplo de como o resumo chega">
+      <span class="selo">Exemplo</span>
+      <p class="small mute">Resumo semanal · <span data-previa-dia>segunda</span></p>
+      <p class="previa-t">O que mudou nas suas áreas nesta semana</p>
+      <ul class="previa-lista" data-previa-lista></ul>
+      <p class="small mute">Cada item traz a ementa e o link para conferir na fonte. O conteúdo acima é só um modelo.</p>
+    </figure>
   </section>
 </Portal>
 
@@ -96,36 +122,6 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
   .tema-form .btn-alt {
     width: auto;
   }
-  .chips {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .chips :global(li) {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 4px 4px 12px;
-    border-radius: var(--radius-pill);
-    background: var(--soft);
-    font: var(--text-small);
-  }
-  .chips :global(button) {
-    width: 28px;
-    height: 28px;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--ink);
-    font-size: 1.1rem;
-    cursor: pointer;
-  }
-  .chips :global(button:focus-visible) {
-    outline: 3px solid var(--brand);
-  }
   .areas {
     border: 0;
     padding: 0;
@@ -148,6 +144,107 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
   .area input {
     accent-color: var(--brand);
   }
+  /* Item 44: temas com fontes e frequência, dia do resumo, prévia. */
+  .temas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .temas :global(li) {
+    display: grid;
+    gap: 10px;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+  .temas :global(.tema-topo) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .temas :global(.tema-nome) {
+    font-weight: 600;
+  }
+  .temas :global(.tema-remover) {
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mute);
+    font: var(--text-small);
+    cursor: pointer;
+  }
+  .temas :global(.tema-remover:hover) {
+    color: var(--ink);
+  }
+  .temas :global(.tema-opcoes) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    font: var(--text-small);
+  }
+  .temas :global(.fonte) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 2px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .temas :global(.fonte:has(input:checked)) {
+    border-color: color-mix(in srgb, var(--brand) 55%, transparent);
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+  }
+  .temas :global(.fonte input) {
+    accent-color: var(--brand);
+    margin: 0;
+  }
+  .temas :global(select),
+  .dia select {
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font: var(--text-small);
+  }
+  .dia {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: var(--text-small);
+  }
+  .previa {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-4);
+    border: 1px dashed color-mix(in srgb, var(--brand) 55%, var(--line));
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+  }
+  .previa p {
+    margin: 0;
+  }
+  .previa-t {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+  }
+  .previa-lista {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 4px;
+    font: var(--text-small);
+  }
   .exemplo-alerta {
     margin: var(--space-3) 0;
     padding: var(--space-4);
@@ -164,82 +261,204 @@ const areas = ['Tributário federal', 'ICMS e estaduais', 'ISS e municipais', 'P
 </style>
 
 <script>
-  import { aoCarregar, $ } from '../../scripts/portal';
+  import { aoCarregar, call, $ } from '../../scripts/portal';
 
-  aoCarregar((ctx) => {
-    $('[data-bloqueado]').hidden = ctx.ouro;
-    document.querySelectorAll<HTMLElement>('[data-liberado]').forEach((el) => (el.hidden = !ctx.ouro));
-  });
+  type Fonte = 'superiores' | 'administrativo' | 'normas' | 'regionais';
+  type Tema = { tema: string; fontes: Fonte[]; frequencia: 'na_hora' | 'diario' | 'semanal' };
+  const FONTES: [Fonte, string][] = [
+    ['superiores', 'STF e STJ'],
+    ['administrativo', 'CARF e conselhos'],
+    ['normas', 'Receita e normas'],
+    ['regionais', 'TRFs e TJs'],
+  ];
+  const FREQ: [Tema['frequencia'], string][] = [
+    ['na_hora', 'Avisar na hora'],
+    ['diario', 'Uma vez por dia'],
+    ['semanal', 'Só no resumo semanal'],
+  ];
+  const DIA: Record<string, string> = { segunda: 'segunda', terca: 'terça', quarta: 'quarta', quinta: 'quinta', sexta: 'sexta' };
+  // Modelo da prévia: um item por área escolhida (só a estrutura; não é conteúdo real).
+  const MODELO: Record<string, string> = {
+    'Tributário federal': 'Acórdão do CARF sobre crédito de PIS/Cofins, com a ementa e o link',
+    'ICMS e estaduais': 'Decisão de conselho estadual sobre ICMS-ST',
+    'ISS e municipais': 'Julgado sobre o local de incidência do ISS',
+    Previdenciário: 'Norma nova sobre contribuição previdenciária',
+    'Processo tributário': 'Tese de recurso repetitivo do STJ sobre execução fiscal',
+    'Reforma tributária (IBS e CBS)': 'Regulamentação nova do IBS e da CBS',
+  };
 
-  const ler = (k: string): string[] => {
+  const secao = $('[data-billing]');
+  const apiBase = (secao.dataset.billing ?? '').replace(/\/billing\/?$/, '');
+  let temas: Tema[] = [];
+  let ouro = false;
+
+  // ---------- leitura e gravação (API, ou este navegador na demonstração) ----------
+  const local = <T,>(k: string, padrao: T): T => {
     try {
-      return JSON.parse(localStorage.getItem(k) ?? '[]');
+      return JSON.parse(localStorage.getItem(k) ?? 'null') ?? padrao;
     } catch {
-      return [];
+      return padrao;
     }
   };
-  const gravar = (k: string, v: string[]) => {
+  const guardar = (k: string, v: unknown) => {
     try {
       localStorage.setItem(k, JSON.stringify(v));
     } catch {}
   };
+  async function carregar() {
+    if (!apiBase) {
+      const antigos = local<(string | Tema)[]>('of-demo-temas', []);
+      temas = antigos.map((t) => (typeof t === 'string' ? { tema: t, fontes: FONTES.map((f) => f[0]), frequencia: 'na_hora' } : t));
+      return { resumo: local('of-demo-resumo', { areas: local<string[]>('of-demo-areas', []), dia: 'segunda' }) };
+    }
+    const r = await call(apiBase, '/alertas').catch(() => null);
+    if (!r?.ok) return { resumo: { areas: [], dia: 'segunda' } };
+    const d = await r.json();
+    temas = d.temas;
+    return d;
+  }
+  async function salvarTemas(msgOk: string) {
+    const msg = $('[data-temas-msg]');
+    if (!apiBase) {
+      guardar('of-demo-temas', temas);
+      msg.textContent = msgOk;
+      return true;
+    }
+    const r = await call(apiBase, '/alertas/temas', 'PUT', temas).catch(() => null);
+    if (!r?.ok) {
+      const e = await r?.json().catch(() => ({}));
+      msg.textContent = e?.detail?.mensagem ?? 'Não deu para salvar agora. Tente de novo.';
+      return false;
+    }
+    temas = await r.json();
+    msg.textContent = msgOk;
+    return true;
+  }
 
-  // Temas (até 20, sem repetir).
-  const TEMAS = 'of-demo-temas';
-  const msg = $('#tema-msg');
-  function pintar() {
+  // ---------- temas ----------
+  const msgTema = $('#tema-msg');
+  function pintarTemas() {
     const lista = $('[data-temas]');
-    const temas = ler(TEMAS);
-    lista.replaceChildren();
-    temas.forEach((t) => {
-      const li = document.createElement('li');
-      li.append(t);
-      const x = document.createElement('button');
-      x.type = 'button';
-      x.textContent = '×';
-      x.setAttribute('aria-label', `Remover o tema ${t}`);
-      x.addEventListener('click', () => {
-        gravar(TEMAS, ler(TEMAS).filter((y) => y !== t));
-        pintar();
-      });
-      li.append(x);
-      lista.append(li);
-    });
+    lista.replaceChildren(
+      ...temas.map((t, i) => {
+        const li = document.createElement('li');
+        const topo = document.createElement('div');
+        topo.className = 'tema-topo';
+        const nome = document.createElement('span');
+        nome.className = 'tema-nome';
+        nome.textContent = t.tema;
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.className = 'tema-remover';
+        x.textContent = 'Remover';
+        x.setAttribute('aria-label', `Remover o tema ${t.tema}`);
+        x.addEventListener('click', async () => {
+          const antes = temas;
+          temas = temas.filter((_, k) => k !== i);
+          if (await salvarTemas(`Tema "${t.tema}" removido.`)) pintarTemas();
+          else temas = antes;
+        });
+        topo.append(nome, x);
+
+        const opcoes = document.createElement('div');
+        opcoes.className = 'tema-opcoes';
+        opcoes.setAttribute('role', 'group');
+        opcoes.setAttribute('aria-label', `Onde acompanhar ${t.tema}`);
+        FONTES.forEach(([v, rotulo]) => {
+          const lab = document.createElement('label');
+          lab.className = 'fonte';
+          const c = document.createElement('input');
+          c.type = 'checkbox';
+          c.checked = t.fontes.includes(v);
+          c.addEventListener('change', async () => {
+            // Sempre pelo índice: depois de salvar, a lista é a que voltou da API (objetos novos).
+            const marcadas = FONTES.map((f) => f[0]).filter((f) => (f === v ? c.checked : temas[i].fontes.includes(f)));
+            if (!marcadas.length) {
+              c.checked = true;
+              $('[data-temas-msg]').textContent = 'Deixe pelo menos uma fonte marcada.';
+              return;
+            }
+            temas[i] = { ...temas[i], fontes: marcadas };
+            await salvarTemas(`Salvo: ${t.tema}.`);
+          });
+          lab.append(c, rotulo);
+          opcoes.append(lab);
+        });
+        const sel = document.createElement('select');
+        sel.setAttribute('aria-label', `Quando avisar sobre ${t.tema}`);
+        FREQ.forEach(([v, r]) => sel.add(new Option(r, v, false, t.frequencia === v)));
+        sel.addEventListener('change', async () => {
+          temas[i] = { ...temas[i], frequencia: sel.value as Tema['frequencia'] };
+          await salvarTemas(`Salvo: ${t.tema}.`);
+        });
+        opcoes.append(sel);
+        li.append(topo, opcoes);
+        return li;
+      }),
+    );
     $('[data-temas-vazio]').hidden = temas.length > 0;
-    document.querySelectorAll<HTMLButtonElement>('[data-sugestao]').forEach((b) => (b.hidden = temas.includes(b.dataset.sugestao!)));
+    $('[data-temas-conta]').textContent = temas.length ? `(${temas.length} de 20)` : '';
+    document.querySelectorAll<HTMLButtonElement>('[data-sugestao]').forEach(
+      (b) => (b.hidden = temas.some((t) => t.tema.toLowerCase() === b.dataset.sugestao!.toLowerCase())),
+    );
   }
-  function adicionar(bruto: string) {
+  async function adicionar(bruto: string) {
     const t = bruto.trim().replace(/\s+/g, ' ');
-    if (t.length < 3) return void (msg.textContent = 'Escreva o tema com pelo menos 3 letras.');
-    const temas = ler(TEMAS);
-    if (temas.some((x) => x.toLowerCase() === t.toLowerCase())) return void (msg.textContent = 'Esse tema já está salvo.');
-    if (temas.length >= 20) return void (msg.textContent = 'Você chegou ao máximo de 20 temas. Remova um para salvar outro.');
-    msg.textContent = '';
-    gravar(TEMAS, [...temas, t]);
-    pintar();
+    if (t.length < 3) return void (msgTema.textContent = 'Escreva o tema com pelo menos 3 letras.');
+    if (temas.some((x) => x.tema.toLowerCase() === t.toLowerCase())) return void (msgTema.textContent = 'Esse tema já está salvo.');
+    if (temas.length >= 20) return void (msgTema.textContent = 'Você chegou ao máximo de 20 temas. Remova um para salvar outro.');
+    msgTema.textContent = '';
+    temas = [...temas, { tema: t, fontes: FONTES.map((f) => f[0]), frequencia: 'na_hora' }];
+    if (await salvarTemas(`Tema "${t}" salvo. Ajuste abaixo onde acompanhar e quando avisar.`)) pintarTemas();
+    else temas = temas.slice(0, -1);
   }
-  $<HTMLFormElement>('[data-tema-form]').addEventListener('submit', (e) => {
+  $<HTMLFormElement>('[data-tema-form]').addEventListener('submit', async (e) => {
     e.preventDefault();
     const campo = $<HTMLInputElement>('#tema');
-    adicionar(campo.value);
-    if (!msg.textContent) campo.value = '';
+    await adicionar(campo.value);
+    if (!msgTema.textContent) campo.value = '';
     campo.focus();
   });
   document.querySelectorAll<HTMLButtonElement>('[data-sugestao]').forEach((b) => b.addEventListener('click', () => adicionar(b.dataset.sugestao!)));
-  pintar();
 
-  // Áreas do resumo semanal.
-  const AREAS = 'of-demo-areas';
+  // ---------- resumo ----------
   const caixas = Array.from(document.querySelectorAll<HTMLInputElement>('[data-areas] input'));
-  const salvas = ler(AREAS);
-  caixas.forEach((c) => (c.checked = salvas.includes(c.value)));
-  caixas.forEach((c) =>
-    c.addEventListener('change', () => {
-      const escolhidas = caixas.filter((x) => x.checked).map((x) => x.value);
-      gravar(AREAS, escolhidas);
-      $('[data-areas-msg]').textContent = escolhidas.length
-        ? `Salvo: ${escolhidas.length} ${escolhidas.length === 1 ? 'área' : 'áreas'}.`
-        : 'Nenhuma área escolhida: o resumo fica pausado.';
-    }),
-  );
+  const dia = $<HTMLSelectElement>('[data-dia]');
+  function pintarPrevia() {
+    const escolhidas = caixas.filter((c) => c.checked).map((c) => c.value);
+    $('[data-previa-dia]').textContent = DIA[dia.value];
+    const lista = $('[data-previa-lista]');
+    const itens = (escolhidas.length ? escolhidas : ['Tributário federal']).map((a) => {
+      const li = document.createElement('li');
+      li.textContent = `${a}: ${MODELO[a]}`;
+      return li;
+    });
+    lista.replaceChildren(...itens);
+  }
+  async function salvarResumo() {
+    const corpo = { areas: caixas.filter((c) => c.checked).map((c) => c.value), dia: dia.value };
+    const msg = $('[data-areas-msg]');
+    pintarPrevia();
+    if (apiBase) {
+      const r = await call(apiBase, '/alertas/resumo', 'PUT', corpo).catch(() => null);
+      if (!r?.ok) return void (msg.textContent = 'Não deu para salvar agora. Tente de novo.');
+    } else guardar('of-demo-resumo', corpo);
+    msg.textContent = corpo.areas.length
+      ? `Salvo: ${corpo.areas.length} ${corpo.areas.length === 1 ? 'área' : 'áreas'}, toda ${DIA[corpo.dia]}.`
+      : 'Nenhuma área escolhida: o resumo fica pausado.';
+  }
+  caixas.forEach((c) => c.addEventListener('change', salvarResumo));
+  dia.addEventListener('change', salvarResumo);
+
+  aoCarregar(async (ctx) => {
+    ouro = ctx.ouro;
+    $('[data-bloqueado]').hidden = ouro;
+    document.querySelectorAll<HTMLElement>('[data-liberado]').forEach((el) => (el.hidden = !ouro));
+    if (!ouro) return;
+    const d = await carregar();
+    pintarTemas();
+    caixas.forEach((c) => (c.checked = d.resumo.areas.includes(c.value)));
+    dia.value = d.resumo.dia;
+    pintarPrevia();
+  });
 </script>
