@@ -1,0 +1,392 @@
+---
+/**
+ * Página dos planos (item 38 da rodada de testes, 26/11/2026). Foco no design e na comparação:
+ * topo com as garantias, "quanto você pesquisa?" que aponta o plano, os três cards, o Empresarial, a tabela completa,
+ * o que todos incluem, dúvidas de cobrança e a chamada final. Tudo lê src/data/plans.ts (mesma fonte da inicial).
+ */
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import PlanCard from '../components/PlanCard.astro';
+import EmpresasFaixa from '../components/EmpresasFaixa.astro';
+import ComparePlanos from '../components/ComparePlanos.astro';
+import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
+import Faq from '../components/Faq.astro';
+import Button from '../components/Button.astro';
+import Footer from '../components/Footer.astro';
+import { planList, comum, aPartirDe } from '../data/plans';
+
+const ritmos = [
+  { plano: 'bronze', rotulo: 'Algumas vezes por mês', texto: 'O Bronze dá a base inteira com a fonte em cada resposta.' },
+  { plano: 'prata', rotulo: 'Toda semana', texto: 'O Prata é o mais escolhido por quem pesquisa com frequência.' },
+  { plano: 'ouro', rotulo: 'Todo dia', texto: 'O Ouro soma alertas por tema, resumo semanal e acesso antecipado.' },
+];
+---
+
+<Base
+  title="Planos e preços · Órbita"
+  description={`Compare o Bronze, o Prata e o Ouro da Órbita, a partir de ${aPartirDe} por mês, e o plano Empresarial para equipes.`}
+>
+  <div class="page-sheet">
+    <Nav
+      signIn="/entrar"
+      cta={{ href: '#escolha', label: 'Assinar' }}
+      links={[
+        { href: '#escolha', label: 'Planos' },
+        { href: '#comparar', label: 'Comparar' },
+        { href: '#incluso', label: 'Todos incluem' },
+        { href: '#cobranca', label: 'Cobrança' },
+      ]}
+    />
+    <main id="conteudo">
+      <section class="section pl-topo">
+        <div class="wrap pl-topo-in" data-reveal>
+          <p class="overline">Planos e preços</p>
+          <h1 class="display-xl" data-split>Escolha o plano da sua pesquisa</h1>
+          <p class="lead">Todos têm a base inteira e a fonte em cada resposta. Muda o quanto você usa e o que vem junto.</p>
+          <ul class="pl-garantias">
+            <li>Reembolso integral em até 7 dias</li>
+            <li>Cancele quando quiser, sem multa</li>
+            <li>Cartão, Pix ou boleto</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="escolha" class="section pl-escolha" aria-labelledby="ritmo-t">
+        <div class="wrap">
+          <div class="pl-ritmo" data-reveal>
+            <p id="ritmo-t" class="pl-ritmo-t">Quanto você pesquisa?</p>
+            <div class="pl-ritmo-op" role="radiogroup" aria-labelledby="ritmo-t">
+              {
+                ritmos.map((r) => (
+                  <button type="button" role="radio" aria-checked={r.plano === 'prata' ? 'true' : 'false'} data-ritmo={r.plano} data-texto={r.texto}>
+                    {r.rotulo}
+                  </button>
+                ))
+              }
+            </div>
+            <p class="pl-ritmo-dica" aria-live="polite" data-ritmo-dica>{ritmos[1].texto}</p>
+          </div>
+          <div class="plans pl-cards" data-reveal data-ritmo-cards data-sugerido="prata">
+            {planList.map((p) => <PlanCard plan={p} badge="Mais escolhido" />)}
+          </div>
+          <div data-reveal><EmpresasFaixa /></div>
+        </div>
+      </section>
+
+      <section id="comparar" class="section section-alt" aria-labelledby="comparar-t">
+        <div class="wrap">
+          <div class="section-head" data-reveal>
+            <h2 id="comparar-t" class="display-lg" data-split>Lado a lado</h2>
+            <p class="lead">Cada recurso, plano por plano. O que ainda está em definição aparece marcado.</p>
+          </div>
+          <ComparePlanos />
+        </div>
+      </section>
+
+      <section id="incluso" class="section" aria-labelledby="incluso-t">
+        <div class="wrap pl-incluso">
+          <div class="section-head" data-reveal>
+            <h2 id="incluso-t" class="display-lg" data-split>Em todos os planos</h2>
+            <p class="lead">O essencial não muda de um plano para outro.</p>
+          </div>
+          <ul class="pl-incluso-lista" data-reveal>
+            {
+              comum.map((c) => (
+                <li>
+                  <span class="pl-check" aria-hidden="true">
+                    <svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  </span>
+                  {c.text}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      <section id="cobranca" class="section section-alt" aria-labelledby="cobranca-t">
+        <div class="wrap faq-grid">
+          <div class="section-head" data-reveal>
+            <h2 id="cobranca-t" class="display-lg" data-split>Cobrança, sem surpresa</h2>
+            <p class="lead">Outras perguntas estão na <a href="/ajuda">Ajuda</a>.</p>
+          </div>
+          <div data-reveal>
+            <Faq name="planos">
+              <details open>
+                <summary>Como funciona a cobrança?</summary>
+                <div class="faq-a">
+                  <p>Mensal, no cartão de crédito, no Pix ou no boleto. O pagamento é processado pelo Asaas.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Posso mudar de plano depois?</summary>
+                <div class="faq-a">
+                  <p>Sim. No seu painel, em Plano, você vê o que o plano seguinte acrescenta e faz o upgrade por lá.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Posso cancelar quando quiser?</summary>
+                <div class="faq-a">
+                  <p>
+                    Sim, no seu painel, sem multa. A assinatura para de renovar e o acesso continua até o fim do período
+                    já pago. Veja os <a href="/termos">Termos de uso</a>.
+                  </p>
+                </div>
+              </details>
+              <details>
+                <summary>E se eu me arrepender?</summary>
+                <div class="faq-a">
+                  <p>
+                    Você tem reembolso integral em até 7 dias da compra (CDC, art. 49). Veja a
+                    <a href="/reembolso">política de reembolso</a>.
+                  </p>
+                </div>
+              </details>
+            </Faq>
+          </div>
+        </div>
+      </section>
+
+      <section class="section final-cta pl-final" aria-labelledby="pl-final-t">
+        <div class="wrap" data-reveal>
+          <h2 id="pl-final-t" class="display-lg" data-split>Comece pelo Prata e mude quando quiser</h2>
+          <div class="pl-final-acoes">
+            <Button href="/assinar/prata">Assinar o Prata</Button>
+            <Button href="#comparar" variant="secondary">Comparar de novo</Button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <Footer />
+  <ContatoEmpresarial />
+</Base>
+
+<script>
+  // "Quanto você pesquisa?": marca o plano sugerido e explica em uma linha.
+  const grupo = document.querySelector<HTMLElement>('.pl-ritmo-op');
+  const cards = document.querySelector<HTMLElement>('[data-ritmo-cards]');
+  const dica = document.querySelector<HTMLElement>('[data-ritmo-dica]');
+  const botoes = Array.from(grupo?.querySelectorAll<HTMLButtonElement>('[data-ritmo]') ?? []);
+  const escolher = (b: HTMLButtonElement, foco = false) => {
+    botoes.forEach((x) => {
+      x.setAttribute('aria-checked', String(x === b));
+      x.tabIndex = x === b ? 0 : -1;
+    });
+    if (cards) cards.dataset.sugerido = b.dataset.ritmo;
+    if (dica) dica.textContent = b.dataset.texto ?? '';
+    if (foco) b.focus();
+  };
+  botoes.forEach((b, i) => {
+    b.tabIndex = b.getAttribute('aria-checked') === 'true' ? 0 : -1;
+    b.addEventListener('click', () => escolher(b));
+    b.addEventListener('keydown', (e) => {
+      const passo = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!passo) return;
+      e.preventDefault();
+      escolher(botoes[(i + passo + botoes.length) % botoes.length], true);
+    });
+  });
+</script>
+
+<style>
+  /* Mesma grade dos cards da inicial: no celular, o Prata (em destaque) vem primeiro. */
+  .plans {
+    display: grid;
+    gap: var(--space-6) var(--space-4);
+    align-items: stretch;
+    padding-top: 14px;
+  }
+  .plans > :global(.plan-featured) {
+    order: -1;
+  }
+  @media (min-width: 900px) {
+    .plans {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+    }
+    .plans > :global(.plan-featured) {
+      order: 0;
+    }
+  }
+  .faq-grid {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .faq-grid .lead a {
+    color: var(--brand);
+  }
+  @media (min-width: 900px) {
+    .faq-grid {
+      grid-template-columns: 1fr 1.6fr;
+      gap: var(--space-7);
+      align-items: start;
+    }
+  }
+  .pl-topo {
+    padding-bottom: var(--space-7, 56px);
+  }
+  .pl-topo-in {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-4);
+    text-align: center;
+    max-width: 52rem;
+  }
+  .pl-topo-in :global(.lead) {
+    max-width: 40rem;
+  }
+  .pl-garantias {
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .pl-garantias li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--mute);
+    font-size: 0.875rem;
+  }
+  .pl-garantias li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+  }
+
+  /* Quanto você pesquisa? */
+  .pl-ritmo {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-7, 56px);
+    text-align: center;
+  }
+  .pl-ritmo-t {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--ink);
+  }
+  .pl-ritmo-op {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+  .pl-ritmo-op button {
+    min-height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mute);
+    font: 500 0.9375rem/1 var(--font-body, inherit);
+    cursor: pointer;
+    transition:
+      background-color 200ms,
+      color 200ms;
+  }
+  .pl-ritmo-op button:hover {
+    color: var(--ink);
+  }
+  .pl-ritmo-op button[aria-checked='true'] {
+    background: var(--brand);
+    color: var(--bg);
+  }
+  .pl-ritmo-op button:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .pl-ritmo-dica {
+    margin: 0;
+    min-height: 1.5em;
+    color: var(--mute);
+    font-size: 0.9375rem;
+  }
+
+  /* O card sugerido sobe um pouco; os outros ficam um tom abaixo. */
+  .pl-cards :global(.plan) {
+    transition:
+      transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 300ms,
+      box-shadow 300ms;
+  }
+  .pl-cards[data-sugerido='bronze'] :global(.plan:not([data-plan='bronze'])),
+  .pl-cards[data-sugerido='prata'] :global(.plan:not([data-plan='prata'])),
+  .pl-cards[data-sugerido='ouro'] :global(.plan:not([data-plan='ouro'])) {
+    opacity: 0.78;
+  }
+  .pl-cards[data-sugerido='bronze'] :global(.plan[data-plan='bronze']),
+  .pl-cards[data-sugerido='prata'] :global(.plan[data-plan='prata']),
+  .pl-cards[data-sugerido='ouro'] :global(.plan[data-plan='ouro']) {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px rgb(16 99 79 / 0.28);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pl-cards :global(.plan) {
+      transition: none;
+    }
+  }
+
+  /* Em todos os planos */
+  .pl-incluso-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+  }
+  .pl-incluso-lista li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 1rem;
+  }
+  .pl-check {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: var(--bg);
+  }
+  .pl-check svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .pl-final :global(.wrap) {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-5);
+    text-align: center;
+  }
+  .pl-final-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+</style>

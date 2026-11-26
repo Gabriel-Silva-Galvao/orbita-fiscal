@@ -8,7 +8,6 @@ import Comparativo from '../components/Comparativo.astro';
 import Button from '../components/Button.astro';
 import PlanCard from '../components/PlanCard.astro';
 import EmpresasFaixa from '../components/EmpresasFaixa.astro';
-import ComparePlanos from '../components/ComparePlanos.astro';
 import ContatoEmpresarial from '../components/ContatoEmpresarial.astro';
 import { planList, aPartirDe } from '../data/plans';
 import Faq from '../components/Faq.astro';
@@ -168,7 +167,14 @@ const steps = [
           {planList.map((p) => <PlanCard plan={p} badge="Mais escolhido" />)}
         </div>
         <div data-reveal><EmpresasFaixa /></div>
-        <ComparePlanos />
+        <!-- Item 38: a comparação completa mora em /planos; aqui fica só o convite. -->
+        <a class="ver-planos" href="/planos" data-reveal>
+          <span class="ver-planos-txt">
+            <span class="ver-planos-t">Compare os planos lado a lado</span>
+            <span class="ver-planos-s">Cada recurso, plano por plano, e qual combina com o quanto você pesquisa.</span>
+          </span>
+          <span class="ver-planos-btn">Ver a página dos planos <span aria-hidden="true">→</span></span>
+        </a>
         <ul class="plans-foot small mute" data-reveal>
           <li>Cobrança mensal</li>
           <li>Cartão, Pix ou boleto</li>
@@ -489,6 +495,60 @@ const steps = [
     .plans > :global(.plan-featured) {
       order: 0;
     }
+  }
+  .ver-planos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    transition:
+      border-color 200ms,
+      transform 200ms;
+  }
+  .ver-planos:hover {
+    border-color: var(--brand);
+    transform: translateY(-2px);
+  }
+  .ver-planos:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+  }
+  .ver-planos-txt {
+    display: grid;
+    gap: 4px;
+  }
+  .ver-planos-t {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+  }
+  .ver-planos-s {
+    color: var(--mute);
+    font-size: 0.9375rem;
+  }
+  .ver-planos-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .ver-planos-btn span {
+    transition: transform 200ms;
+  }
+  .ver-planos:hover .ver-planos-btn span {
+    transform: translateX(3px);
   }
   .plans-foot {
     display: flex;

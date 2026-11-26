@@ -186,5 +186,20 @@ const { name = 'faq' } = Astro.props;
         window.setTimeout(() => (ocupado = false), dur() + 40);
       });
     });
+
+    // O endereço abre a pergunta certa (/ajuda#conectar): fecha as outras e abre a do #.
+    const doEndereco = () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      const alvo = id ? itens.find((d) => d.id === id) : undefined;
+      if (!alvo) return;
+      itens.forEach((d) => definir(d, d === alvo));
+    };
+    doEndereco();
+    addEventListener('hashchange', () => {
+      doEndereco();
+      const id = decodeURIComponent(location.hash.slice(1));
+      const alvo = id ? itens.find((d) => d.id === id) : undefined;
+      if (alvo) ((window as any).__lenis?.scrollTo(alvo, { offset: -110 }) ?? alvo.scrollIntoView({ block: 'start' }));
+    });
   });
 </script>

@@ -899,10 +899,21 @@ na vertical; o rodapé só aparece rolando até o fim. Os dois botões passaram 
 Quando a assinatura estiver ligada ao Asaas (item 29), rodar o security-review em tudo o que envolve cobrança e conferir, principalmente,
 se a mesma pessoa consegue assinar mais de uma vez (cliques repetidos, duas abas, duas compras ao mesmo tempo, webhook repetido).
 
-### 38. Página própria dos planos — A lapidar
+### 38. Página própria dos planos — Executado e testado (26/11/2026)
 
 Página nova só para os planos, com foco total no design e na comparação entre Bronze, Prata, Ouro e Empresarial, e um botão ou mini seção
 na página inicial que leva até ela.
+
+**Feito:** nova `src/pages/planos.astro` (/planos): topo centrado com três garantias (reembolso em 7 dias, cancelar sem multa,
+cartão/Pix/boleto); seletor "Quanto você pesquisa?" (Algumas vezes por mês → Bronze, Toda semana → Prata, Todo dia → Ouro) que
+levanta o card sugerido e explica em uma linha; os três cards e o card Empresarial; a tabela "Lado a lado" (ComparePlanos);
+"Em todos os planos"; dúvidas de cobrança (cobrança, mudar de plano, cancelar, reembolso) e a chamada final. Na inicial, a tabela
+de comparação saiu e virou o convite "Compare os planos lado a lado", que leva a /planos. "Planos" no menu e "Planos e preços"
+no rodapé apontam para /planos; os botões "Assinar" continuam indo aos cards da inicial. Testado no desktop e a 375 px.
+
+**Ajuste pedido no mesmo item:** a página /ajuda passou a usar o mesmo componente `Faq` da página de planos (o "+" que vira "−",
+abrir e fechar suaves, uma pergunta aberta por vez). O `Faq` agora também abre a pergunta do endereço (`/ajuda#reembolso`) e
+responde a `hashchange`; o script antigo da Ajuda que abria pelo # saiu.
 
 ### 39. Página inicial sem o exemplo e com o texto centralizado — A lapidar
 
