@@ -17,7 +17,7 @@ A empresa ainda não tem CNPJ, então a integração real com o Asaas está susp
 ```powershell
 cd api
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # produção: requirements.txt (sem o pytest)
 copy .env.example .env   # traz ORBITA_ENV=development e a simulação ligada
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```

@@ -1,6 +1,9 @@
-fastapi==0.115.6
+# Dependências de produção da API. Testes: requirements-dev.txt.
+# ARES-DEP-001 (26/11/2026): fastapi 0.115.6 trazia a starlette 0.41.3, com 8 CVEs; a starlette agora é fixada
+# explicitamente. Versões com pelo menos duas semanas de publicação. Auditar: pip-audit -r requirements-dev.txt
+fastapi==0.162.5
+starlette==1.10.0
 uvicorn[standard]==0.32.1
 httpx==0.28.1
 pydantic-settings==2.7.0
-pytest==8.3.4
 segno==1.6.6
