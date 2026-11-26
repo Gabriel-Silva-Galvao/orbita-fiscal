@@ -1114,6 +1114,37 @@ auditoria que ninguém apaga; as telas do suporte (busca, ficha resumida com CPF
 clientes, assinaturas, equipe, auditoria, segurança, conteúdo); verificação de vulnerabilidades reforçada; ordem de construção e
 o que falta decidir.
 
+### 53. Correções da revisão de segurança ARES — Executado (26/11/2026); faltam só decisões
+
+Corrigir tudo o que as cinco revisões de segurança do ARES (REVIEW-001 a 005, com pentest e OWASP ZAP) encontraram, um commit
+por achado, cada um com teste de regressão, e documentar todas as vulnerabilidades num artefato.
+
+**Feito:** o artefato "Vulnerabilidades da Órbita" (https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD, cópia em
+`artefatos/06-vulnerabilidades/`) registra os 32 achados, os alertas do ZAP, os candidatos novos e o commit de cada correção.
+Corrigidos, com teste que falha no código antigo e passa no novo (detalhe em `docs/ciberseguranca.md`, seção 5.1):
+
+- Altos: tomada de conta pela troca de e-mail (agora pede a senha atual, derruba as outras sessões e avisa o e-mail antigo)
+  e cobrança em dobro (uma operação de cobrança por conta de cada vez, também no reembolso, upgrade, troca de forma,
+  cancelar e reativar).
+- Limites: senha atual na troca de senha/e-mail, código do 2FA por conta, contador do login com memória contida, contato
+  por destinatário.
+- Login com o mesmo tempo com ou sem conta; open redirect no `?next=`; `Origin` conferido nas rotas que mudam estado;
+  cabeçalhos de segurança na API e nas páginas do servidor; `/docs` só no desenvolvimento; `/asaas-sim/_eventos` com chave.
+- `ORBITA_ENV` (produção por padrão): a simulação não sobe em produção e a produção exige SMTP.
+- Formulários com dado pessoal por POST; CPF/CNPJ com dígito verificador, inclusive o CNPJ alfanumérico de 2026.
+- Correções menores: reenviar código na troca, 500 virando 409 em corridas, contato com quebra de linha.
+- Dependências: fastapi 0.162.5, starlette 1.10.0 e pytest 9.2.0 em `requirements-dev.txt` (pip-audit sem achados).
+
+Primeira parte pelo PR #1 (19 commits), o resto direto na main. Testes: 131 da API e 9 do site (`npm run test:site`, novo).
+Conferido no navegador: troca de e-mail, open redirect e CNPJ alfanumérico no Checkout. Não houve novo pentest nem ZAP.
+
+**Atenção para quem roda a API:** agora é preciso `ORBITA_ENV=development` (já no `.claude/launch.json` e no
+`api/.env.example`); sem ele, a API se considera em produção e recusa a simulação. Instalação: `requirements-dev.txt`.
+
+**Falta (decisões, em `docs/ciberseguranca.md` seção 4.2):** cobrança do upgrade no meio do mês (o upgrade hoje libera o Ouro
+sem cobrar a diferença), cartão pela página ou tokenização do Asaas, 409 do cadastro, reembolso depois de cancelar, proxy de
+produção (IP real, limite por IP, CAPTCHA, cabeçalhos das páginas estáticas) e CNPJ alfanumérico no Asaas real.
+
 ## Ordem proposta de execução
 
 1. ~~Bloco A~~ feito: 1 e 10, 2, 4, 6, 14, 15, 19, 21 a 24.
@@ -1127,6 +1158,7 @@ o que falta decidir.
 7. Riscos altos de segurança (S3 a S5) antes de publicar.
 8. ~~**Bloco H**: 36 → 35 → 34 → 38 → 39~~ feito; o 37 depois do 29.
    ~~**Bloco I**: 45 → 46 → 47 → 49 → 42 → 40 → 41 → 43 com 48 → 44 → 50~~ feito; 51 e 52 documentados.
-9. **Fase de segurança (a partir de 26/11/2026):** S18 (assinatura em dobro) → item 37 → S3 a S9 (`docs/ciberseguranca.md`);
-   depois, a construção do suporte e da administração (`docs/suporte-e-admin.md`).
+9. **Fase de segurança (a partir de 26/11/2026):** ~~S18 (assinatura em dobro)~~ e ~~correções da revisão ARES (item 53)~~ feitos;
+   faltam as decisões da seção 4.2 de `docs/ciberseguranca.md` (S3, upgrade, cadastro, proxy) e o resto do item 37 com o
+   Sandbox; depois, a construção do suporte e da administração (`docs/suporte-e-admin.md`).
 9. Bloco D (só documentar) e, por último, a animação de explosão, que toca na abertura da boas-vindas.

@@ -411,6 +411,7 @@ Os pedidos da rodada, com diagnóstico, decisões e testes, estão em [docs/roda
 - [x] Bloco E: planos Bronze, Prata e Ouro, área empresarial com o envelope animado e o público "advogados, contadores e empresários"
 - [x] Item 17: documentação do backend e da segurança, com os riscos críticos S1 e S2 corrigidos
 - [x] Itens 5 e 8: Portal em 7 páginas, com layout de produto (detalhe abaixo)
+- [x] Item 53 (26/11/2026): correções da revisão de segurança ARES, um commit por achado, com teste de regressão (S4, S6, S8 e S18 corrigidos; S5, S7 e S9 em parte). Registro de todas as vulnerabilidades no artefato [Vulnerabilidades da Órbita](https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD); detalhe em [docs/ciberseguranca.md](docs/ciberseguranca.md). A API de desenvolvimento agora precisa de `ORBITA_ENV=development`.
 
 **Portal do assinante (itens 5 e 8, 25/11/2026)**
 
@@ -426,7 +427,7 @@ Os pedidos da rodada, com diagnóstico, decisões e testes, estão em [docs/roda
 - [ ] Bloco C: item 9 (Conta e segurança completa), item 11 (Checkout branco) e item 3 (boas-vindas)
 - [ ] Bloco F: 30 (FAQ), 31 (/bases), 32 (rodapé), 33 (compra só do que faz sentido e comparação de planos), 29 (Sandbox do Asaas) e 28 (avaliações)
 - [ ] Bloco G (ideias da revisão do Portal, aguardando decisão): ver abaixo
-- [ ] Riscos altos de segurança S3 a S5, antes de publicar
+- [ ] Segurança, decisões pendentes antes de publicar (`docs/ciberseguranca.md`, seção 4.2): cobrança do upgrade no meio do mês, cartão pela página ou tokenização do Asaas (S3), 409 do cadastro, reembolso depois de cancelar e proxy de produção (limite por IP, CAPTCHA, cabeçalhos das páginas estáticas)
 
 **Bloco G: ideias da revisão do Portal (25/11/2026), para decidir**
 

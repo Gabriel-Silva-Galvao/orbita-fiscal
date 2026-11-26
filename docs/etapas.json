@@ -209,11 +209,16 @@
   {"id": "e22", "titulo": "Segurança (fase atual, desde 26/11/2026)", "itens": [
     ["Documento de cibersegurança (docs/ciberseguranca.md)", true],
     ["S17: API travava com ReDoS no e-mail; corrigido com limites de tamanho e corpo de 64 KB", true],
-    ["S18: impedir assinatura em dobro com pedidos simultâneos", false],
-    ["Item 37: revisão de segurança da assinatura com o Asaas", false],
-    ["S3: cartão pela tokenização do Asaas (nunca passa pela API)", false],
-    ["S4 e S5: SMTP obrigatório e limite de tentativas por IP", false],
-    ["S6 a S9: /docs fechado, cabeçalhos, Origin e tempo igual no login", false],
+    ["S18: impedir assinatura em dobro com pedidos simultâneos", true],
+    ["Item 53: correções da revisão ARES, um commit por achado, com teste de regressão", true],
+    ["Registro de todas as vulnerabilidades (artefato Vulnerabilidades da Órbita)", true],
+    ["S4: SMTP obrigatório em produção (ORBITA_ENV)", true],
+    ["S6, S8 e S9 (login): /docs fechado, Origin conferido e tempo igual no login", true],
+    ["Item 37: revisão de segurança da assinatura com o Asaas (resto, com o Sandbox)", false],
+    ["S3: cartão pela página ou tokenização do Asaas (nunca passa pela API)", false],
+    ["S5: limite de tentativas por IP e CAPTCHA (depende do proxy)", false],
+    ["S7: cabeçalhos também nas páginas estáticas (proxy) e CSP de scripts", false],
+    ["Decidir: cobrança do upgrade, 409 do cadastro e reembolso depois de cancelar", false],
     ["Varredura (OWASP ZAP), pip-audit e npm audit antes de publicar", false]
   ]},
   {"id": "e23", "titulo": "Suporte e administração (itens 51 e 52)", "itens": [

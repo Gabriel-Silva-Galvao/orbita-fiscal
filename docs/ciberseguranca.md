@@ -42,7 +42,10 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 - Cookie `HttpOnly`, `SameSite=Lax` e `Secure` em produção (`COOKIE_SECURE=true`).
 - Troca de senha e troca de e-mail derrubam as outras sessões; a troca de e-mail pede a senha atual e avisa o endereço
   antigo. Lista de aparelhos com "este aparelho", "Sair dos outros" e "Sair de todos".
-- Limite de 10 falhas de login por e-mail em 15 minutos (na memória; ver S5).
+- Limites na memória com tamanho contido (classe `Limitador`, que não cria chave na leitura e varre as vencidas):
+  10 falhas de login por e-mail em 15 minutos; 5 erros da senha atual por conta na troca de senha ou de e-mail;
+  10 códigos errados por conta somando todos os desafios. Falta o limite por IP (ver S5).
+- O login roda o scrypt mesmo quando o e-mail não existe (`SENHA_FICTICIA`): o tempo não revela quem tem conta.
 
 **Entrada de dados** (todas as rotas)
 - Todo texto que entra tem tamanho máximo (`max_length`); acima dele, 422 antes de processar.
@@ -50,6 +53,15 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 - Corpo de pedido limitado a 64 KB (413), por middleware em `api/app/main.py`.
 - Valores de listas fechadas (planos, formas, fontes, áreas, dias) validados pelo tipo (`Literal`).
 - SQL sempre parametrizado.
+- CPF e CNPJ (inclusive o alfanumérico de 2026) com dígito verificador conferido na API (`app/documentos.py`) e no site
+  (`src/scripts/validate.ts`).
+- Nome e empresa do contato sem caractere de controle (nada de quebra de linha no assunto do e-mail).
+
+**Pedidos de outros sites** (`api/app/main.py`)
+- CORS só para o `SITE_URL`, com cookies.
+- `ConfereOrigem`: POST, PUT, PATCH e DELETE com `Origin` diferente do `SITE_URL` recebem 403 (CSRF por subdomínio, S8).
+- Cabeçalhos em toda resposta da API: `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP que proíbe tudo
+  e HSTS com `COOKIE_SECURE`.
 
 **Autorização**
 - Nenhuma rota aceita id de usuário de fora: tudo sai da sessão.
@@ -59,14 +71,23 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 
 **Pagamento**
 - Webhook do Asaas com token, idempotente, e eventos atrasados não reativam assinatura encerrada.
-- Só os 4 últimos dígitos do cartão ficam conosco.
-- A API não sobe com configuração perigosa (`problemas_de_producao`): simulação com cookie seguro, token de exemplo,
-  chave da simulação, código do 2FA na resposta, segredo do MCP curto.
+- Uma operação de cobrança por conta de cada vez (`uma_operacao_por_vez`, tabela `operacoes_cobranca`): assinar,
+  trocar plano ou forma, cancelar, reativar e reembolsar. O pedido concorrente recebe 409 `em_andamento`.
+- Só os 4 últimos dígitos do cartão ficam conosco (o número ainda passa pela API; ver S3).
+
+**Ambiente** (`api/app/config.py`)
+- `ORBITA_ENV` diz onde a API roda; o padrão é `production`. O desenvolvimento declara `ORBITA_ENV=development`.
+- A API não sobe com configuração perigosa (`problemas_de_producao`). Em produção: simulação ligada, `COOKIE_SECURE=false`
+  ou SMTP vazio. Em qualquer ambiente: simulação fora de localhost. Sem a simulação: token de exemplo, chave da
+  simulação, código do 2FA na resposta, segredo do MCP curto.
+- `/docs`, `/redoc` e `/openapi.json` só em desenvolvimento.
 
 **Site** (Astro)
 - Páginas da conta e de compra fora do Google (`noindex`, `X-Robots-Tag`).
 - O `next` do Entrar só aceita caminho interno (`caminhoSeguro`: sem caractere de controle, sem barra invertida, mesma origem).
 - Valores vindos da API entram na tela por `textContent`, não por HTML.
+- Formulários com dado pessoal usam `method="post"`: sem JavaScript, nada vai para o endereço.
+- Cabeçalhos de segurança nas páginas renderizadas no servidor (`src/scripts/cabecalhos.ts`); as estáticas dependem do proxy (S7).
 
 ## 4. Riscos em aberto
 
@@ -75,13 +96,16 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 | # | Risco | Gravidade | O que fazer | Quando |
 |---|---|---|---|---|
 | S18 | **Assinatura em dobro por pedidos simultâneos** (novo, 26/11/2026; **corrigido** em 26/11/2026, ver 4.1 e 5.1) | ~~Alto~~ | Hoje `POST /billing/assinatura` confere se já existe assinatura e só depois cria a cobrança no Asaas e grava com `INSERT OR REPLACE`. Dois pedidos ao mesmo tempo (clique duplo, duas abas) passam os dois pela conferência: o Asaas cria duas assinaturas e a primeira fica órfã, cobrando. Corrigir com uma trava por usuário (reserva gravada no banco antes de chamar o Asaas, com `INSERT` que falha se já houver) e chave de idempotência no Asaas; teste com pedidos em paralelo. | Item 37 |
-| S3 | Cartão passa pela API | Alto | Tokenização do Asaas no navegador; a API recebe só o token. | Com o Sandbox (item 29) |
-| S5 | Limite de tentativas só na memória e só no login | Alto | Limite por IP e por e-mail em todo `/auth`, guardado no banco; CAPTCHA invisível depois de N falhas. | Antes de publicar |
+| S3 | Cartão passa pela API (ARES-ARC-001) | Alto | Tokenização do Asaas no navegador ou página de pagamento do Asaas; a API recebe só o token. **Decisão pendente** (4.2). | Com o Sandbox (item 29) |
+| QA-008 | **Upgrade libera o Ouro sem cobrar a diferença** (piorou em 26/11/2026: alertas e resumo dependem do plano) | Médio (proposta) | Quem paga Prata e sobe para Ouro usa o recurso Ouro até a próxima cobrança sem pagar a diferença. Definir a regra (cobrança proporcional na hora, ou o plano novo só vale depois do pagamento). **Decisão pendente** (4.2). | Antes de publicar |
+| S5 | Limite de tentativas só na memória (em parte corrigido: limites por conta e memória contida, ver 5.1) | Alto | Falta: limite por IP em todo `/auth` e no contato, guardado no banco ou no Redis; CAPTCHA invisível depois de N falhas. Depende de saber qual proxy vai na frente da API (o IP real vem dele). | Antes de publicar |
 | S4 | Código do 2FA no log sem SMTP (**corrigido** em 26/11/2026: produção exige SMTP, ver 5.1) | ~~Alto~~ | — | — |
 | S6 | `/docs` aberto (**corrigido** em 26/11/2026: só em desenvolvimento, ver 5.1) | ~~Médio~~ | — | — |
-| S7 | Sem cabeçalhos de segurança | Médio | HSTS, CSP restrita, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy` no proxy. | Antes de publicar |
+| S7 | Cabeçalhos de segurança (em parte corrigido: API e páginas do servidor, ver 5.1) | Médio | Falta: os mesmos cabeçalhos nas páginas estáticas, no proxy; e uma CSP que restrinja scripts e estilos (exige revisar fontes, fotos e scripts). | Antes de publicar |
 | S8 | CSRF por subdomínio (**corrigido** em 26/11/2026: `Origin` conferido, ver 5.1) | ~~Médio~~ | — | — |
-| S9 | Descoberta de contas pelo tempo do login | Médio | Rodar o scrypt também quando o e-mail não existe. | Antes de publicar |
+| S9 | Descoberta de contas (login corrigido: mesmo tempo com ou sem conta, ver 5.1) | Baixo | Falta: o cadastro responde 409 para e-mail que já tem conta. O time tinha aceitado (é útil para quem se cadastra); a alternativa é responder sempre 202 e mandar "você já tem conta" por e-mail. **Decisão pendente** (4.2). | Antes de publicar |
+| SEC-009 | Contato empresarial (em parte corrigido: confirmação sem texto digitado e limite por destino, ver 5.1) | Baixo | Falta: IP real atrás do proxy (`--proxy-headers` e `--forwarded-allow-ips` no uvicorn) e CAPTCHA. | Com o proxy |
+| CAND-04 | Reembolso aceito depois de cancelar | — | Hoje uma assinatura cancelada dentro dos 7 dias ainda pode pedir reembolso. Pode ser o certo pelo CDC, art. 49. **Decisão pendente** (4.2). | Com o jurídico |
 | S10, S11 | CPF/CNPJ legível; SQLite | Médio | Disco e backups criptografados; PostgreSQL ao crescer. | Infra |
 | S12 | Sessões e desafios vencidos ficam no banco | Baixo | Rotina diária de limpeza. | Infra |
 | S16 | Dependências | Baixo | `pip-audit` e `npm audit` mensais. | Rotina |
@@ -123,6 +147,20 @@ tinha o mesmo defeito: dois clientes no Asaas para a mesma pessoa e um erro 500 
 **Fica para o item 37** (precisa do Sandbox): webhook repetido e fora de ordem com o Asaas real, troca de plano e de forma
 ao mesmo tempo, e a conferência periódica de assinaturas órfãs no Asaas (relatório para o Admin, item 52).
 
+## 4.2 Decisões pendentes (26/11/2026)
+
+O que a revisão ARES deixou em aberto porque depende de uma escolha do time, do jurídico ou da infraestrutura. Todo o
+resto dos achados foi corrigido (seção 5.1).
+
+| Decisão | Quem decide | Opções | Achado |
+|---|---|---|---|
+| Como cobrar o upgrade no meio do mês | Empresa | (a) cobrança proporcional na hora, via Asaas; (b) o plano novo só vale depois do pagamento da diferença; (c) o plano novo só vale na próxima cobrança | ARES-QA-008 |
+| Como receber o cartão | Empresa e técnico | (a) página de pagamento do Asaas; (b) tokenização do Asaas no navegador, com o formulário próprio | ARES-ARC-001 (S3) |
+| Cadastro com e-mail que já tem conta | Empresa | (a) manter o 409 "Esse e-mail já tem conta"; (b) responder sempre 202 e avisar por e-mail | ARES-SEC-007 (S9) |
+| Reembolso depois de cancelar | Jurídico | (a) manter (direito de arrependimento em 7 dias); (b) recusar depois do cancelamento | CAND-04 |
+| Proxy de produção | Técnico | Nginx, Caddy ou Cloudflare: dele dependem o IP real, o limite por IP, o CAPTCHA e os cabeçalhos das páginas estáticas | S5, S7, SEC-009 |
+| CNPJ alfanumérico no Asaas | Técnico, com o Sandbox | Confirmar se o Asaas real aceita o formato; API e site já aceitam | ARES-QA-009 |
+
 ## 5. Incidentes
 
 | Data | O que houve | Causa | Correção |
@@ -163,16 +201,20 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 
 ## 6. Plano de testes de segurança
 
-**Automáticos** (`cd api` e `.venv\Scripts\python.exe -m pytest`, 92 testes em 26/11/2026)
-- Conta e sessão: `test_auth.py`, `test_conta.py`.
-- Cobrança e webhook: `test_billing.py`, `test_config.py`.
-- Entrada de dados e ReDoS: `test_limites.py`.
-- Plugin e segredo do servidor MCP: `test_plugin.py`.
-- Regra do Ouro nos alertas: `test_alertas.py`.
+**Automáticos da API** (`cd api` e `.venv\Scripts\python.exe -m pytest`, 131 testes em 26/11/2026)
+- Conta e sessão, limites de tentativas, troca de senha e de e-mail: `test_auth.py`, `test_conta.py`.
+- Cobrança, webhook e pedidos em paralelo (assinatura e reembolso): `test_billing.py`.
+- Configuração de produção (`ORBITA_ENV`, SMTP, `/docs`): `test_config.py`.
+- Entrada de dados, ReDoS, cabeçalhos e `Origin`: `test_limites.py`.
+- CPF e CNPJ: `test_documentos.py`. Contato: `test_contato.py`. Simulação: `test_asaas_sim.py`.
+- Plugin e segredo do servidor MCP: `test_plugin.py`. Regra do Ouro nos alertas: `test_alertas.py`.
+
+**Automáticos do site** (`npm run test:site`, 9 testes): `next` do Entrar, cabeçalhos e CPF/CNPJ, em `scripts/testes/`.
 
 **A acrescentar**
-- Item 37: pedidos de assinatura em paralelo (S18), webhook repetido e fora de ordem, troca de plano e de forma ao mesmo tempo.
+- Item 37: webhook repetido e fora de ordem com assinaturas reais do Sandbox.
 - Limite por IP (S5), quando existir.
+- Upgrade seguido de recurso do Ouro (QA-008), depois da decisão.
 - Para cada rota nova: sem sessão (401), sessão de outra conta (404 ou 403), plano errado (403), campo gigante (422),
   corpo gigante (413).
 
@@ -192,3 +234,8 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 6. Valor que veio de fora entra na tela por `textContent`.
 7. Toda rota de simulação ou de teste fica atrás de `ASAAS_SIM_ENABLED` e entra em `problemas_de_producao` se for perigosa.
 8. Mudança em cobrança, login, admin ou suporte passa pela revisão de segurança antes do commit.
+9. Rota de cobrança que confere o estado e depois chama o Asaas roda dentro de `uma_operacao_por_vez`; teste com
+   pedidos em paralelo.
+10. Toda correção de segurança tem um teste de regressão que falha no código antigo e um commit próprio.
+11. Configuração que só vale no desenvolvimento depende de `ORBITA_ENV=development`, nunca de outra variável.
+12. Formulário com dado pessoal usa `method="post"`; destino de redirecionamento passa por `caminhoSeguro`.
