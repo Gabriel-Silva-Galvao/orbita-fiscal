@@ -27,6 +27,7 @@ from app.asaas.client import AsaasClient, AsaasError
 from app.auth import usuario_logado
 from app.config import get_settings
 from app.db import Banco
+from app.documentos import normalizar_documento
 
 # Item 25 da rodada de testes (25/11/2026): três planos. As especificações de cada um serão definidas depois.
 PLANOS = {
@@ -222,6 +223,9 @@ def criar_router() -> APIRouter:
 
     def _criar_assinatura(dados: NovaAssinatura, request: Request, u: dict, banco: Banco, asaas: AsaasClient):
         usuario_id, email = u["id"], u["email"]
+        doc = normalizar_documento(dados.cpf_cnpj)  # ARES-QA-009: dígito verificador conferido na API
+        if not doc or len(dados.nome.strip()) < 2:
+            raise HTTPException(422, detail={"codigo": "dados_invalidos", "mensagem": "Informe o nome ou a razão social e um CPF ou CNPJ válido."})
         atual = banco.um("SELECT status_acesso FROM assinaturas WHERE usuario_id = ?", usuario_id)
         if atual and atual["status_acesso"] not in STATUS_FINAIS:
             raise HTTPException(409, detail={"codigo": "ja_assinante", "mensagem": "Esta conta já tem uma assinatura. Troque o plano ou a forma de pagamento no Portal."})
@@ -234,7 +238,7 @@ def criar_router() -> APIRouter:
         try:
             cliente = banco.um("SELECT customer_id FROM assinantes WHERE usuario_id = ?", usuario_id)
             if not cliente:
-                novo = asaas.criar_cliente(name=dados.nome, email=email, cpfCnpj=dados.cpf_cnpj, externalReference=usuario_id)
+                novo = asaas.criar_cliente(name=dados.nome, email=email, cpfCnpj=doc, externalReference=usuario_id)
                 banco.executar(
                     "INSERT INTO assinantes (usuario_id, email, nome, cpf_cnpj, customer_id) VALUES (?, ?, ?, ?, ?)",
                     usuario_id, email, dados.nome, novo["cpfCnpj"], novo["id"],
@@ -252,7 +256,7 @@ def criar_router() -> APIRouter:
             if dados.cartao:
                 c = dados.cartao
                 corpo["creditCard"] = {"holderName": c.titular, "number": c.numero, "expiryMonth": c.mes, "expiryYear": c.ano, "ccv": c.cvv}
-                corpo["creditCardHolderInfo"] = {"name": dados.nome, "email": email, "cpfCnpj": dados.cpf_cnpj, "postalCode": c.cep, "addressNumber": c.numero_endereco, "phone": c.telefone}
+                corpo["creditCardHolderInfo"] = {"name": dados.nome, "email": email, "cpfCnpj": doc, "postalCode": c.cep, "addressNumber": c.numero_endereco, "phone": c.telefone}
                 corpo["remoteIp"] = request.client.host if request.client else "127.0.0.1"
             sub = asaas.criar_assinatura(**corpo)
         except AsaasError as e:
@@ -285,8 +289,8 @@ def criar_router() -> APIRouter:
         if not a:
             raise HTTPException(409, detail={"codigo": "sem_cadastro", "mensagem": "Os dados da nota são informados na primeira compra."})
         nome = dados.nome.strip()
-        doc = "".join(ch for ch in dados.cpf_cnpj if ch.isdigit())
-        if len(nome) < 2 or len(doc) not in (11, 14):
+        doc = normalizar_documento(dados.cpf_cnpj)  # ARES-QA-009: antes só contava 11 ou 14 dígitos
+        if len(nome) < 2 or not doc:
             raise HTTPException(422, detail={"codigo": "dados_invalidos", "mensagem": "Informe o nome ou a razão social e um CPF ou CNPJ válido."})
         endereco = (dados.endereco or "").strip() or None
         try:
