@@ -39,7 +39,8 @@ administração (itens 51 e 52), que terão regras mais duras que o resto do sit
 - 2FA por e-mail em todo cadastro, login, troca de senha e troca de e-mail: código de 6 dígitos, 10 minutos, 5 tentativas.
 - Tokens de sessão, desafio e download guardados só como SHA-256.
 - Cookie `HttpOnly`, `SameSite=Lax` e `Secure` em produção (`COOKIE_SECURE=true`).
-- Troca de senha derruba as outras sessões; lista de aparelhos com "este aparelho", "Sair dos outros" e "Sair de todos".
+- Troca de senha e troca de e-mail derrubam as outras sessões; a troca de e-mail pede a senha atual e avisa o endereço
+  antigo. Lista de aparelhos com "este aparelho", "Sair dos outros" e "Sair de todos".
 - Limite de 10 falhas de login por e-mail em 15 minutos (na memória; ver S5).
 
 **Entrada de dados** (todas as rotas)
@@ -91,6 +92,16 @@ Os riscos S1 a S17 estão detalhados em [backend-e-seguranca.md](backend-e-segur
 | 26/11/2026 | A API parou de responder; o site devolvia 503 nas páginas da conta. | ReDoS no regex de e-mail: um e-mail com domínio longo cheio de pontos segurava o processo (S17). | Regex linear, limite de tamanho em todos os campos e corpo de até 64 KB; testes em `api/tests/test_limites.py`. |
 
 Para cada incidente novo: o que o usuário viu, a causa confirmada, a correção, o teste que impede a volta e a linha aqui.
+
+## 5.1 Correções da revisão ARES (a partir de 26/11/2026)
+
+Achados das revisões REVIEW-001 a 005 do ARES (registro completo no artefato
+[Vulnerabilidades da Órbita](https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD), cópia em `artefatos/06-vulnerabilidades/`).
+Cada correção tem um commit próprio e um teste de regressão que falha no código antigo.
+
+| ID | Gravidade | O que estava errado | Correção | Teste |
+|---|---|---|---|---|
+| ARES-SEC-017 e ARES-QA-012 | Alta | Com uma sessão roubada, dava para trocar o e-mail sem a senha; o dono ficava trancado fora (a recuperação vai para o e-mail) e as outras sessões continuavam abertas. | `POST /auth/email/trocar` exige a senha atual (401 `senha_atual`); ao confirmar, as outras sessões caem e o e-mail antigo recebe aviso (`correio.avisar_troca_de_email`). Na tela, campo "Sua senha atual". | `test_conta.py::test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo` |
 
 ## 6. Plano de testes de segurança
 

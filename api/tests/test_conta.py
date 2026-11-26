@@ -12,6 +12,7 @@ from tests.test_billing import assinar
 def caixa(monkeypatch):
     recebidos: dict[str, str] = {}
     monkeypatch.setattr(auth, "enviar_codigo", lambda email, codigo: recebidos.__setitem__(email, codigo))
+    monkeypatch.setattr(auth, "avisar_troca_de_email", lambda antigo, novo: recebidos.__setitem__(f"aviso:{antigo}", novo), raising=False)
     return recebidos
 
 
@@ -45,13 +46,36 @@ def test_troca_de_email_confirma_no_endereco_novo(api, caixa):
     http, *_ = api
     cadastrar(http, caixa)
     cadastrar(TestClient(http.app), caixa, email="bia@exemplo.test")
-    assert http.post("/auth/email/trocar", json={"email": "bia@exemplo.test"}).status_code == 409
-    assert http.post("/auth/email/trocar", json={"email": "ana@exemplo.test"}).status_code == 422
-    assert http.post("/auth/email/trocar", json={"email": "Ana.Nova@Exemplo.test"}).status_code == 202
+    senha = "senha-forte-1"
+    assert http.post("/auth/email/trocar", json={"email": "bia@exemplo.test", "senha": senha}).status_code == 409
+    assert http.post("/auth/email/trocar", json={"email": "ana@exemplo.test", "senha": senha}).status_code == 422
+    assert http.post("/auth/email/trocar", json={"email": "Ana.Nova@Exemplo.test", "senha": senha}).status_code == 202
     assert "ana.nova@exemplo.test" in caixa  # o código foi para o endereço novo
     r = http.post("/auth/confirmar", json={"codigo": caixa["ana.nova@exemplo.test"]})
     assert r.status_code == 200 and r.json()["email"] == "ana.nova@exemplo.test"
     assert http.get("/auth/sessao").json()["email"] == "ana.nova@exemplo.test"
+
+
+def test_troca_de_email_exige_senha_derruba_sessoes_e_avisa_o_antigo(api, caixa):
+    """Regressão ARES-SEC-017 e ARES-QA-012: só a sessão não troca o e-mail; depois da troca, as outras sessões caem
+    e o endereço antigo recebe aviso."""
+    http, *_ = api
+    cadastrar(http, caixa)
+    outro = TestClient(http.app)
+    assert outro.post("/auth/login", json={"email": "ana@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    assert outro.post("/auth/codigo", json={"codigo": caixa["ana@exemplo.test"]}).status_code == 200
+
+    # Quem tem só a sessão (o "outro" aparelho, por exemplo roubado) não consegue pedir a troca.
+    assert outro.post("/auth/email/trocar", json={"email": "ladrao@exemplo.test"}).status_code == 422
+    r = outro.post("/auth/email/trocar", json={"email": "ladrao@exemplo.test", "senha": "chute-errado"})
+    assert r.status_code == 401 and r.json()["codigo"] == "senha_atual"
+    assert "ladrao@exemplo.test" not in caixa
+
+    assert http.post("/auth/email/trocar", json={"email": "ana.nova@exemplo.test", "senha": "senha-forte-1"}).status_code == 202
+    assert http.post("/auth/confirmar", json={"codigo": caixa["ana.nova@exemplo.test"]}).status_code == 200
+    assert http.get("/auth/sessao").status_code == 200  # esta continua
+    assert outro.get("/auth/sessao").status_code == 401  # a outra caiu
+    assert caixa["aviso:ana@exemplo.test"] == "ana.nova@exemplo.test"  # o e-mail antigo foi avisado
 
 
 def test_codigo_de_troca_nao_serve_para_entrar(api, caixa):

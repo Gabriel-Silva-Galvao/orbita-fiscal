@@ -32,6 +32,10 @@ export const prerender = false;
           <label for="email-novo">Trocar o e-mail</label>
           <input id="email-novo" type="email" autocomplete="email" placeholder="novo@exemplo.com" />
         </div>
+        <div class="field">
+          <label for="email-senha">Sua senha atual</label>
+          <input id="email-senha" type="password" autocomplete="current-password" />
+        </div>
         <button type="submit" class="btn-alt">Enviar código ao novo e-mail</button>
       </form>
       <div class="codigo" data-codigo="email" hidden>
@@ -434,15 +438,19 @@ export const prerender = false;
     e.preventDefault();
     const msg = $('[data-email-msg]');
     const email = $<HTMLInputElement>('#email-novo').value.trim();
+    const senha = $<HTMLInputElement>('#email-senha').value;
+    if (!senha) return void (msg.textContent = 'Digite sua senha atual para trocar o e-mail.');
     try {
-      const r = await call(authEndpoint, '/email/trocar', 'POST', { email });
+      const r = await call(authEndpoint, '/email/trocar', 'POST', { email, senha });
       if (!r.ok) return void (msg.textContent = await erroDe(r, 'Não conseguimos trocar o e-mail agora.'));
       const d = await r.json();
       pedirCodigo('email', d.enviado_para, msg, (res) => {
         usuario.email = res.email;
         $('[data-email]').textContent = res.email;
         $<HTMLInputElement>('#email-novo').value = '';
-        msg.textContent = 'E-mail trocado. A partir de agora, entre com o e-mail novo.';
+        $<HTMLInputElement>('#email-senha').value = '';
+        msg.textContent = 'E-mail trocado. A partir de agora, entre com o e-mail novo. Os outros aparelhos saíram da conta.';
+        carregarAparelhos();
         try {
           sessionStorage.removeItem('orbita:sessao');
         } catch {}

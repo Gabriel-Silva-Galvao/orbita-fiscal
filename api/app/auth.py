@@ -16,8 +16,8 @@ Contrato usado pelo site (src/pages/entrar.astro e src/middleware.ts), com base 
   DELETE /auth/sessoes/{id}                                -> 204 (sai daquele aparelho) | 404
   POST /auth/sair-de-todos                                 -> 204 (encerra todas, inclusive esta)
   POST /auth/senha/trocar     {atual, nova}                -> 202 código enviado ao e-mail | 401 senha atual errada
-  POST /auth/email/trocar     {email}                      -> 202 código enviado ao e-mail NOVO | 409 em uso
-  POST /auth/confirmar        {codigo}                     -> 200 troca feita (senha: as outras sessões caem)
+  POST /auth/email/trocar     {email, senha}               -> 202 código enviado ao e-mail NOVO | 401 senha atual errada | 409 em uso
+  POST /auth/confirmar        {codigo}                     -> 200 troca feita (as outras sessões caem; troca de e-mail avisa o antigo)
   GET/PUT /auth/preferencias  {novidades, resumo_semanal}  -> preferências de e-mail (item 9)
 
 Sessão (item 1 da rodada de testes, 25/11/2026): no máximo 30 dias a partir do login, sem renovar.
@@ -48,7 +48,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
-from app.correio import enviar_codigo
+from app.correio import avisar_troca_de_email, enviar_codigo
 
 log = logging.getLogger("orbita.auth")
 
@@ -213,6 +213,7 @@ class TrocaSenha(BaseModel):
 
 class TrocaEmail(BaseModel):
     email: str = Field(max_length=EMAIL_MAX)
+    senha: str = Field(max_length=128)  # ARES-SEC-017: só a sessão não basta para trocar o e-mail
 
 
 class Confirmacao(BaseModel):
@@ -383,6 +384,11 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
+        # ARES-SEC-017: com uma sessão roubada, trocar o e-mail sem a senha tomava a conta de vez (a recuperação
+        # vai para o e-mail). Agora a senha atual é exigida, como na troca de senha.
+        u = banco(req).um("SELECT senha_hash FROM usuarios WHERE id=?", s["id"])
+        if not confere_senha(dados.senha, u["senha_hash"]):
+            return _erro(401, "senha_atual", "A senha atual não confere.")
         email = dados.email.strip().lower()
         if not EMAIL_RE.match(email):
             return _erro(422, "dados_invalidos", "Informe um e-mail válido.")
@@ -415,6 +421,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if b.um("SELECT 1 FROM usuarios WHERE email=?", d["email"]):
             return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
         b.executar("UPDATE usuarios SET email=? WHERE id=?", d["email"], s["id"])
+        # ARES-SEC-017 / ARES-QA-012: como na troca de senha, as outras sessões caem; e o endereço antigo é avisado,
+        # para o dono perceber se não foi ele.
+        b.executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
+        avisar_troca_de_email(s["email"], d["email"])
         return {"ok": True, "trocou": "email", "email": d["email"]}
 
     @r.get("/preferencias")
