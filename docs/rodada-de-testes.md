@@ -979,10 +979,15 @@ o suporte é prioritário"; ficam o e-mail, o atendimento, "Escrever para a equi
 planos (`src/data/plans.ts`), o grupo Suporte ficou só com "Atendimento pela equipe" (saíram suporte prioritário, conversa de
 implantação e prazo de resposta). A implantação do plano Empresarial continua. Testado no Portal e em /planos.
 
-### 46. Formulário de ajuda sem imagem e com medidas exatas — A lapidar
+### 46. Formulário de ajuda sem imagem e com medidas exatas — Executado e testado (26/11/2026)
 
 Tirar a imagem ao lado do formulário de contato (Ajuda e Portal) e acertar as proporções, para o formulário e o texto ficarem
 com tamanhos alinhados na grade.
+
+**Feito:** em `Contact.astro` (o formulário de /ajuda#contato, para onde o Portal também leva) saiu a foto da mesa. No desktop, as
+duas colunas têm exatamente a mesma largura e a mesma altura (518 × 704 px a 1366 px de tela), e o bloco de texto fica centrado na
+altura do formulário, com o mesmo respiro interno dele. Saiu também a linha "Prazo de resposta", seguindo o item 45. No celular,
+o formulário ocupa a largura menos as margens (327 px a 375 px), sem rolagem lateral.
 
 ### 47. Sessões: mostrar "este aparelho" — A lapidar
 
