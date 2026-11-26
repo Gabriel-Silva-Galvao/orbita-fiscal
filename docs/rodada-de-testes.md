@@ -899,6 +899,13 @@ na vertical; o rodapé só aparece rolando até o fim. Os dois botões passaram 
 Quando a assinatura estiver ligada ao Asaas (item 29), rodar o security-review em tudo o que envolve cobrança e conferir, principalmente,
 se a mesma pessoa consegue assinar mais de uma vez (cliques repetidos, duas abas, duas compras ao mesmo tempo, webhook repetido).
 
+
+**Correção do S18 feita (26/11/2026):** reserva por conta gravada no banco antes de chamar o Asaas (409 `em_andamento` para
+o segundo pedido), conferência de "já é assinante" dentro da reserva e cliente do Asaas criado uma vez só (ARES-QA-003,
+commit `81e7a5c`), com testes de pedidos em paralelo e de reserva abandonada. Ainda faltam, do plano em
+`docs/ciberseguranca.md` seção 4.1: trocar o `INSERT OR REPLACE`, a consulta pela `externalReference` como rede de
+segurança e os testes de assinatura anterior encerrada e de erro do Asaas no meio. O resto do item 37 espera o Sandbox.
+
 ### 38. Página própria dos planos — Executado e testado (26/11/2026)
 
 Página nova só para os planos, com foco total no design e na comparação entre Bronze, Prata, Ouro e Empresarial, e um botão ou mini seção
