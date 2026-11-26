@@ -34,6 +34,46 @@ EVENTOS_WEBHOOK = [
 ]
 
 
+
+class LimiteDeCorpo:
+    """Recusa com 413 o pedido cujo corpo passa do limite, pelo Content-Length ou contando o que chega aos pedaços."""
+
+    def __init__(self, app, maximo: int):
+        self.app, self.maximo = app, maximo
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        for nome, valor in scope.get("headers", []):
+            if nome == b"content-length" and valor.isdigit() and int(valor) > self.maximo:
+                return await self._recusar(send)
+        recebido = 0
+
+        async def receber():
+            nonlocal recebido
+            msg = await receive()
+            if msg["type"] == "http.request":
+                recebido += len(msg.get("body", b""))
+                if recebido > self.maximo:
+                    raise _CorpoGrande()
+            return msg
+
+        try:
+            await self.app(scope, receber, send)
+        except _CorpoGrande:
+            await self._recusar(send)
+
+    @staticmethod
+    async def _recusar(send):
+        corpo = b'{"codigo":"pedido_grande","descricao":"O pedido passou do tamanho permitido."}'
+        await send({"type": "http.response.start", "status": 413,
+                    "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(corpo)).encode())]})
+        await send({"type": "http.response.body", "body": corpo})
+
+
+class _CorpoGrande(Exception):
+    pass
+
 def create_app(store: Store | None = None, banco: Banco | None = None, asaas: AsaasClient | None = None) -> FastAPI:
     settings = get_settings()
     # Item 17: a API se recusa a subir com configuração perigosa (simulação em produção, segredos de exemplo).
@@ -47,6 +87,8 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         auth.migrar(app.state.banco.con)
         app.state.banco.con.executescript(plugin.ESQUEMA)
         app.state.banco.con.executescript(contato.ESQUEMA)
+    # Segurança (26/11/2026): nenhum pedido passa de 64 KB (os maiores, webhook do Asaas e contato, ficam bem abaixo).
+    app.add_middleware(LimiteDeCorpo, maximo=64 * 1024)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.site_url],

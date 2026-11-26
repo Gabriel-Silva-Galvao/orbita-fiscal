@@ -176,6 +176,7 @@ O `api/.env` está no `.gitignore` e nunca vai para o repositório.
 | S14 | **Token de download no endereço** | Baixo | Aparece em logs do servidor. Vale 15 min. | Aceitável; não registrar o caminho completo no log de acesso. |
 | S15 | **Nome e e-mail no `sessionStorage`** | Baixo | Cópia para o avatar aparecer sem piscar; some ao fechar a aba. | Aceitável; some também no Sair. |
 | S16 | **Dependências** | Baixo | Versões fixas no `requirements.txt` e no `package-lock.json`. | `pip-audit` e `npm audit` mensais; atualizar com testes. |
+| S17 | **ReDoS na validação de e-mail (API travou em 26/11/2026)** | ~~Crítico~~ **Corrigido** | O regex `^[^@\s]+@[^@\s]+\.[^@\s]+$` voltava atrás em tempo quadrático num domínio longo cheio de pontos; um único pedido (8 mil pontos = 0,27 s; ~1 MB = mais de uma hora) segurava o GIL e travava a API inteira, e o site respondia 503 nas páginas da conta. | **Feito em 26/11/2026:** regex linear (`^[^@\s]{1,64}@[^@\s.]{1,63}(?:\.[^@\s.]{1,63})+$`, o mesmo em `/auth` e `/contato`); limite de tamanho (`max_length`) em todos os campos de texto de `/auth`, `/billing`, `/contato` e `/plugin` (422 antes de processar); e corpo de pedido limitado a 64 KB (413) por middleware. Testes em `api/tests/test_limites.py`. |
 
 ### 6.3 LGPD
 

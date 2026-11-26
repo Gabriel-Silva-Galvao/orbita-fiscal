@@ -30,7 +30,7 @@ import zipfile
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse, Response
 
 from app.auth import usuario_logado
@@ -109,8 +109,8 @@ IAS = {"claude", "chatgpt", "copilot", "gemini"}
 
 
 class Uso(BaseModel):
-    email: str
-    ia: str | None = None
+    email: str = Field(max_length=254)
+    ia: str | None = Field(default=None, max_length=20)
 
 
 def registrar_conexao(banco, usuario_id: str, ia: str | None) -> None:

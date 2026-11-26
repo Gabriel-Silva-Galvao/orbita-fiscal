@@ -45,7 +45,7 @@ from typing import Callable
 
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.correio import enviar_codigo
@@ -61,7 +61,11 @@ SESSAO_VALIDADE = 30 * 24 * 3600
 SESSAO_CURTA = 12 * 3600  # sem "manter conectado"
 ULTIMO_USO_PASSO = 60  # grava o último uso no máximo uma vez por minuto
 LOGIN_JANELA, LOGIN_MAX_FALHAS = 15 * 60, 10
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+# Segurança (26/11/2026): o regex antigo, r"^[^@\s]+@[^@\s]+\.[^@\s]+$", voltava atrás em tempo quadrático num domínio
+# longo cheio de pontos (ReDoS) e, como o regex segura o GIL, travava a API inteira. Este não volta atrás: os pedaços do
+# domínio não contêm ponto, e o ponto é literal entre eles. Além disso, o e-mail passa por limite de tamanho antes.
+EMAIL_MAX = 254
+EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s.]{1,63}(?:\.[^@\s.]{1,63})+$")
 
 ESQUEMA = """
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -175,42 +179,44 @@ def usuario_logado(req: Request, orbita_sessao: str | None = Cookie(None)) -> di
     return s
 
 
+# Limites de tamanho em todo texto que entra (segurança, 26/11/2026): nada de string gigante chegando ao regex,
+# ao scrypt ou ao banco. Acima do limite, a API responde 422 antes de qualquer processamento.
 class Cadastro(BaseModel):
-    nome: str
-    email: str
-    senha: str
-    plano: str | None = None
+    nome: str = Field(max_length=120)
+    email: str = Field(max_length=EMAIL_MAX)
+    senha: str = Field(max_length=128)
+    plano: str | None = Field(default=None, max_length=20)
 
 
 class Login(BaseModel):
-    email: str
-    senha: str
+    email: str = Field(max_length=EMAIL_MAX)
+    senha: str = Field(max_length=128)
 
 
 class Codigo(BaseModel):
-    codigo: str
+    codigo: str = Field(max_length=12)
     manter: bool = True
 
 
 class Esqueci(BaseModel):
-    email: str
+    email: str = Field(max_length=EMAIL_MAX)
 
 
 class Nome(BaseModel):
-    nome: str
+    nome: str = Field(max_length=120)
 
 
 class TrocaSenha(BaseModel):
-    atual: str
-    nova: str
+    atual: str = Field(max_length=128)
+    nova: str = Field(max_length=128)
 
 
 class TrocaEmail(BaseModel):
-    email: str
+    email: str = Field(max_length=EMAIL_MAX)
 
 
 class Confirmacao(BaseModel):
-    codigo: str
+    codigo: str = Field(max_length=12)
 
 
 class Preferencias(BaseModel):

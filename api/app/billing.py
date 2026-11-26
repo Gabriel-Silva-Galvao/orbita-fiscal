@@ -63,29 +63,29 @@ SUSPENDE = {"PAYMENT_OVERDUE", "PAYMENT_CHARGEBACK_REQUESTED", "PAYMENT_REPROVED
 
 
 class Cartao(BaseModel):
-    titular: str
-    numero: str
-    mes: str
-    ano: str
-    cvv: str
-    cep: str = Field(default="00000000")
-    numero_endereco: str = Field(default="S/N")
-    telefone: str | None = None
+    titular: str = Field(max_length=120)
+    numero: str = Field(max_length=25)
+    mes: str = Field(max_length=2)
+    ano: str = Field(max_length=4)
+    cvv: str = Field(max_length=4)
+    cep: str = Field(default="00000000", max_length=9)
+    numero_endereco: str = Field(default="S/N", max_length=20)
+    telefone: str | None = Field(default=None, max_length=20)
 
 
 class NovaAssinatura(BaseModel):
     # Nome ou razão social e CPF/CNPJ da nota fiscal; o e-mail vem da conta.
-    nome: str
-    cpf_cnpj: str
+    nome: str = Field(max_length=160)
+    cpf_cnpj: str = Field(max_length=20)
     plano: Literal["bronze", "prata", "ouro"]
     forma: Literal["cartao", "pix", "boleto"]
     cartao: Cartao | None = None
 
 
 class Nota(BaseModel):
-    nome: str
-    cpf_cnpj: str
-    endereco: str | None = None
+    nome: str = Field(max_length=160)
+    cpf_cnpj: str = Field(max_length=20)
+    endereco: str | None = Field(default=None, max_length=300)
 
 
 class TrocaPlano(BaseModel):

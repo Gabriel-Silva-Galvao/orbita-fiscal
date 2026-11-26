@@ -35,17 +35,18 @@ CREATE TABLE IF NOT EXISTS contatos (
 );
 """
 
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+# Mesmo regex seguro de app/auth.py (sem ReDoS).
+from app.auth import EMAIL_RE  # noqa: E402
 JANELA, MAXIMO = 3600, 5
 
 
 class Mensagem(BaseModel):
     nome: str = Field(max_length=120)
     empresa: str = Field(max_length=160)
-    email: str = Field(max_length=200)
+    email: str = Field(max_length=254)
     usuarios: str | None = Field(default=None, max_length=40)
     mensagem: str = Field(max_length=4000)
-    site: str | None = None  # isca para robôs
+    site: str | None = Field(default=None, max_length=200)  # isca para robôs
 
 
 def criar_router() -> APIRouter:
