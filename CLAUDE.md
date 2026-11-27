@@ -3,7 +3,7 @@
 Este arquivo é lido automaticamente no começo de toda conversa sobre o projeto. Ele diz o que é a Órbita, como
 trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seção "Manter este arquivo").
 
-Última atualização: 27/11/2026 (commit `40b9687`).
+Última atualização: 27/11/2026 (commit `c711188`).
 
 ---
 
@@ -71,7 +71,7 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   suporte, conta e segurança.
 - Plugin: download de demonstração, status ativo/inativo, contagem de perguntas por IA e downloads; cada reembolso
   grava a foto de uso do plugin.
-- Segurança: fase encerrada em 27/11/2026 (`docs/ciberseguranca.md`, seção 8). 61 fichas no registro.
+- Segurança: fase encerrada em 27/11/2026 (`docs/ciberseguranca.md`, seção 8). 63 fichas no registro.
 
 **Planejado, não construído**
 - Suporte e administração: planos em `docs/suporte.md` e `docs/admin.md`; estrutura das telas para discussão em
@@ -79,7 +79,9 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   para a equipe, sem "entrar como o cliente", auditoria por 5 anos, chamados próprios pelo Portal e por e-mail,
   reembolso aprovado pela equipe.
 
-**Próximo passo:** login da equipe com app autenticador, papéis e auditoria (`docs/admin.md`, seção 9, passos 1 e 2).
+**Próximo passo:** preparar o app atual para a equipe, na ordem de `docs/preparacao-suporte-admin.md`, seção 11
+(migrações numeradas, camada de serviços com `ator`, situação da conta, histórico, fila de e-mail e rotinas, reembolso
+como pedido, origens e cookies). Depois, o login da equipe (`docs/admin.md`, seção 9).
 
 **Pendências que dependem de terceiros ou de decisão**
 - Sandbox do Asaas (item 29) e o resto do item 37; cartão por página ou tokenização do Asaas (S3).
@@ -98,6 +100,7 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
 | `docs/seguranca/registro.json` e `painel.html` | Registro único de vulnerabilidades e o painel interativo |
 | `docs/backend-e-seguranca.md` | Rotas da API e riscos S1 a S18 |
 | `docs/suporte.md`, `docs/admin.md`, `docs/suporte-e-admin.md` | Planos do suporte e da administração |
+| `docs/preparacao-suporte-admin.md` | O que muda no app atual (API e site) antes de construir suporte e admin |
 | `docs/guia-de-uso.html` | Guia interativo de uso e testes (republicado a cada commit) |
 | `docs/etapas.json` e `docs/progresso.html` | Etapas do painel de progresso |
 | `artefatos/LEIA-ME.md` | Lista dos artefatos publicados no claude.ai |

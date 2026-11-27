@@ -104,6 +104,9 @@ em [admin.md](admin.md), com as decisões de 27/11/2026.
 
 ## 7. Ordem sugerida de construção (quando chegar a vez)
 
+Antes do passo 1, o app atual passa pela preparação de [preparacao-suporte-admin.md](preparacao-suporte-admin.md)
+(camada de serviços, migrações, histórico, rotinas, origens e cookies).
+
 1. Login da equipe com 2FA forte, papéis e registro de auditoria (sem isso, nenhuma tela entra).
 2. Suporte: busca, ficha resumida e chamados (fecha o "Seus chamados" do Portal).
 3. Admin: equipe, auditoria e segurança.
