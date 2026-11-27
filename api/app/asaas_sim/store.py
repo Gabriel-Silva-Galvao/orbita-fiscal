@@ -84,6 +84,33 @@ class Store:
     base_publica: str = "http://localhost:8000/asaas-sim"
     trava: threading.RLock = field(default_factory=threading.RLock)
 
+    # ---------- Guarda em arquivo (só no uso local) ----------
+    # Sem isto, reiniciar a API apagava clientes, assinaturas e cobranças da simulação, mas o banco da Órbita
+    # continuava apontando para eles: trocar a forma de pagamento ou cancelar dava "Assinatura não encontrada".
+    # Os webhooks não entram: a API cadastra o da Órbita de novo ao subir.
+    def salvar(self, caminho: str) -> None:
+        import json, os
+        with self.trava:
+            dados = {"clientes": self.clientes, "assinaturas": self.assinaturas, "cobrancas": self.cobrancas}
+            tmp = caminho + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(dados, f, ensure_ascii=False)
+            os.replace(tmp, caminho)
+
+    def carregar(self, caminho: str) -> None:
+        import json, os
+        if not os.path.exists(caminho):
+            return
+        try:
+            with open(caminho, encoding="utf-8") as f:
+                dados = json.load(f)
+        except (OSError, ValueError):
+            return
+        with self.trava:
+            self.clientes.update(dados.get("clientes", {}))
+            self.assinaturas.update(dados.get("assinaturas", {}))
+            self.cobrancas.update(dados.get("cobrancas", {}))
+
     # ---------- Eventos e webhooks ----------
     def _evento(self, nome: str, **dados: Any) -> None:
         evento = {"id": _id("evt"), "event": nome, "dateCreated": _agora(), "account": {"id": "acc_simulacao", "ownerId": None}, **dados}

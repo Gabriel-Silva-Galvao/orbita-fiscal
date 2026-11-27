@@ -7,6 +7,8 @@ Rodar: uvicorn app.main:app --reload --port 8000 (dentro de api/).
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -173,6 +175,17 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
 
     if settings.asaas_sim_enabled:
         app.state.asaas_sim = store or Store()
+        if store is None:
+            # Uso local: a simulação sobrevive a reinícios da API, guardada ao lado do banco.
+            arquivo_sim = str(Path(settings.database_path).with_suffix("")) + "-asaas-sim.json"
+            app.state.asaas_sim.carregar(arquivo_sim)
+
+            @app.middleware("http")
+            async def _guardar_sim(request: Request, call_next):
+                resposta = await call_next(request)
+                if request.method != "GET" and request.url.path.startswith("/asaas-sim/"):
+                    app.state.asaas_sim.salvar(arquivo_sim)
+                return resposta
         # Na simulação, o webhook da Órbita já nasce cadastrado. No Asaas real, cadastre pelo painel
         # (Integrações > Webhooks) ou por POST /v3/webhooks, com a mesma URL, token e eventos.
         app.state.asaas_sim.cadastrar_webhook(

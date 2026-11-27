@@ -87,6 +87,27 @@ const year = new Date().getFullYear();
         ))}
       </nav>
       <a class="pt-voltar" href="/"><Icon name="solar:arrow-left-linear" size={18} /> Voltar ao site</a>
+      <!-- O menu lateral repete o último estado conhecido antes da primeira pintura: ao trocar de página nada pisca nem
+           empurra o menu; a API só corrige se algo mudou. -->
+      <script is:inline>
+        (function () {
+          try {
+            var c = JSON.parse(sessionStorage.getItem('pt-lado') || 'null');
+            if (!c || c.email !== document.querySelector('[data-portal]').dataset.userEmail) return;
+            if (c.plano != null) document.querySelector('[data-portal-plano]').innerHTML = c.plano;
+            if (c.plugin) {
+              var s = document.querySelector('[data-plugin-status]');
+              s.dataset.estado = c.plugin.estado;
+              s.title = c.plugin.dica;
+              s.setAttribute('aria-label', c.plugin.texto + '. ' + c.plugin.dica);
+              s.querySelector('[data-plugin-texto]').textContent = c.plugin.texto;
+              s.hidden = false;
+              var m = document.querySelector('[data-plugin-mini]');
+              if (m) { m.dataset.estado = c.plugin.estado; m.hidden = false; }
+            }
+          } catch (e) {}
+        })();
+      </script>
     </aside>
 
     <div class="pt-corpo">
@@ -1067,6 +1088,17 @@ const year = new Date().getFullYear();
   const iniciais = (nome: string) =>
     nome.trim().split(/[\s@.]+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
 
+  // Último estado do menu lateral, repetido na próxima página antes da pintura (script inline no aside).
+  const guardarLado = (parte: Record<string, unknown>) => {
+    try {
+      const atual = JSON.parse(sessionStorage.getItem('pt-lado') ?? 'null');
+      const base = atual?.email === root.dataset.userEmail ? atual : { email: root.dataset.userEmail };
+      sessionStorage.setItem('pt-lado', JSON.stringify({ ...base, ...parte }));
+    } catch {
+      /* sem armazenamento: só perde o atalho */
+    }
+  };
+
   let primeira = true;
   aoCarregar((ctx) => {
     $('[data-portal-carregando]').hidden = true;
@@ -1126,6 +1158,7 @@ const year = new Date().getFullYear();
           mini.setAttribute('role', 'img');
           mini.setAttribute('aria-label', texto);
           mini.hidden = false;
+          guardarLado({ plugin: { estado, texto, dica } });
         })
         .catch(() => {});
     }
@@ -1146,6 +1179,7 @@ const year = new Date().getFullYear();
       s.textContent = `Plano ${nome}`;
       plano.append(s, ` · ${situacao}`);
     } else plano.textContent = ctx.estado === 'erro' ? '' : 'Sem plano';
+    if (ctx.estado !== 'erro') guardarLado({ plano: plano.innerHTML });
 
     // Avatar: nome do servidor (sessão) ou, na demonstração, o que o Checkout gravou.
     const quem = usuario.nome || ctx.sub?.nome || '';
