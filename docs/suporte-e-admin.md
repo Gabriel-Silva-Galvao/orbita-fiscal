@@ -53,6 +53,9 @@ O cliente pode pedir, pela LGPD, quem acessou os dados dele; o registro responde
 
 ## 4. Telas do suporte (item 51)
 
+O plano detalhado do suporte (canais, ciclo do chamado, dados, rotas, anexos, avisos e ideias) está em
+[suporte.md](suporte.md), com as decisões de 27/11/2026.
+
 1. **Entrar** — e-mail, senha e o 2FA da equipe. Sem "lembrar de mim".
 2. **Início do suporte** — chamados abertos, os que esperam resposta há mais tempo e uma busca.
 3. **Busca de cliente** — por e-mail completo ou id. Não lista todos os clientes e não aceita busca parcial (evita varrer
