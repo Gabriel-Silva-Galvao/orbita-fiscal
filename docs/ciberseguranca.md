@@ -286,3 +286,35 @@ Cada correção tem um commit próprio e um teste de regressão que falha no có
 10. Toda correção de segurança tem um teste de regressão que falha no código antigo e um commit próprio.
 11. Configuração que só vale no desenvolvimento depende de `ORBITA_ENV=development`, nunca de outra variável.
 12. Formulário com dado pessoal usa `method="post"`; destino de redirecionamento passa por `caminhoSeguro`.
+
+## 8. Encerramento da fase de segurança (27/11/2026)
+
+A fase de segurança aberta em 26/11/2026 (item 50) termina aqui. O que ela entregou:
+
+- **Correções:** 26 fichas corrigidas no registro, entre elas o ReDoS que derrubou a API (S17), a assinatura e o
+  reembolso em dobro (S18, CAND-01 a 03), a troca de e-mail sem senha (ARES-SEC-017), os limites de 2FA e de senha
+  atual, o open redirect do Entrar, a trava de produção (`ORBITA_ENV`), o `/docs` fechado, a conferência de `Origin` e
+  as dependências atualizadas. Cada uma com teste de regressão; 134 testes da API passando.
+- **Sistema de documentação:** registro único em `docs/seguranca/registro.json` (seção 0), painel
+  [Segurança da Órbita](https://claude.ai/artifact/HPpHTMdkdzKGD2T5Xr41d6) e checklist de nova funcionalidade
+  (seção 0.1), também em `CLAUDE.md`.
+- **Riscos das próximas partes analisados antes de construir:** login e auditoria da equipe, IDOR, anexos, aprovação do
+  reembolso, usuários online, e-mail falsificado, chat, servidor MCP e pacote do plugin (fichas F-01 a F-14), com as
+  decisões em [suporte.md](suporte.md) e [admin.md](admin.md).
+
+**O que fica, e quando volta**
+
+| O que | Situação no registro | Quando |
+|---|---|---|
+| Item 37 com o Sandbox do Asaas (webhook real, idempotência, órfãs) | Em observação | Com o Sandbox (item 29) |
+| S3: cartão pela página ou tokenização do Asaas | Em observação | Decisão da seção 4.2 |
+| S5 e SEC-009: limite por IP e CAPTCHA | Em observação | Com o proxy de produção |
+| S7: CSP de scripts e cabeçalhos nas páginas estáticas | Em observação | Com o proxy de produção |
+| QA-008, S9 e CAND-04: upgrade, 409 do cadastro, reembolso depois de cancelar | Em observação | Decisões da seção 4.2 |
+| S10 a S12 e S16: criptografia de disco, backups, limpeza, auditoria de dependências | Em observação | Infraestrutura e rotina |
+| Varredura OWASP ZAP, `pip-audit` e `npm audit` | — | Antes de publicar |
+| Telas da equipe (F-01 a F-06, F-12 a F-14) | Futuras | Ao construir suporte e admin |
+
+Daqui em diante a segurança não é mais uma fase separada: toda funcionalidade nova passa pelo checklist da seção 0.1,
+e cada achado novo entra no registro e no painel no mesmo commit.
+

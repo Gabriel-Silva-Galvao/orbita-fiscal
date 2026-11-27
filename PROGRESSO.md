@@ -413,6 +413,18 @@ Os pedidos da rodada, com diagnóstico, decisões e testes, estão em [docs/roda
 - [x] Itens 5 e 8: Portal em 7 páginas, com layout de produto (detalhe abaixo)
 - [x] Item 53 (26/11/2026): correções da revisão de segurança ARES, um commit por achado, com teste de regressão (S4, S6, S8 e S18 corrigidos; S5, S7 e S9 em parte). Registro de todas as vulnerabilidades no artefato [Vulnerabilidades da Órbita](https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD); detalhe em [docs/ciberseguranca.md](docs/ciberseguranca.md). A API de desenvolvimento agora precisa de `ORBITA_ENV=development`.
 
+- [x] Fase de segurança encerrada (27/11/2026): registro único de vulnerabilidades em `docs/seguranca/registro.json` (61 fichas em quatro situações: corrigidas, em observação, futuras e não necessárias), painel [Segurança da Órbita](https://claude.ai/artifact/HPpHTMdkdzKGD2T5Xr41d6) e checklist obrigatório para toda funcionalidade nova (`docs/ciberseguranca.md`, seções 0 e 8, e `CLAUDE.md`). O que ficou é para antes de publicar.
+- [x] Suporte e administração, fase de planejamento (27/11/2026): estrutura das telas em `/equipe` (só no desenvolvimento), plano do suporte em [docs/suporte.md](docs/suporte.md) e plano da administração em [docs/admin.md](docs/admin.md). Próximo passo: login da equipe com app autenticador, papéis e auditoria.
+
+**Suporte e administração: decisões (27/11/2026)**
+
+- Endereço: subdomínios próprios, `admin.<domínio>` e `suporte.<domínio>`; nada da equipe abre pelo site.
+- Chamados em sistema próprio, abertos pelo Portal e por e-mail; chat no site documentado como ideia.
+- O Suporte vê o resumo do plugin (ativo, se baixou, última conexão, IAs); a foto completa de uso fica para depois.
+- Atendimento: uma pessoa, em dias úteis, sem prazo prometido no Portal.
+- Equipe entra com app autenticador; não haverá "entrar como o cliente"; auditoria guardada por 5 anos.
+- Reembolso passará a ser aprovado pela equipe (prazo de 2 dias úteis, recusa só por motivo de lista fechada); questionário opcional e foto de uso do plugin já são gravados em cada pedido.
+
 **Portal do assinante (itens 5 e 8, 25/11/2026)**
 
 - Layout `src/layouts/Portal.astro`: menu lateral com o plano e as 7 páginas; no celular, barra inferior (Início, Plugin, Novidades, Plano) e a folha "Mais"; cabeçalho com o nome da página, busca na Ajuda, avatar com menu e "Voltar ao site".
@@ -452,6 +464,8 @@ Os pedidos da rodada, com diagnóstico, decisões e testes, estão em [docs/roda
 | `src/data/` | `plans.ts`, `photos.ts` (créditos), `site.ts` (contatos provisórios), `ajuda.ts` (artigos para a busca do Portal), `examples.ts`, `citacoes.ts` (125 citações) |
 | `src/middleware.ts` | Porta das rotas do assinante e do Checkout, pela sessão da API FastAPI |
 | `src/styles/` | `tokens.css` (marca), `global.css`, `forms.css` |
-| `docs/` | Briefings, mapa, análise de animações, auditoria de IA, painel de progresso (`progresso.html`) |
+| `docs/` | Briefings, mapa, análise de animações, auditoria de IA, painel de progresso (`progresso.html`), cibersegurança (`ciberseguranca.md`), suporte (`suporte.md`), administração (`admin.md`) |
+| `docs/seguranca/` | Registro único de vulnerabilidades (`registro.json`) e o painel Segurança da Órbita (`painel.html`) |
+| `src/pages/equipe/` | Estrutura das telas de suporte e admin para discussão (só no `astro dev`; layout `Equipe.astro`, dados em `src/data/equipe-exemplo.ts`) |
 | `design-system/` | Design system exportado (tokens, componentes, regras) |
 | `.claude/skills/` | Skills de auditoria de design usadas no projeto |

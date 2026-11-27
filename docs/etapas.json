@@ -206,28 +206,27 @@
     ["Formulário de contato na Ajuda e prévia na inicial", true],
     ["Átomo mais lento no topo e na logo", true]
   ]},
-  {"id": "e22", "titulo": "Segurança (fase atual, desde 26/11/2026)", "itens": [
+  {"id": "e22", "titulo": "Segurança (fase encerrada em 27/11/2026)", "itens": [
     ["Documento de cibersegurança (docs/ciberseguranca.md)", true],
     ["S17: API travava com ReDoS no e-mail; corrigido com limites de tamanho e corpo de 64 KB", true],
     ["S18: impedir assinatura em dobro com pedidos simultâneos", true],
     ["Item 53: correções da revisão ARES, um commit por achado, com teste de regressão", true],
-    ["Registro de todas as vulnerabilidades (artefato Vulnerabilidades da Órbita)", true],
-    ["S4: SMTP obrigatório em produção (ORBITA_ENV)", true],
-    ["S6, S8 e S9 (login): /docs fechado, Origin conferido e tempo igual no login", true],
-    ["Item 37: revisão de segurança da assinatura com o Asaas (resto, com o Sandbox)", false],
-    ["S3: cartão pela página ou tokenização do Asaas (nunca passa pela API)", false],
-    ["S5: limite de tentativas por IP e CAPTCHA (depende do proxy)", false],
-    ["S7: cabeçalhos também nas páginas estáticas (proxy) e CSP de scripts", false],
-    ["Decidir: cobrança do upgrade, 409 do cadastro e reembolso depois de cancelar", false],
-    ["Varredura (OWASP ZAP), pip-audit e npm audit antes de publicar", false]
+    ["S4, S6, S8 e S9 (login): SMTP em produção, /docs fechado, Origin conferido e tempo igual no login", true],
+    ["Registro único de vulnerabilidades (docs/seguranca/registro.json) e painel Segurança da Órbita", true],
+    ["Checklist de segurança para toda funcionalidade nova (ciberseguranca.md, seção 0.1, e CLAUDE.md)", true],
+    ["Para publicar: item 37 com o Sandbox, S3 (cartão), S5 (limite por IP), S7 (CSP) e decisões da seção 4.2", false],
+    ["Para publicar: varredura (OWASP ZAP), pip-audit e npm audit", false]
   ]},
   {"id": "e23", "titulo": "Suporte e administração (itens 51 e 52)", "itens": [
     ["Telas e regras documentadas em docs/suporte-e-admin.md", true],
-    ["Login separado da equipe, com 2FA obrigatório e papéis", false],
-    ["Telas do suporte: busca, ficha do cliente, chamados", false],
-    ["Telas do admin: usuários, assinaturas, auditoria", false],
+    ["Estrutura das telas para discussão em /equipe (só no desenvolvimento)", true],
+    ["Plano do suporte (docs/suporte.md): Portal e e-mail, sistema próprio, chat como ideia", true],
+    ["Plano da administração (docs/admin.md): subdomínios admin. e suporte., app autenticador, auditoria de 5 anos", true],
+    ["Login separado da equipe, com app autenticador e papéis", false],
     ["Registro de auditoria de todo acesso e ação", false],
-    ["Revisão de segurança dedicada antes de ligar", false]
+    ["Telas do suporte: chamados, ficha do cliente, avisos por e-mail", false],
+    ["Telas do admin: clientes, assinaturas, reembolsos, equipe, painel", false],
+    ["Revisão de segurança dedicada e teste de invasão antes de ligar", false]
   ]},
   {"id": "e20", "titulo": "Animação da explosão do átomo", "itens": [
     ["Definir quando toca: uma vez, na confirmação do pagamento", true],
