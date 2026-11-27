@@ -75,6 +75,9 @@ O lado do cliente já tem onde isso aparece: "Seus chamados" na página Suporte 
 
 ## 5. Telas da administração (item 52)
 
+O plano detalhado da administração (endereços, acesso, telas, auditoria, alertas, dados e ordem de construção) está
+em [admin.md](admin.md), com as decisões de 27/11/2026.
+
 1. **Painel** — números do negócio sem dados pessoais: assinantes por plano, novos e cancelados no mês, receita do mês,
    reembolsos, plugins ativos.
 2. **Clientes** — a mesma busca do suporte, com a ficha completa: CPF/CNPJ inteiro (só ao clicar em "mostrar", com motivo
@@ -147,9 +150,10 @@ oferta, **nunca** para negar por "usou demais" ou "não respondeu". Validar este
   auditoria, como qualquer acesso a dado de cliente.
 - **Privacidade:** não guardar IP nem página visitada para isso; apagar as contagens com mais de 90 dias.
 
-## 10. Para decidir
+## 10. Decisões (27/11/2026)
 
-- Endereço das telas da equipe (subdomínio próprio ou caminho no site).
-- Se haverá "entrar como o cliente" para reproduzir problemas (se sim: só Admin, com aviso ao cliente e registro).
-- Prazo de guarda do registro de auditoria.
-- Ferramenta de chamados: própria (como descrito) ou um serviço pronto integrado.
+- Endereço: subdomínios próprios, `admin.<domínio>` e `suporte.<domínio>`; nada da equipe abre pelo site.
+- Segundo fator da equipe: app autenticador.
+- "Entrar como o cliente": não haverá.
+- Guarda da auditoria: 5 anos.
+- Chamados: sistema próprio, pelo Portal e por e-mail (detalhe em [suporte.md](suporte.md)).

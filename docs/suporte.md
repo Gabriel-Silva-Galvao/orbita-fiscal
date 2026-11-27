@@ -13,6 +13,7 @@ Nada disto está construído além dessa estrutura.
 | Por onde o cliente abre chamado | **Formulário no Portal** (página Suporte, "Seus chamados") e **e-mail** para o endereço do suporte. Chat no site fica como ideia documentada (seção 9). |
 | Onde ficam os chamados | **Sistema próprio**, na API da Órbita: ligado à ficha do cliente, ao status do plugin e à auditoria. Nenhum serviço de terceiros recebe dados do cliente. |
 | O que o Suporte vê do plugin | **Resumo:** ativo ou inativo, se baixou, última conexão e em quais IAs. O número de perguntas e os dias de uso (a foto completa) ficam para depois (seção 9). |
+| Endereço da área do suporte | **`suporte.<domínio>`**, subdomínio próprio, com login e cookie separados do site e do `admin.` ([admin.md](admin.md), seção 2). |
 | Quem atende | **Uma pessoa, em dias úteis**, no horário comercial. O texto do Portal não promete prazo de resposta (item 45). |
 
 ## 2. O que o suporte resolve
