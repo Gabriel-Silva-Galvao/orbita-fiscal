@@ -7,20 +7,12 @@ interface Props {
   links?: { href: string; label: string }[];
   cta?: { href: string; label: string };
   signIn?: string;
-  /** Item 49: na página inicial o header não leva às outras páginas (elas abrem pelos links da própria página). */
-  semPaginas?: boolean;
 }
-const { links = [], cta, signIn, semPaginas = false } = Astro.props;
+const { links = [], cta, signIn } = Astro.props;
 
-// Item 23 da rodada de testes: o header principal é o mesmo em todas as páginas públicas.
-const globais = [
-  { href: '/#como-funciona', label: 'Como funciona' },
-  { href: '/bases', label: 'O que cobre' },
-  { href: '/planos', label: 'Planos' },
-  { href: '/ajuda', label: 'Ajuda' },
-];
-const atual = Astro.url.pathname.replace(/\/$/, '') || '/';
-const ehAtual = (href: string) => !href.includes('#') && href === atual;
+// Item 49, estendido a todas as páginas públicas (27/11/2026): o header não leva às outras páginas; elas abrem pelos
+// links da própria página, pelo caminho no topo ("Órbita › ...") e pelo rodapé. Fica só a logo, Entrar e Assinar,
+// mais a barra de seções da página, que aparece ao rolar.
 // Item 1 da rodada de testes: com a API ligada, o cabeçalho descobre se há sessão e troca "Entrar" e "Assinar"
 // pelo avatar com as iniciais e um menu. Sem API (demonstração), fica como sempre.
 const authEndpoint = import.meta.env.PUBLIC_AUTH_ENDPOINT ?? '';
@@ -31,17 +23,6 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 <header class="nav" data-nav>
   <div class="wrap nav-inner">
     <Logo />
-    {
-      !semPaginas && (
-        <nav class="nav-links" aria-label="Principal">
-          {globais.map((l) => (
-            <a href={l.href} aria-current={ehAtual(l.href) ? 'page' : undefined}>
-              <span>{l.label}</span>
-            </a>
-          ))}
-        </nav>
-      )
-    }
     <div class="nav-actions" data-nav-actions data-auth={authEndpoint} data-billing={billingEndpoint}>
       {signIn && <a class="nav-signin" href={signIn} data-nav-anon>Entrar</a>}
       {cta && <span class="nav-cta" data-nav-anon><Button href={cta.href}>{cta.label}</Button></span>}
@@ -254,13 +235,6 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
 </script>
 
 <style>
-  /* Página atual no header global. */
-  .nav-links a[aria-current='page'] {
-    color: var(--ink);
-  }
-  .nav-links a[aria-current='page']::after {
-    transform: scaleX(1);
-  }
   /* "Assinar" discreto no topo e em destaque depois da primeira tela. */
   .nav-cta :global(.btn) {
     transition:
@@ -469,11 +443,6 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
   .nav.is-scrolled .nav-inner {
     min-height: 74px;
   }
-  .nav-links {
-    display: none;
-    gap: var(--space-5);
-  }
-  .nav-links a,
   .nav-signin {
     position: relative;
     font: var(--text-small);
@@ -482,24 +451,6 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     padding: 6px 2px;
     transition: color 280ms ease-out;
   }
-  /* Sublinhado que corre da esquerda. */
-  .nav-links a::after {
-    content: '';
-    position: absolute;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    height: 1.5px;
-    background: var(--brand);
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .nav-links a:hover::after {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
-  .nav-links a:hover,
   .nav-signin:hover {
     color: var(--ink);
   }
@@ -512,7 +463,6 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
     display: none;
   }
   @media (min-width: 900px) {
-    .nav-links,
     .nav-signin {
       display: flex;
     }
@@ -522,30 +472,8 @@ const billingEndpoint = import.meta.env.PUBLIC_BILLING_ENDPOINT ?? '';
       min-height: 72px;
     }
   }
-  /* Item 23: no celular, os links principais ficam numa linha rolável abaixo do logo (antes sumiam). */
-  @media (max-width: 899px) {
-    .nav-inner {
-      flex-wrap: wrap;
-      row-gap: 0;
-    }
-    .nav-links {
-      display: flex;
-      order: 3;
-      flex-basis: 100%;
-      gap: var(--space-4);
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 6px;
-      margin-top: -8px;
-    }
-    .nav-links a {
-      flex: none;
-      white-space: nowrap;
-    }
-  }
   /* Item 42 (auditoria de navegação): no toque, cada link do header e da barra de seções tem pelo menos 44 px de altura. */
   @media (pointer: coarse), (max-width: 760px) {
-    .nav-links a,
     .nav-secoes a {
       display: inline-flex;
       align-items: center;
