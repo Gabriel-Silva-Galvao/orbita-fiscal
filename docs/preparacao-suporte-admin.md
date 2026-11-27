@@ -180,6 +180,10 @@ Cada passo é um commit testado; nenhum muda o que o cliente vê, exceto o 6.
    **Feito em 27/11/2026:** `api/app/servicos/base.py` (`Ator`, `ErroDeNegocio`) e `api/app/servicos/assinaturas.py`;
    `billing.py` ficou só com as rotas; testes em `tests/test_servicos_assinaturas.py`.
 3. Camada de serviços para `auth` e `plugin`; situação da conta e `ultima_atividade`.
+   **Feito em 27/11/2026:** `servicos/contas.py` (suspender e reativar com motivo, só equipe ou sistema; encerrar
+   sessões; nome; exclusão; última atividade uma vez por minuto) e `servicos/plugin.py` (`resumo_para_suporte` sem o
+   número de perguntas). Migração 2 (`situacao`, `suspensa_em`, `suspensa_motivo`, `ultima_atividade`). Conta suspensa
+   não entra, perde as sessões e o plugin recebe 403. Testes em `tests/test_servicos_contas.py`.
 4. `historico_conta` e o serviço de auditoria (ainda sem a equipe gravar nada).
 5. Fila de e-mail e o processo de rotinas (começando pela limpeza do S12).
 6. Reembolso como pedido (muda o Portal e o pop-up).

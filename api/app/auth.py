@@ -50,6 +50,8 @@ from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.correio import avisar_troca_de_email, enviar_codigo
+from app.servicos import contas
+from app.servicos.base import Ator, ErroDeNegocio
 
 log = logging.getLogger("orbita.auth")
 
@@ -154,15 +156,17 @@ def sessao_valida(banco, token: str | None) -> dict | None:
     if not token:
         return None
     s = banco.um(
-        "SELECT u.id, u.email, u.nome, s.expira, s.ultimo_uso, s.id AS sessao_id FROM sessoes s "
+        "SELECT u.id, u.email, u.nome, u.situacao, u.ultima_atividade, s.expira, s.ultimo_uso, s.id AS sessao_id FROM sessoes s "
         "JOIN usuarios u ON u.id=s.usuario_id WHERE s.token_hash=?",
         _sha(token),
     )
     agora = time.time()
-    if not s or s["expira"] < agora:
+    # Passo 3 da preparação: conta suspensa não tem sessão válida (a suspensão já apaga as sessões; isto é a segunda trava).
+    if not s or s["expira"] < agora or s["situacao"] != "ativa":
         return None
     if not s["ultimo_uso"] or agora - s["ultimo_uso"] > ULTIMO_USO_PASSO:
         banco.executar("UPDATE sessoes SET ultimo_uso=? WHERE token_hash=?", agora, _sha(token))
+    contas.registrar_atividade(banco, s["id"], s["ultima_atividade"], agora)
     return {"id": s["id"], "email": s["email"], "nome": s["nome"], "sessao_id": s["sessao_id"]}
 
 
@@ -349,6 +353,8 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             falhas.falhou(email, LOGIN_MAX_FALHAS)
             return _erro(401, "credenciais", "E-mail ou senha não conferem.")
         falhas.zerar(email)
+        if u["situacao"] != "ativa":
+            return _erro(403, "conta_suspensa", "Esta conta está suspensa. Fale com a equipe da Órbita pelo e-mail do suporte.")
         if limite_login(f"codigo:{email}", CODIGO_MAX_FALHAS_CONTA):
             # ARES-SEC-002: conta com códigos errados demais na janela não ganha desafio novo (nem mais 5 chutes).
             return _erro(429, "muitas_tentativas", "Muitos códigos errados. Espere alguns minutos para pedir outro.")
@@ -394,7 +400,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
             except sqlite3.IntegrityError:  # ARES-QA-011: outro cadastro do mesmo e-mail entrou entre a conferência e o INSERT
                 return _erro(409, "email_em_uso", "Esse e-mail já tem conta.")
         else:
-            uid = b.um("SELECT id FROM usuarios WHERE email=?", d["email"])["id"]
+            existente = b.um("SELECT id, situacao FROM usuarios WHERE email=?", d["email"])
+            if existente["situacao"] != "ativa":
+                return _erro(403, "conta_suspensa", "Esta conta está suspensa. Fale com a equipe da Órbita pelo e-mail do suporte.")
+            uid = existente["id"]
         b.executar("DELETE FROM desafios WHERE token_hash=?", d["token_hash"])
 
         # Token novo a cada login; o token velho deste navegador, se houver, é encerrado.
@@ -556,7 +565,7 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
-        banco(req).executar("DELETE FROM sessoes WHERE usuario_id=? AND id<>?", s["id"], s["sessao_id"])
+        contas.encerrar_sessoes(banco(req), Ator.cliente(s["id"]), s["id"], manter_sessao_id=s["sessao_id"])
         return Response(status_code=204)
 
     @r.delete("/sessoes/{sid}", status_code=204)
@@ -565,8 +574,10 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
         # Só encerra sessão da própria conta: o id de outra pessoa não é achado.
-        if not banco(req).executar("DELETE FROM sessoes WHERE id=? AND usuario_id=?", sid, s["id"]):
-            return _erro(404, "nao_achada", "Essa sessão já foi encerrada.")
+        try:
+            contas.encerrar_sessao(banco(req), Ator.cliente(s["id"]), s["id"], sid)
+        except ErroDeNegocio as e:
+            return _erro(e.status, e.codigo, e.mensagem)
         if sid == s["sessao_id"]:
             resp.delete_cookie(COOKIE_SESSAO, path="/")
         resp.status_code = 204
@@ -577,7 +588,7 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
         s = sessao_valida(banco(req), orbita_sessao)
         if not s:
             return _erro(401, "sem_sessao", "Entre na sua conta.")
-        banco(req).executar("DELETE FROM sessoes WHERE usuario_id=?", s["id"])
+        contas.encerrar_sessoes(banco(req), Ator.cliente(s["id"]), s["id"])
         resp.delete_cookie(COOKIE_SESSAO, path="/")
         resp.status_code = 204
         return resp
@@ -585,24 +596,19 @@ def criar_router(enviar: Callable[[str, str], None] | None = None) -> APIRouter:
     @r.put("/conta")
     def trocar_nome(dados: Nome, req: Request, orbita_sessao: str | None = Cookie(None)):
         u = usuario_logado(req, orbita_sessao)
-        nome = dados.nome.strip()
-        if not 2 <= len(nome) <= 120:
-            return _erro(422, "nome_invalido", "Escreva um nome entre 2 e 120 caracteres.")
-        banco(req).executar("UPDATE usuarios SET nome = ? WHERE id = ?", nome, u["id"])
+        try:
+            nome = contas.trocar_nome(banco(req), Ator.cliente(u["id"]), u["id"], dados.nome)
+        except ErroDeNegocio as e:
+            return _erro(e.status, e.codigo, e.mensagem)
         return {**u, "nome": nome}
 
     @r.delete("/conta", status_code=204)
     def excluir(req: Request, resp: Response, orbita_sessao: str | None = Cookie(None)):
         u = usuario_logado(req, orbita_sessao)
-        b = banco(req)
-        a = b.um("SELECT status_acesso, cancelada_em FROM assinaturas WHERE usuario_id = ?", u["id"])
-        if a and a["status_acesso"] not in ("cancelado", "reembolsado") and not a["cancelada_em"]:
-            return _erro(409, "assinatura_ativa", "Cancele a assinatura antes de excluir a conta, para não haver nova cobrança.")
-        # Dados de cobrança (assinantes, assinaturas) ficam pelo prazo legal de guarda fiscal; a conta e o login saem.
-        b.executar("DELETE FROM sessoes WHERE usuario_id = ?", u["id"])
-        b.executar("DELETE FROM desafios WHERE email = ?", u["email"])
-        b.executar("DELETE FROM preferencias WHERE usuario_id = ?", u["id"])
-        b.executar("DELETE FROM usuarios WHERE id = ?", u["id"])
+        try:
+            contas.excluir(banco(req), Ator.cliente(u["id"]), u["id"], u["email"])
+        except ErroDeNegocio as e:
+            return _erro(e.status, e.codigo, e.mensagem)
         resp.delete_cookie(COOKIE_SESSAO, path="/")
         resp.status_code = 204
         return resp

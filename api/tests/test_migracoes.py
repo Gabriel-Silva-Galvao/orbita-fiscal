@@ -21,9 +21,9 @@ def tabelas(con) -> set[str]:
 
 def test_banco_novo_recebe_o_esquema_inteiro(tmp_path):
     con = Banco(str(tmp_path / "novo.db")).con
-    assert migracoes.aplicar(con) == [1]
+    assert migracoes.aplicar(con) == [1, 2]
     assert TABELAS <= tabelas(con)
-    assert migracoes.versao_atual(con) == 1
+    assert migracoes.versao_atual(con) == migracoes.MIGRACOES[-1][0]
     assert migracoes.aplicar(con) == []  # rodar de novo não faz nada
 
 
@@ -49,7 +49,7 @@ def test_banco_antigo_ganha_as_colunas_sem_perder_dados(tmp_path):
     )
     velho.close()
     con = Banco(caminho).con
-    assert migracoes.aplicar(con) == [1]
+    assert migracoes.aplicar(con) == [1, 2]
     assert {"criada_em", "cancelada_em", "reembolso_em"} <= migracoes._colunas(con, "assinaturas")
     assert {"id", "ultimo_uso", "aparelho"} <= migracoes._colunas(con, "sessoes")
     assert "endereco" in migracoes._colunas(con, "assinantes")
@@ -60,12 +60,13 @@ def test_banco_antigo_ganha_as_colunas_sem_perder_dados(tmp_path):
 def test_migracao_que_falha_nao_deixa_nada_pela_metade(tmp_path, monkeypatch):
     con = Banco(str(tmp_path / "falha.db")).con
     migracoes.aplicar(con)
+    antes = migracoes.versao_atual(con)
     ruim = "CREATE TABLE parcial (x INTEGER); INSERT INTO tabela_que_nao_existe VALUES (1)"
-    monkeypatch.setattr(migracoes, "MIGRACOES", [*migracoes.MIGRACOES, (2, "Quebrada de propósito", ruim)])
+    monkeypatch.setattr(migracoes, "MIGRACOES", [*migracoes.MIGRACOES, (antes + 1, "Quebrada de propósito", ruim)])
     with pytest.raises(sqlite3.OperationalError):
         migracoes.aplicar(con)
     assert "parcial" not in tabelas(con)
-    assert migracoes.versao_atual(con) == 1
+    assert migracoes.versao_atual(con) == antes
 
 
 def test_numeros_repetidos_sao_recusados(tmp_path, monkeypatch):

@@ -49,6 +49,14 @@ def _v1_esquema_inicial(con: sqlite3.Connection) -> None:
 
 MIGRACOES: list[tuple[int, str, Passo]] = [
     (1, "Esquema inicial de 27/11/2026", _v1_esquema_inicial),
+    (
+        2,
+        "Situação da conta e última atividade (passo 3 da preparação)",
+        "ALTER TABLE usuarios ADD COLUMN situacao TEXT NOT NULL DEFAULT 'ativa';"
+        "ALTER TABLE usuarios ADD COLUMN suspensa_em TEXT;"
+        "ALTER TABLE usuarios ADD COLUMN suspensa_motivo TEXT;"
+        "ALTER TABLE usuarios ADD COLUMN ultima_atividade REAL",
+    ),
 ]
 
 

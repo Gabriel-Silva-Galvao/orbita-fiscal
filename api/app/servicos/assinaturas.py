@@ -343,7 +343,7 @@ def reembolsar(banco: Banco, asaas: AsaasClient, ator: Ator, usuario_id: str, *,
             "UPDATE assinaturas SET status_acesso = 'reembolsado', reembolso_em = ?, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?",
             date.today().isoformat(), usuario_id,
         )
-        from app.plugin import resumo_de_uso  # import local: plugin.py importa deste módulo
+        from app.servicos.plugin import resumo_de_uso  # import local: evita ciclo na importação
 
         melhorar = " ".join((melhorar or "").split())
         uso = json.dumps(resumo_de_uso(banco, usuario_id), ensure_ascii=False)

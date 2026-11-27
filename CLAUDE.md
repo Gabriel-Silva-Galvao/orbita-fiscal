@@ -31,7 +31,7 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   reiniciar o "api".
 - **Conta de teste:** `fetch` em `/auth/cadastro` e `/auth/codigo` (o `codigo_dev` vem na resposta no
   desenvolvimento); `POST /billing/assinatura` com Pix e `POST /billing/assinatura/simular-pagamento`.
-- **Testes da API** (145 passando): em `api/`,
+- **Testes da API** (152 passando): em `api/`,
   `.venv/Scripts/python -m pytest -q -p no:cacheprovider --basetemp="$TEMP/orbita-pt-$RANDOM$RANDOM" -W ignore`
   (sempre um `basetemp` novo; reaproveitar dá erro no Windows).
 - **Testes do site:** `npm run test:site`.
@@ -82,9 +82,10 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   reembolso aprovado pela equipe.
 
 **Próximo passo:** preparar o app atual para a equipe, na ordem de `docs/preparacao-suporte-admin.md`, seção 11.
-Feito: passo 1 (migrações numeradas e WAL) e passo 2 (regras de cobrança em `api/app/servicos/assinaturas.py`, com
-`Ator`). Próximo: passo 3 (serviços de conta e plugin, situação da conta); depois histórico, fila de e-mail e rotinas,
-reembolso como pedido, origens e cookies. Depois, o login da equipe (`docs/admin.md`, seção 9).
+Feito: passos 1 (migrações numeradas e WAL), 2 (cobrança em `api/app/servicos/assinaturas.py`, com `Ator`) e 3
+(conta e plugin em `servicos/contas.py` e `servicos/plugin.py`; conta pode ser suspensa; `ultima_atividade`).
+Próximo: passo 4 (histórico da conta e serviço de auditoria); depois fila de e-mail e rotinas, reembolso como pedido,
+origens e cookies. Depois, o login da equipe (`docs/admin.md`, seção 9).
 
 **Pendências que dependem de terceiros ou de decisão**
 - Sandbox do Asaas (item 29) e o resto do item 37; cartão por página ou tokenização do Asaas (S3).

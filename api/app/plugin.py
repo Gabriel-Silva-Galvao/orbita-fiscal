@@ -36,6 +36,7 @@ from fastapi.responses import JSONResponse, Response
 from app.auth import usuario_logado
 from app.billing import tem_acesso
 from app.config import get_settings
+from app.servicos.plugin import IAS, registrar_conexao, resumo_de_uso  # noqa: F401  (passo 3: as regras moram no serviço)
 
 VALIDADE = 15 * 60
 VERSAO = "0.0.0-demo"
@@ -120,49 +121,9 @@ def montar_zip() -> bytes:
     return buf.getvalue()
 
 
-IAS = {"claude", "chatgpt", "copilot", "gemini"}
-
-
 class Uso(BaseModel):
     email: str = Field(max_length=254)
     ia: str | None = Field(default=None, max_length=20)
-
-
-def registrar_conexao(banco, usuario_id: str, ia: str | None) -> None:
-    """Marca a primeira e a última vez que o plugin deste assinante falou com a Órbita e soma a pergunta na IA usada
-    (IA desconhecida ou não informada conta como "outra")."""
-    agora = time.time()
-    ia = ia if ia in IAS else None
-    banco.executar(
-        "INSERT INTO plugin_conexoes (usuario_id, primeira, ultima, ia) VALUES (?,?,?,?) "
-        "ON CONFLICT(usuario_id) DO UPDATE SET ultima=excluded.ultima, ia=COALESCE(excluded.ia, plugin_conexoes.ia)",
-        usuario_id, agora, agora, ia,
-    )
-    banco.executar(
-        "INSERT INTO plugin_uso_ia (usuario_id, ia, perguntas, primeira, ultima) VALUES (?,?,1,?,?) "
-        "ON CONFLICT(usuario_id, ia) DO UPDATE SET perguntas = perguntas + 1, ultima = excluded.ultima",
-        usuario_id, ia or "outra", agora, agora,
-    )
-
-
-def resumo_de_uso(banco, usuario_id: str) -> dict:
-    """Foto do uso do plugin de uma conta: o que o pedido de reembolso e o suporte vão mostrar."""
-    c = banco.um("SELECT primeira, ultima FROM plugin_conexoes WHERE usuario_id = ?", usuario_id)
-    ias = banco.todos(
-        "SELECT ia, perguntas, primeira, ultima FROM plugin_uso_ia WHERE usuario_id = ? ORDER BY perguntas DESC", usuario_id
-    )
-    d = banco.um("SELECT COUNT(*) AS n, MIN(quando) AS primeiro FROM plugin_downloads_feitos WHERE usuario_id = ?", usuario_id)
-    return {
-        "baixou": bool(d and d["n"]),
-        "downloads": d["n"] if d else 0,
-        "primeiro_download": d["primeiro"] if d else None,
-        "conectou": bool(c),
-        "primeira_conexao": c["primeira"] if c else None,
-        "ultima_conexao": c["ultima"] if c else None,
-        "dias_de_uso": round((c["ultima"] - c["primeira"]) / 86400, 1) if c else 0,
-        "perguntas": sum(i["perguntas"] for i in ias),
-        "ias": ias,
-    }
 
 
 def criar_router() -> APIRouter:
@@ -204,9 +165,11 @@ def criar_router() -> APIRouter:
         if not x_orbita_servidor or not hmac.compare_digest(x_orbita_servidor.encode(), segredo.encode()):
             return JSONResponse({"codigo": "nao_autorizado", "descricao": "Segredo do servidor inválido."}, status_code=401)
         banco = req.app.state.banco
-        u = banco.um("SELECT id FROM usuarios WHERE email = ?", dados.email.strip().lower())
+        u = banco.um("SELECT id, situacao FROM usuarios WHERE email = ?", dados.email.strip().lower())
         if not u:
             return JSONResponse({"codigo": "conta_desconhecida", "descricao": "Conta não encontrada."}, status_code=404)
+        if u["situacao"] != "ativa":  # passo 3: o servidor MCP recusa a pergunta de conta suspensa
+            return JSONResponse({"codigo": "conta_suspensa", "descricao": "Conta suspensa."}, status_code=403)
         registrar_conexao(banco, u["id"], dados.ia)
         return Response(status_code=204)
 
