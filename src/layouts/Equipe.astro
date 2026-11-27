@@ -1,0 +1,451 @@
+---
+/**
+ * Telas da equipe (suporte e administração, itens 51 e 52). ESTRUTURA PARA DISCUSSÃO, 27/11/2026.
+ *
+ * - Só existem no desenvolvimento: o middleware responde 404 em /equipe fora do `astro dev` (F-12 no registro de segurança).
+ * - Nenhuma chamada à API e nenhum dado real: tudo vem de src/data/equipe-exemplo.ts.
+ * - O seletor de papel no topo é só para a discussão (mostra o que Suporte, Financeiro e Admin veriam). No sistema real o
+ *   papel vem da sessão da equipe e é conferido na API em cada rota (docs/suporte-e-admin.md, seções 1 e 2).
+ */
+import Base from './Base.astro';
+import Logo from '../components/Logo.astro';
+import Icon from '../components/Icon.astro';
+
+type Papel = 'suporte' | 'financeiro' | 'admin';
+interface Props {
+  titulo: string;
+  pagina: string;
+  /** Papéis que abrem esta tela. */
+  papeis?: Papel[];
+  /** Perguntas em aberto sobre esta tela, mostradas no fim para a discussão. */
+  decidir?: string[];
+}
+const { titulo, pagina, papeis = ['suporte', 'financeiro', 'admin'], decidir = [] } = Astro.props;
+
+const menu: { id: string; href: string; label: string; icon: string; papeis: Papel[]; grupo: string }[] = [
+  { id: 'inicio', href: '/equipe', label: 'Início', icon: 'solar:home-2-linear', papeis: ['suporte', 'financeiro', 'admin'], grupo: 'Suporte' },
+  { id: 'chamados', href: '/equipe/chamados', label: 'Chamados', icon: 'solar:chat-round-dots-linear', papeis: ['suporte', 'financeiro', 'admin'], grupo: 'Suporte' },
+  { id: 'clientes', href: '/equipe/clientes', label: 'Clientes', icon: 'solar:user-id-linear', papeis: ['suporte', 'financeiro', 'admin'], grupo: 'Suporte' },
+  { id: 'reembolsos', href: '/equipe/reembolsos', label: 'Reembolsos', icon: 'solar:card-recive-linear', papeis: ['financeiro', 'admin'], grupo: 'Financeiro' },
+  { id: 'painel', href: '/equipe/painel', label: 'Painel', icon: 'solar:chart-2-linear', papeis: ['admin'], grupo: 'Administração' },
+  { id: 'time', href: '/equipe/time', label: 'Equipe e papéis', icon: 'solar:users-group-rounded-linear', papeis: ['admin'], grupo: 'Administração' },
+  { id: 'auditoria', href: '/equipe/auditoria', label: 'Auditoria', icon: 'solar:document-text-linear', papeis: ['admin'], grupo: 'Administração' },
+  { id: 'seguranca', href: '/equipe/seguranca', label: 'Segurança', icon: 'solar:shield-check-linear', papeis: ['admin'], grupo: 'Administração' },
+];
+const grupos = [...new Set(menu.map((m) => m.grupo))];
+---
+
+<Base title={`${titulo} · Equipe Órbita`} description="Área da equipe (estrutura para discussão)." noindex>
+  <div class="eq" data-equipe data-papeis={papeis.join(' ')}>
+    <aside class="eq-lado" aria-label="Área da equipe">
+      <div class="eq-logo"><Logo /><span class="eq-tag">Equipe</span></div>
+      <nav class="eq-menu" aria-label="Telas da equipe">
+        {grupos.map((g) => (
+          <div class="eq-grupo">
+            <p class="eq-grupo-t">{g}</p>
+            {menu.filter((m) => m.grupo === g).map((m) => (
+              <a href={m.href} data-papeis={m.papeis.join(' ')} aria-current={m.id === pagina ? 'page' : undefined}>
+                <Icon name={m.icon} size={19} />
+                <span>{m.label}</span>
+              </a>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <a class="eq-sair" href="/equipe/entrar"><Icon name="solar:logout-2-linear" size={18} /> Sair</a>
+    </aside>
+
+    <div class="eq-corpo">
+      <div class="eq-aviso" role="note">
+        <strong>Estrutura para discussão.</strong> Dados de exemplo, nada é real e nada é salvo. Esta área só abre no ambiente de desenvolvimento.
+        <label class="eq-papel">
+          Ver como
+          <select data-papel-sel>
+            <option value="suporte">Suporte</option>
+            <option value="financeiro">Financeiro</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+      </div>
+      <header class="eq-topo">
+        <h1>{titulo}</h1>
+        <span class="eq-quem">Ana Souza · <span data-papel-nome>Suporte</span> · sessão expira em 30 min</span>
+      </header>
+      <main class="eq-main" data-conteudo>
+        <slot />
+      </main>
+      <div class="eq-bloqueado" data-bloqueado hidden>
+        <h2>Seu papel não abre esta tela</h2>
+        <p>No sistema real a API responde 403 e a tentativa fica no registro de auditoria.</p>
+      </div>
+      {decidir.length > 0 && (
+        <section class="eq-decidir" aria-labelledby="decidir-t">
+          <h2 id="decidir-t">Para decidir nesta tela</h2>
+          <ul>{decidir.map((d) => <li>{d}</li>)}</ul>
+        </section>
+      )}
+    </div>
+  </div>
+</Base>
+
+<script>
+  const NOMES: Record<string, string> = { suporte: 'Suporte', financeiro: 'Financeiro', admin: 'Admin' };
+  const root = document.querySelector<HTMLElement>('[data-equipe]')!;
+  const sel = document.querySelector<HTMLSelectElement>('[data-papel-sel]')!;
+  const ler = () => {
+    try {
+      return localStorage.getItem('equipe-papel') ?? 'admin';
+    } catch {
+      return 'admin';
+    }
+  };
+  function aplicar(papel: string) {
+    sel.value = papel;
+    document.querySelector('[data-papel-nome]')!.textContent = NOMES[papel];
+    document.querySelectorAll<HTMLElement>('.eq-menu a').forEach((a) => (a.hidden = !a.dataset.papeis!.split(' ').includes(papel)));
+    // Partes de uma tela que só alguns papéis veem (ex.: CPF inteiro, ações de reembolso).
+    document.querySelectorAll<HTMLElement>('[data-so]').forEach((el) => (el.hidden = !el.dataset.so!.split(' ').includes(papel)));
+    const pode = root.dataset.papeis!.split(' ').includes(papel);
+    document.querySelector<HTMLElement>('[data-conteudo]')!.hidden = !pode;
+    document.querySelector<HTMLElement>('[data-bloqueado]')!.hidden = pode;
+  }
+  sel.addEventListener('change', () => {
+    try {
+      localStorage.setItem('equipe-papel', sel.value);
+    } catch {
+      /* só a demonstração */
+    }
+    aplicar(sel.value);
+  });
+  aplicar(ler());
+  // Formulários de demonstração: nunca enviam.
+  document.querySelectorAll('form[data-demo]').forEach((f) => f.addEventListener('submit', (e) => e.preventDefault()));
+</script>
+
+<style>
+  .eq {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    min-height: 100vh;
+    background: var(--bg);
+  }
+  .eq-lado {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4, 16px);
+    padding: 20px 14px;
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .eq-logo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-inline: 8px;
+  }
+  .eq-tag {
+    font: 700 0.6875rem/1 var(--font-body, inherit);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 7px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--brand) 20%, transparent);
+    color: var(--brand);
+  }
+  .eq-menu {
+    display: grid;
+    gap: 14px;
+  }
+  .eq-grupo {
+    display: grid;
+    gap: 2px;
+  }
+  .eq-grupo:not(:has(a:not([hidden]))) {
+    display: none;
+  }
+  .eq-grupo-t {
+    margin: 0 0 4px;
+    padding-inline: 10px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mute);
+  }
+  .eq-menu a,
+  .eq-sair {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 10px;
+    color: var(--mute);
+    text-decoration: none;
+    font-size: 0.9375rem;
+  }
+  .eq-menu a:hover,
+  .eq-sair:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--brand) 8%, transparent);
+  }
+  .eq-menu a[aria-current='page'] {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--brand) 16%, transparent);
+    font-weight: 600;
+  }
+  .eq-menu a[hidden] {
+    display: none;
+  }
+  .eq-sair {
+    margin-top: auto;
+  }
+  .eq-corpo {
+    display: grid;
+    align-content: start;
+    gap: 20px;
+    padding: 20px clamp(16px, 3vw, 36px) 48px;
+    min-width: 0;
+  }
+  .eq-aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 10px 14px;
+    border: 1px dashed color-mix(in srgb, var(--brand) 60%, transparent);
+    border-radius: 12px;
+    font-size: 0.875rem;
+    color: var(--mute);
+  }
+  .eq-aviso strong {
+    color: var(--ink);
+  }
+  .eq-papel {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .eq-papel select {
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .eq-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+  }
+  .eq-topo h1 {
+    margin: 0;
+    font-family: var(--font-display, inherit);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+  }
+  .eq-quem {
+    font-size: 0.8125rem;
+    color: var(--mute);
+  }
+  .eq-main {
+    display: grid;
+    gap: 20px;
+  }
+  .eq-bloqueado,
+  .eq-decidir {
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+  .eq-bloqueado h2,
+  .eq-decidir h2 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+  }
+  .eq-bloqueado p {
+    margin: 0;
+    color: var(--mute);
+  }
+  .eq-decidir {
+    border-style: dashed;
+    background: transparent;
+  }
+  .eq-decidir ul {
+    margin: 0;
+    padding-left: 1.2em;
+    display: grid;
+    gap: 6px;
+    color: var(--mute);
+  }
+  @media (max-width: 860px) {
+    .eq {
+      grid-template-columns: 1fr;
+    }
+    .eq-lado {
+      position: static;
+      height: auto;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .eq-menu {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+  }
+
+  /* Peças comuns das telas da equipe. */
+  .eq-main :global(.cx) {
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+  .eq-main :global(.cx h2) {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .eq-main :global(.cx > p) {
+    margin: 0;
+  }
+  .eq-main :global(.grade) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 16px;
+  }
+  .eq-main :global(.numeros) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .eq-main :global(.num) {
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    display: grid;
+    gap: 2px;
+  }
+  .eq-main :global(.num b) {
+    font-size: 1.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .eq-main :global(.num span) {
+    color: var(--mute);
+    font-size: 0.8125rem;
+  }
+  .eq-main :global(.tabela) {
+    overflow-x: auto;
+  }
+  .eq-main :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .eq-main :global(th),
+  .eq-main :global(td) {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .eq-main :global(th) {
+    color: var(--mute);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .eq-main :global(td.quebra) {
+    white-space: normal;
+    min-width: 220px;
+  }
+  .eq-main :global(.pilula) {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--brand) 16%, transparent);
+    color: var(--ink);
+  }
+  .eq-main :global(.pilula.alerta) {
+    background: color-mix(in srgb, #d98a00 22%, transparent);
+  }
+  .eq-main :global(.pilula.neutra) {
+    background: color-mix(in srgb, var(--mute) 18%, transparent);
+  }
+  .eq-main :global(.kv) {
+    display: grid;
+    grid-template-columns: minmax(120px, 40%) 1fr;
+    gap: 6px 14px;
+    margin: 0;
+    font-size: 0.9375rem;
+  }
+  .eq-main :global(.kv dt) {
+    color: var(--mute);
+  }
+  .eq-main :global(.kv dd) {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .eq-main :global(.acoes) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .eq-main :global(.bt) {
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line-strong, var(--line));
+    background: transparent;
+    color: var(--ink);
+    cursor: not-allowed;
+  }
+  .eq-main :global(.bt.principal) {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand, var(--bg));
+  }
+  .eq-main :global(.busca) {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .eq-main :global(.busca input),
+  .eq-main :global(.campo) {
+    flex: 1 1 260px;
+    min-width: 0;
+    font: inherit;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .eq-main :global(.nota) {
+    font-size: 0.8125rem;
+    color: var(--mute);
+  }
+  .eq-main :global([hidden]) {
+    display: none !important;
+  }
+</style>

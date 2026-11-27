@@ -22,7 +22,11 @@ const protegida = (path: string) => PROTEGIDAS.some((p) => path === p || path.st
 
 // SEO (etapa 8a): conta, compra e login ficam fora do Google. O robots.txt não bloqueia essas rotas
 // (senão o Google nem leria o noindex); o aviso vai no cabeçalho de toda resposta delas, redirecionamentos inclusive.
-const foraDoGoogle = (path: string) => protegida(path) || path === '/entrar';
+const foraDoGoogle = (path: string) => protegida(path) || path === '/entrar' || daEquipe(path);
+
+// Telas da equipe (itens 51 e 52): por ora são só uma estrutura para discussão, com dados de exemplo. Fora do
+// `astro dev` não existem (404), para nada da área interna aparecer no site publicado (F-12 no registro de segurança).
+const daEquipe = (path: string) => path === '/equipe' || path.startsWith('/equipe/');
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const res = await porta(context, next);
@@ -59,6 +63,7 @@ async function jaLogado(context: APIContext): Promise<Response | null> {
 
 async function porta(context: APIContext, next: MiddlewareNext): Promise<Response> {
   const { pathname, search } = context.url;
+  if (daEquipe(pathname) && !import.meta.env.DEV) return new Response('Not found', { status: 404 });
   if (pathname === '/entrar' && !context.isPrerendered) {
     const destino = await jaLogado(context);
     if (destino) return destino;

@@ -1,6 +1,12 @@
 # Suporte e administração da Órbita
 
-Itens 51 e 52 da rodada de testes. Documento de desenho, aberto em 26/11/2026: nada disto está construído ainda. Fica por
+Itens 51 e 52 da rodada de testes. Documento de desenho, aberto em 26/11/2026.
+
+**Estrutura para discussão (27/11/2026):** as telas existem em `src/pages/equipe/` (layout `src/layouts/Equipe.astro`,
+dados de exemplo em `src/data/equipe-exemplo.ts`), só no `astro dev` (404 em produção, ficha F-12). Sem login e sem
+API: os botões estão desligados e o seletor "Ver como" mostra o que Suporte, Financeiro e Admin veriam. Cada tela
+termina com as perguntas "Para decidir". Telas: `/equipe/entrar`, `/equipe` (início), `/equipe/chamados`,
+`/equipe/clientes`, `/equipe/reembolsos`, `/equipe/painel`, `/equipe/time`, `/equipe/auditoria`, `/equipe/seguranca`. Fica por
 último no projeto, junto com a fase de segurança (ver [ciberseguranca.md](ciberseguranca.md)), porque estas são as telas que
 mais expõem dados de clientes. A regra geral: **cada pessoa da equipe vê só o necessário para a tarefa, e tudo o que ela vê
 ou faz fica registrado.**

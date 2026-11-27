@@ -1,0 +1,61 @@
+---
+/** Painel da administração (item 52 e seção 9 de suporte-e-admin.md): números sem dado pessoal. Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { numeros as n, onlineHoras } from '../../data/equipe-exemplo';
+export const prerender = false;
+const total = n.assinantes.bronze + n.assinantes.prata + n.assinantes.ouro;
+const max = Math.max(...onlineHoras);
+---
+
+<Equipe
+  titulo="Painel"
+  pagina="painel"
+  papeis={['admin']}
+  decidir={[
+    'Quais números entram no painel e quais ficam para relatórios?',
+    'Online = atividade nos últimos 5 minutos no site ou no plugin. Esse critério serve?',
+    'O Suporte também vê quantos estão online (sem nomes)?',
+  ]}
+>
+  <div class="numeros">
+    <div class="num"><b>{total}</b><span>assinantes ({n.assinantes.bronze} Bronze, {n.assinantes.prata} Prata, {n.assinantes.ouro} Ouro)</span></div>
+    <div class="num"><b>{n.receitaMes}</b><span>receita do mês</span></div>
+    <div class="num"><b>+{n.novosMes} / −{n.canceladosMes}</b><span>novos e cancelados no mês</span></div>
+    <div class="num"><b>{n.reembolsosMes}</b><span>reembolsos no mês</span></div>
+    <div class="num"><b>{n.pluginsAtivos}</b><span>plugins ativos</span></div>
+  </div>
+  <section class="cx" aria-labelledby="on-t">
+    <h2 id="on-t">Online agora: {n.online.agora}</h2>
+    <p class="nota">{n.online.site} no site ou no Portal · {n.online.plugin} usando o plugin · últimas 24 horas, uma barra por hora</p>
+    <div class="barras" role="img" aria-label="Clientes online por hora nas últimas 24 horas">
+      {onlineHoras.map((v, i) => <span style={`--h:${Math.max(4, (v / max) * 100)}%`} title={`${i}h: ${v}`}></span>)}
+    </div>
+    <div class="eixo nota"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>agora</span></div>
+    <details>
+      <summary>Quem está online (só Admin, entra na auditoria)</summary>
+      <p class="nota">Lista com nome, plano e onde está (site ou plugin). Sem IP e sem página visitada.</p>
+    </details>
+  </section>
+</Equipe>
+
+<style>
+  .barras {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    align-items: end;
+    gap: 3px;
+    height: 120px;
+  }
+  .barras span {
+    height: var(--h);
+    background: color-mix(in srgb, var(--brand) 65%, transparent);
+    border-radius: 3px 3px 0 0;
+  }
+  .barras span:last-child {
+    background: var(--brand);
+  }
+  .eixo {
+    display: flex;
+    justify-content: space-between;
+  }
+</style>

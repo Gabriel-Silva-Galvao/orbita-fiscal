@@ -1,0 +1,51 @@
+---
+/** Início do suporte (item 51): o que pede atenção agora. Estrutura para discussão, dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { chamados, reembolsos, numeros } from '../../data/equipe-exemplo';
+export const prerender = false;
+const abertos = chamados.filter((c) => c.situacao !== 'Resolvido');
+---
+
+<Equipe
+  titulo="Início"
+  pagina="inicio"
+  decidir={[
+    'Quais números o suporte precisa ver ao abrir (fila, tempo de espera, plugins com erro)?',
+    'Haverá meta de tempo de resposta? (o Portal deixou de prometer prazo no item 45)',
+    'O suporte recebe aviso de chamado novo (e-mail, som, nada)?',
+  ]}
+>
+  <div class="numeros">
+    <div class="num"><b>{abertos.length}</b><span>chamados abertos</span></div>
+    <div class="num"><b>5 h</b><span>maior espera</span></div>
+    <div class="num" data-so="financeiro admin"><b>{reembolsos.length}</b><span>reembolsos em análise</span></div>
+    <div class="num"><b>{numeros.online.agora}</b><span>clientes online agora</span></div>
+  </div>
+  <section class="cx" aria-labelledby="fila-t">
+    <h2 id="fila-t">Esperando resposta há mais tempo</h2>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>#</th><th>Cliente</th><th>Plano</th><th>Assunto</th><th>Situação</th><th>Espera</th></tr></thead>
+        <tbody>
+          {abertos.map((c) => (
+            <tr>
+              <td>{c.id}</td><td>{c.cliente}</td><td>{c.plano}</td>
+              <td class="quebra"><a href="/equipe/chamados">{c.assunto}</a></td>
+              <td><span class={c.situacao === 'Aberto' ? 'pilula alerta' : 'pilula neutra'}>{c.situacao}</span></td>
+              <td>{c.espera}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="cx" aria-labelledby="busca-t">
+    <h2 id="busca-t">Buscar cliente</h2>
+    <form class="busca" method="post" data-demo>
+      <label class="sr-only" for="busca-cliente">E-mail completo ou id</label>
+      <input id="busca-cliente" placeholder="E-mail completo ou id do cliente" autocomplete="off" />
+      <button class="bt principal" type="submit" disabled>Buscar</button>
+    </form>
+    <p class="nota">Só e-mail completo ou id: sem busca parcial e sem lista de todos, para ninguém varrer a base. Cada busca entra na auditoria.</p>
+  </section>
+</Equipe>

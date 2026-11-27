@@ -1,0 +1,78 @@
+---
+/** Clientes (itens 51 e 52): busca e ficha. O Suporte vê a ficha resumida; Financeiro e Admin veem mais. Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { cliente as c } from '../../data/equipe-exemplo';
+export const prerender = false;
+---
+
+<Equipe
+  titulo="Clientes"
+  pagina="clientes"
+  decidir={[
+    'O Suporte precisa ver as datas do plugin e as perguntas por IA, ou só ativo e inativo?',
+    'Haverá "entrar como o cliente"? Se sim: só Admin, com aviso ao cliente (risco F-11).',
+    'Quais ações o Suporte faz sozinho: reenviar verificação, encerrar sessões… mais alguma?',
+  ]}
+>
+  <form class="busca" method="post" data-demo>
+    <label class="sr-only" for="busca-c">E-mail completo ou id</label>
+    <input id="busca-c" value={c.email} autocomplete="off" />
+    <button class="bt principal" type="submit" disabled>Buscar</button>
+  </form>
+  <div class="grade">
+    <section class="cx" aria-labelledby="ficha-t">
+      <h2 id="ficha-t">{c.nome}</h2>
+      <dl class="kv">
+        <dt>E-mail</dt><dd>{c.email}</dd>
+        <dt>Id</dt><dd>{c.id}</dd>
+        <dt>Cliente desde</dt><dd>{c.desde}</dd>
+        <dt>Plano</dt><dd>{c.plano} · <span class="pilula">{c.situacao}</span></dd>
+        <dt>CPF/CNPJ</dt>
+        <dd>
+          {c.docMascarado}
+          <span data-so="admin"> · <button class="bt" type="button" disabled>Mostrar inteiro (pede motivo)</button></span>
+        </dd>
+      </dl>
+    </section>
+    <section class="cx" aria-labelledby="plugin-t">
+      <h2 id="plugin-t">Plugin</h2>
+      <dl class="kv">
+        <dt>Status</dt><dd><span class="pilula neutra">{c.plugin.status}</span></dd>
+        <dt>Baixou</dt><dd>{c.plugin.baixou}</dd>
+        <dt>Última conexão</dt><dd>{c.plugin.ultima}</dd>
+        <dt>Perguntas</dt><dd>{c.plugin.perguntas}</dd>
+      </dl>
+    </section>
+    <section class="cx" aria-labelledby="ap-t">
+      <h2 id="ap-t">Aparelhos conectados</h2>
+      <ul class="lista-s">
+        {c.aparelhos.map((a) => <li>{a.nome} <span class="nota">· último acesso {a.ultimo}</span></li>)}
+      </ul>
+      <div class="acoes"><button class="bt" type="button" disabled>Encerrar sessões (a pedido do cliente)</button></div>
+    </section>
+    <section class="cx" aria-labelledby="fat-t" data-so="financeiro admin">
+      <h2 id="fat-t">Assinatura e faturas</h2>
+      <p>Forma de pagamento: {c.forma}</p>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Data</th><th>Valor</th><th>Situação</th></tr></thead>
+          <tbody>{c.faturas.map((f) => <tr><td>{f.data}</td><td>{f.valor}</td><td>{f.situacao}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <div class="acoes">
+        <button class="bt" type="button" disabled>Trocar forma a pedido</button>
+        <button class="bt" type="button" data-so="admin" disabled>Suspender conta</button>
+      </div>
+    </section>
+  </div>
+  <p class="nota">Não aparece para ninguém: senha, códigos, temas de alerta e o texto das perguntas feitas ao plugin. Abrir esta ficha gera a linha "ver_ficha" na auditoria.</p>
+</Equipe>
+
+<style>
+  .lista-s {
+    margin: 0;
+    padding-left: 1.1em;
+    display: grid;
+    gap: 4px;
+  }
+</style>

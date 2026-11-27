@@ -15,7 +15,7 @@ export default defineConfig({
   integrations: [
     react(),
     sitemap({
-      filter: (page) => !/\/(conta|instalar|assinar|entrar|app)(\/|$)/.test(new URL(page).pathname),
+      filter: (page) => !/\/(conta|instalar|assinar|entrar|app|equipe)(\/|$)/.test(new URL(page).pathname),
     }),
   ],
   adapter: node({

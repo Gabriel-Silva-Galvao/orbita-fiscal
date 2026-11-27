@@ -1,0 +1,36 @@
+---
+/** Registro de auditoria (docs/suporte-e-admin.md, seção 3). Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { auditoria } from '../../data/equipe-exemplo';
+export const prerender = false;
+---
+
+<Equipe
+  titulo="Auditoria"
+  pagina="auditoria"
+  papeis={['admin']}
+  decidir={[
+    'Por quanto tempo guardar o registro de auditoria?',
+    'Exportação: CSV só para o Admin, com linha na própria auditoria?',
+    'O cliente pode pedir pela LGPD quem viu os dados dele: responder por e-mail ou mostrar no Portal?',
+  ]}
+>
+  <section class="cx" aria-labelledby="a-t">
+    <h2 id="a-t">Tudo o que a equipe viu e fez</h2>
+    <div class="busca">
+      <label class="sr-only" for="f-quem">Filtrar</label>
+      <input id="f-quem" placeholder="Filtrar por pessoa, cliente, ação ou data" autocomplete="off" />
+    </div>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Sobre</th><th>Motivo</th></tr></thead>
+        <tbody>
+          {auditoria.map((l) => (
+            <tr><td>{l.quando}</td><td>{l.quem}</td><td><code>{l.acao}</code></td><td>{l.sobre}</td><td>{l.motivo}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="nota">Ninguém edita nem apaga estas linhas, nem o Admin. O cliente aparece pelo id, nunca pelo e-mail.</p>
+  </section>
+</Equipe>

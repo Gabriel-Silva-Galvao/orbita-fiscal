@@ -1,0 +1,54 @@
+---
+/** Equipe e papéis (item 52). Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { time } from '../../data/equipe-exemplo';
+export const prerender = false;
+---
+
+<Equipe
+  titulo="Equipe e papéis"
+  pagina="time"
+  papeis={['admin']}
+  decidir={[
+    'Endereço da área da equipe: subdomínio próprio (equipe.) ou caminho no site?',
+    'Segundo fator: só app autenticador, ou chave física obrigatória para o Admin?',
+    'Lista de IPs permitidos para o Admin: sim ou não?',
+  ]}
+>
+  <section class="cx" aria-labelledby="t-t">
+    <h2 id="t-t">Quem tem acesso</h2>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Segundo fator</th><th>Último acesso</th></tr></thead>
+        <tbody>
+          {time.map((p) => (
+            <tr><td>{p.nome}</td><td>{p.email}</td><td><span class="pilula">{p.papel}</span></td><td>{p.fator}</td><td>{p.ultimo}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div class="acoes">
+      <button class="bt principal" type="button" disabled>Convidar (vale 24 h)</button>
+      <button class="bt" type="button" disabled>Mudar papel</button>
+      <button class="bt" type="button" disabled>Remover acesso</button>
+    </div>
+    <p class="nota">Não há cadastro aberto: só convite do Admin. Mudar papel e remover pedem a senha de novo e um motivo.</p>
+  </section>
+  <section class="cx" aria-labelledby="p-t">
+    <h2 id="p-t">O que cada papel pode</h2>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Ação</th><th>Suporte</th><th>Financeiro</th><th>Admin</th></tr></thead>
+        <tbody>
+          <tr><td>Buscar cliente e ver a ficha resumida</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+          <tr><td>Responder chamados</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+          <tr><td>Ver faturas e trocar a forma de pagamento</td><td>Não</td><td>Sim</td><td>Sim</td></tr>
+          <tr><td>Aprovar ou recusar reembolso</td><td>Não</td><td>Sim</td><td>Sim</td></tr>
+          <tr><td>Ver CPF/CNPJ inteiro</td><td>Não</td><td>Não</td><td>Com motivo</td></tr>
+          <tr><td>Suspender ou apagar conta</td><td>Não</td><td>Não</td><td>Sim</td></tr>
+          <tr><td>Equipe, auditoria, segurança e painel</td><td>Não</td><td>Não</td><td>Sim</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</Equipe>

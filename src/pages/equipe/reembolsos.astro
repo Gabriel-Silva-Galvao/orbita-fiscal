@@ -1,0 +1,42 @@
+---
+/** Pedidos de reembolso (docs/suporte-e-admin.md, seção 8): Financeiro e Admin. Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { reembolsos } from '../../data/equipe-exemplo';
+export const prerender = false;
+---
+
+<Equipe
+  titulo="Pedidos de reembolso"
+  pagina="reembolsos"
+  papeis={['financeiro', 'admin']}
+  decidir={[
+    'Prazo de análise: 2 dias úteis, com aprovação automática depois? (seção 8)',
+    'Motivos de recusa: fora do prazo, pagamento não identificado, pedido repetido, indício de fraude. Falta algum?',
+    'A oferta de retenção (ex.: um mês com desconto) entra aqui ou no pop-up do cliente?',
+    'Texto validado pelo jurídico: no prazo de 7 dias o reembolso é direito do cliente (CDC, art. 49).',
+  ]}
+>
+  {reembolsos.map((r) => (
+    <section class="cx" aria-labelledby={`r-${r.id}`}>
+      <h2 id={`r-${r.id}`}>{r.id} · {r.cliente} · {r.plano} · {r.valor}</h2>
+      <p class="nota">Pago em {r.pago} · pedido em {r.pedido} · decidir {r.prazo} · <span class="pilula alerta">Em análise</span></p>
+      <div class="grade">
+        <dl class="kv">
+          <dt>Motivo</dt><dd>{r.motivo || 'Não respondeu'}</dd>
+          <dt>O que melhorar</dt><dd>{r.melhorar || '—'}</dd>
+        </dl>
+        <dl class="kv">
+          <dt>Baixou o plugin</dt><dd>{r.uso.baixou}</dd>
+          <dt>Uso</dt><dd>{r.uso.primeira} a {r.uso.ultima} ({r.uso.dias} dias)</dd>
+          <dt>Perguntas</dt><dd>{r.uso.perguntas} · {r.uso.ias}</dd>
+        </dl>
+      </div>
+      <div class="acoes">
+        <button class="bt principal" type="button" disabled>Aprovar e estornar</button>
+        <button class="bt" type="button" disabled>Recusar (motivo da lista)</button>
+        <button class="bt" type="button" disabled>Fazer oferta</button>
+      </div>
+      <p class="nota">Aprovar e recusar pedem a senha de novo e ficam na auditoria. O uso do plugin é só contexto: não é motivo para recusar dentro dos 7 dias.</p>
+    </section>
+  ))}
+</Equipe>

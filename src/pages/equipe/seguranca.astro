@@ -1,0 +1,45 @@
+---
+/** Segurança da área da equipe (docs/suporte-e-admin.md, seções 5 e 6). Dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { eventosSeguranca } from '../../data/equipe-exemplo';
+export const prerender = false;
+---
+
+<Equipe
+  titulo="Segurança"
+  pagina="seguranca"
+  papeis={['admin']}
+  decidir={[
+    'Quais alertas vão por e-mail ao Admin na hora (login de IP novo, muitas buscas, ação fora do horário)?',
+    'Mostrar aqui também os avisos de configuração da API e as versões das dependências?',
+  ]}
+>
+  <section class="cx" aria-labelledby="s-t">
+    <h2 id="s-t">Eventos recentes</h2>
+    <div class="tabela">
+      <table>
+        <thead><tr><th>Quando</th><th>Tipo</th><th>Detalhe</th><th>Nível</th></tr></thead>
+        <tbody>
+          {eventosSeguranca.map((e) => (
+            <tr>
+              <td>{e.quando}</td><td>{e.tipo}</td><td class="quebra">{e.detalhe}</td>
+              <td><span class={e.nivel === 'alerta' ? 'pilula alerta' : 'pilula'}>{e.nivel === 'alerta' ? 'Atenção' : 'Ok'}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="cx" aria-labelledby="ses-t">
+    <h2 id="ses-t">Sessões abertas da equipe</h2>
+    <p>3 sessões · todas com segundo fator · a mais antiga expira em 6 h</p>
+    <div class="acoes"><button class="bt" type="button" disabled>Encerrar todas as sessões da equipe</button></div>
+  </section>
+  <section class="cx" aria-labelledby="reg-t">
+    <h2 id="reg-t">Registro de vulnerabilidades</h2>
+    <p>
+      O painel <a href="https://claude.ai/artifact/HPpHTMdkdzKGD2T5Xr41d6">Segurança da Órbita</a> e o arquivo
+      <code>docs/seguranca/registro.json</code>. Os riscos destas telas estão nas fichas F-01 a F-06, F-11 e F-12.
+    </p>
+  </section>
+</Equipe>

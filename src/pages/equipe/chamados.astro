@@ -1,0 +1,84 @@
+---
+/** Chamados (item 51): fila e conversa. Estrutura para discussão, dados de exemplo. */
+import Equipe from '../../layouts/Equipe.astro';
+import { chamados, conversa } from '../../data/equipe-exemplo';
+export const prerender = false;
+const atual = chamados[0];
+---
+
+<Equipe
+  titulo="Chamados"
+  pagina="chamados"
+  decidir={[
+    'Sistema de chamados próprio (como aqui) ou um serviço pronto integrado?',
+    'O cliente abre chamado pelo Portal, por e-mail ou pelos dois?',
+    'Anexos: só imagem e PDF, até quantos MB? (risco F-04 no registro de segurança)',
+    'Situações do chamado: aberto, aguardando cliente, resolvido. Falta alguma?',
+  ]}
+>
+  <div class="grade">
+    <section class="cx" aria-labelledby="lista-t">
+      <h2 id="lista-t">Fila</h2>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>#</th><th>Assunto</th><th>Situação</th></tr></thead>
+          <tbody>
+            {chamados.map((c) => (
+              <tr>
+                <td>{c.id}</td>
+                <td class="quebra">{c.assunto}<br /><span class="nota">{c.cliente} · {c.plano}</span></td>
+                <td><span class={c.situacao === 'Aberto' ? 'pilula alerta' : 'pilula neutra'}>{c.situacao}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="cx" aria-labelledby="conv-t">
+      <h2 id="conv-t">#{atual.id} · {atual.assunto}</h2>
+      <p class="nota">{atual.cliente} · plano {atual.plano} · IA: {atual.ia} · <a href="/equipe/clientes">abrir a ficha</a></p>
+      <ol class="conv">
+        {conversa.map((m) => (
+          <li class={`msg ${m.quem}`}>
+            <span class="nota">{m.nome} · {m.quando}{m.quem === 'interna' && ' · nota interna, o cliente não vê'}</span>
+            <p>{m.texto}</p>
+          </li>
+        ))}
+      </ol>
+      <label class="sr-only" for="resposta">Resposta</label>
+      <textarea id="resposta" class="campo" rows="3" placeholder="Escrever resposta ao cliente"></textarea>
+      <div class="acoes">
+        <button class="bt principal" type="button" disabled>Responder</button>
+        <button class="bt" type="button" disabled>Nota interna</button>
+        <button class="bt" type="button" disabled>Marcar como resolvido</button>
+      </div>
+    </section>
+  </div>
+</Equipe>
+
+<style>
+  .conv {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .msg {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    display: grid;
+    gap: 4px;
+  }
+  .msg p {
+    margin: 0;
+  }
+  .msg.equipe {
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+  }
+  .msg.interna {
+    border-style: dashed;
+    background: color-mix(in srgb, #d98a00 10%, transparent);
+  }
+</style>
