@@ -30,3 +30,5 @@ api/*.db
 
 api/*-asaas-sim.json
 api/*.json.tmp
+api/*.db-wal
+api/*.db-shm

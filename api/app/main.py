@@ -13,7 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app import alertas, auth, billing, contato, plugin
+from app import alertas, auth, billing, contato, migracoes, plugin
 from app.asaas.client import AsaasClient
 from app.asaas_sim.router import criar_router, erro
 from app.asaas_sim.store import SimError, Store
@@ -147,11 +147,7 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
     )
     app.state.banco = banco or Banco(settings.database_path)
     with app.state.banco.trava:
-        app.state.banco.con.executescript(auth.ESQUEMA)
-        auth.migrar(app.state.banco.con)
-        app.state.banco.con.executescript(plugin.ESQUEMA)
-        app.state.banco.con.executescript(contato.ESQUEMA)
-        app.state.banco.con.executescript(alertas.ESQUEMA)
+        migracoes.aplicar(app.state.banco.con)  # passo 1 da preparação: versões numeradas do esquema
     # Segurança (26/11/2026): nenhum pedido passa de 64 KB (os maiores, webhook do Asaas e contato, ficam bem abaixo).
     app.add_middleware(LimiteDeCorpo, maximo=64 * 1024)
     app.add_middleware(ConfereOrigem, permitidas={settings.site_url})

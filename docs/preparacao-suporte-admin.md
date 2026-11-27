@@ -173,7 +173,9 @@ trava no banco para nunca rodar duas vezes ao mesmo tempo. Cada rotina é idempo
 
 Cada passo é um commit testado; nenhum muda o que o cliente vê, exceto o 6.
 
-1. Migrações numeradas e WAL no SQLite.
+1. Migrações numeradas e WAL no SQLite. **Feito em 27/11/2026:** `api/app/migracoes.py` (versão 1 = esquema de
+   hoje, completando bancos antigos), `PRAGMA journal_mode=WAL` e `busy_timeout=5000` em `db.py`; testes em
+   `tests/test_migracoes.py`.
 2. Camada de serviços para `billing` (com `ator`), sem mudar as rotas.
 3. Camada de serviços para `auth` e `plugin`; situação da conta e `ultima_atividade`.
 4. `historico_conta` e o serviço de auditoria (ainda sem a equipe gravar nada).

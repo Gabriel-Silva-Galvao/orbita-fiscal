@@ -1,4 +1,4 @@
-"""Banco da API (SQLite, sem dependências extras). As tabelas são criadas na inicialização."""
+"""Banco da API (SQLite, sem dependências extras). As tabelas vêm das migrações numeradas (app/migracoes.py)."""
 from __future__ import annotations
 
 import sqlite3
@@ -56,18 +56,12 @@ class Banco:
         self.con.row_factory = sqlite3.Row
         self.trava = threading.RLock()
         with self.trava:
-            self.con.executescript(ESQUEMA)
-            # Bancos criados antes da etapa 7d: acrescenta as colunas que faltam.
-            existentes = {r[1] for r in self.con.execute("PRAGMA table_info(assinaturas)")}
-            for col in ("criada_em", "final_cartao", "cancelada_em", "acesso_ate", "reembolso_em"):
-                if col not in existentes:
-                    self.con.execute(f"ALTER TABLE assinaturas ADD COLUMN {col} TEXT")
-            # Item 9: endereço da nota fiscal.
-            if "endereco" not in {r[1] for r in self.con.execute("PRAGMA table_info(assinantes)")}:
-                self.con.execute("ALTER TABLE assinantes ADD COLUMN endereco TEXT")
-            if "uso_plugin" not in {r[1] for r in self.con.execute("PRAGMA table_info(reembolso_feedback)")}:
-                self.con.execute("ALTER TABLE reembolso_feedback ADD COLUMN uso_plugin TEXT")
-            self.con.commit()
+            # Passo 1 da preparação (27/11/2026): as tabelas agora vêm das migrações numeradas (app/migracoes.py),
+            # aplicadas pelo create_app. Aqui só o modo do SQLite: WAL deixa as leituras longas da área da equipe
+            # correrem ao lado das escritas do cliente, e busy_timeout espera um pouco em vez de falhar na hora.
+            if caminho != ":memory:":
+                self.con.execute("PRAGMA journal_mode=WAL")
+            self.con.execute("PRAGMA busy_timeout=5000")
 
     def um(self, sql: str, *args) -> dict | None:
         with self.trava:

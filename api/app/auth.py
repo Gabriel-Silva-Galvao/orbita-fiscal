@@ -101,20 +101,8 @@ CREATE TABLE IF NOT EXISTS preferencias (
 );
 """
 
-# Colunas da sessão acrescentadas no item 1 (bancos antigos ganham as colunas sem perder as sessões).
+# Colunas da sessão acrescentadas no item 1 (bancos antigos ganham as colunas na migração 1, app/migracoes.py).
 COLUNAS_SESSAO = {"id": "TEXT", "criada": "REAL", "ultimo_uso": "REAL", "aparelho": "TEXT", "manter": "INTEGER"}
-
-
-def migrar(con) -> None:
-    existentes = {r[1] for r in con.execute("PRAGMA table_info(sessoes)")}
-    for col, tipo in COLUNAS_SESSAO.items():
-        if col not in existentes:
-            con.execute(f"ALTER TABLE sessoes ADD COLUMN {col} {tipo}")
-    con.execute("UPDATE sessoes SET id = lower(hex(randomblob(8))) WHERE id IS NULL")
-    # Item 9: desafios de troca de senha e de e-mail são de um usuário já logado.
-    if "usuario_id" not in {r[1] for r in con.execute("PRAGMA table_info(desafios)")}:
-        con.execute("ALTER TABLE desafios ADD COLUMN usuario_id TEXT")
-    con.commit()
 
 
 def aparelho(user_agent: str) -> str:
