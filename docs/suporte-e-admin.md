@@ -98,7 +98,47 @@ O lado do cliente já tem onde isso aparece: "Seus chamados" na página Suporte 
 4. Admin: clientes, assinaturas e painel.
 5. Revisão de segurança dedicada e teste de invasão.
 
-## 8. Para decidir
+## 8. Pedido de reembolso com aprovação da equipe (decidido em 27/11/2026, ainda não construído)
+
+Hoje o reembolso é devolvido na hora. Na nova regra, ele vira um **pedido** que a equipe aprova na tela de
+administração. Só entra no código junto com o login da equipe (seção 7, passo 1).
+
+**O que já existe (27/11/2026):**
+- O questionário opcional no pop-up do reembolso (motivo e "o que podemos melhorar").
+- A cada reembolso, a API guarda em `reembolso_feedback` o questionário e uma foto do uso do plugin naquele momento
+  (`plugin.resumo_de_uso`): se baixou e quantas vezes, primeira e última conexão, dias entre elas, total de perguntas
+  e perguntas por IA (Claude, ChatGPT, Copilot, Gemini ou "outra").
+- O servidor MCP soma cada pergunta por IA em `plugin_uso_ia`; cada download feito fica em `plugin_downloads_feitos`.
+
+**Fluxo planejado:**
+1. O cliente confirma o pedido. A API cria a linha em `pedidos_reembolso` com situação `em_analise`, a foto do uso e o
+   questionário. Nada é estornado ainda. O Portal mostra "Pedido em análise" na trilha do reembolso.
+2. O acesso fica suspenso enquanto o pedido está em análise (evita usar e devolver).
+3. Na tela **Assinaturas › Pedidos de reembolso** (papel Financeiro ou Admin), a equipe vê o pedido com a foto do uso,
+   o questionário e o histórico de pagamentos.
+4. **Aprovar**: a API estorna pelo Asaas (mesma regra de hoje), cancela a assinatura e avisa o cliente por e-mail.
+   **Recusar**: só com motivo da lista fechada (fora do prazo de 7 dias, pagamento não identificado, pedido repetido ou
+   indício de fraude), escrito para o cliente; o acesso volta. Ambas pedem reautenticação e entram na auditoria.
+5. **Prazo máximo de análise**: 2 dias úteis. Passou do prazo sem decisão, a API aprova sozinha e registra
+   "aprovado por prazo".
+
+**Limite legal:** dentro de 7 dias da compra (CDC, art. 49) o reembolso é direito do cliente e não depende de motivo,
+de uso ou de resposta ao questionário. A análise serve para conferir prazo e pagamento e para tentar reter com uma
+oferta, **nunca** para negar por "usou demais" ou "não respondeu". Validar este texto com o jurídico antes de ligar.
+
+## 9. Usuários online (para o painel do admin, ainda não construído)
+
+- **O que conta como online:** sessão do Portal ou do site com atividade nos últimos 5 minutos, ou pergunta feita pelo
+  plugin nos últimos 5 minutos (`plugin_uso_ia.ultima`).
+- **Como medir:** a API grava `ultima_atividade` na sessão a cada pedido autenticado, no máximo uma escrita por minuto
+  por sessão (para não pesar no banco). Nada roda no navegador além das chamadas que já existem.
+- **O que o painel mostra:** total online agora; separado em "no site/Portal" e "no plugin"; por plano; gráfico das
+  últimas 24 horas (contagem a cada 5 minutos, guardada sem identificar ninguém).
+- **Quem vê quem:** o número é para Admin e Suporte. A lista nominal (quem está online) só para Admin, com registro na
+  auditoria, como qualquer acesso a dado de cliente.
+- **Privacidade:** não guardar IP nem página visitada para isso; apagar as contagens com mais de 90 dias.
+
+## 10. Para decidir
 
 - Endereço das telas da equipe (subdomínio próprio ou caminho no site).
 - Se haverá "entrar como o cliente" para reproduzir problemas (se sim: só Admin, com aviso ao cliente e registro).

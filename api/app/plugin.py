@@ -48,6 +48,21 @@ CREATE TABLE IF NOT EXISTS plugin_conexoes (
     ultima      REAL NOT NULL,
     ia          TEXT
 );
+-- Uso por IA: cada pergunta que o servidor MCP registra soma aqui (para o suporte e o pedido de reembolso).
+CREATE TABLE IF NOT EXISTS plugin_uso_ia (
+    usuario_id  TEXT NOT NULL,
+    ia          TEXT NOT NULL,
+    perguntas   INTEGER NOT NULL DEFAULT 0,
+    primeira    REAL NOT NULL,
+    ultima      REAL NOT NULL,
+    PRIMARY KEY (usuario_id, ia)
+);
+-- Histórico de downloads do plugin (a tabela de links é limpa quando eles vencem).
+CREATE TABLE IF NOT EXISTS plugin_downloads_feitos (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id  TEXT NOT NULL,
+    quando      REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS downloads (
     token_hash  TEXT PRIMARY KEY,
     usuario_id  TEXT NOT NULL,
@@ -114,7 +129,8 @@ class Uso(BaseModel):
 
 
 def registrar_conexao(banco, usuario_id: str, ia: str | None) -> None:
-    """Marca a primeira e a última vez que o plugin deste assinante falou com a Órbita."""
+    """Marca a primeira e a última vez que o plugin deste assinante falou com a Órbita e soma a pergunta na IA usada
+    (IA desconhecida ou não informada conta como "outra")."""
     agora = time.time()
     ia = ia if ia in IAS else None
     banco.executar(
@@ -122,6 +138,31 @@ def registrar_conexao(banco, usuario_id: str, ia: str | None) -> None:
         "ON CONFLICT(usuario_id) DO UPDATE SET ultima=excluded.ultima, ia=COALESCE(excluded.ia, plugin_conexoes.ia)",
         usuario_id, agora, agora, ia,
     )
+    banco.executar(
+        "INSERT INTO plugin_uso_ia (usuario_id, ia, perguntas, primeira, ultima) VALUES (?,?,1,?,?) "
+        "ON CONFLICT(usuario_id, ia) DO UPDATE SET perguntas = perguntas + 1, ultima = excluded.ultima",
+        usuario_id, ia or "outra", agora, agora,
+    )
+
+
+def resumo_de_uso(banco, usuario_id: str) -> dict:
+    """Foto do uso do plugin de uma conta: o que o pedido de reembolso e o suporte vão mostrar."""
+    c = banco.um("SELECT primeira, ultima FROM plugin_conexoes WHERE usuario_id = ?", usuario_id)
+    ias = banco.todos(
+        "SELECT ia, perguntas, primeira, ultima FROM plugin_uso_ia WHERE usuario_id = ? ORDER BY perguntas DESC", usuario_id
+    )
+    d = banco.um("SELECT COUNT(*) AS n, MIN(quando) AS primeiro FROM plugin_downloads_feitos WHERE usuario_id = ?", usuario_id)
+    return {
+        "baixou": bool(d and d["n"]),
+        "downloads": d["n"] if d else 0,
+        "primeiro_download": d["primeiro"] if d else None,
+        "conectou": bool(c),
+        "primeira_conexao": c["primeira"] if c else None,
+        "ultima_conexao": c["ultima"] if c else None,
+        "dias_de_uso": round((c["ultima"] - c["primeira"]) / 86400, 1) if c else 0,
+        "perguntas": sum(i["perguntas"] for i in ias),
+        "ias": ias,
+    }
 
 
 def criar_router() -> APIRouter:
@@ -143,11 +184,12 @@ def criar_router() -> APIRouter:
 
     @r.get("/baixar/{token}")
     def baixar(token: str, req: Request):
-        d = req.app.state.banco.um("SELECT expira FROM downloads WHERE token_hash = ?", _sha(token))
+        d = req.app.state.banco.um("SELECT expira, usuario_id FROM downloads WHERE token_hash = ?", _sha(token))
         if not d:
             return JSONResponse({"codigo": "link_invalido", "descricao": "Link de download desconhecido."}, status_code=404)
         if d["expira"] < time.time():
             return JSONResponse({"codigo": "link_expirado", "descricao": "O link expirou. Gere outro na página Instalar."}, status_code=410)
+        req.app.state.banco.executar("INSERT INTO plugin_downloads_feitos (usuario_id, quando) VALUES (?, ?)", d["usuario_id"], time.time())
         return Response(
             montar_zip(),
             media_type="application/zip",

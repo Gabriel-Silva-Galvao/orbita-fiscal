@@ -140,8 +140,12 @@ def test_reembolso_guarda_o_questionario_opcional(api):
     assinar(http, "cartao", cartao=CARTAO)
     r = http.post("/billing/assinatura/reembolso", json={"motivo": "dificil", "melhorar": "  Não achei   o plugin "})
     assert r.status_code == 200
-    f = banco.um("SELECT motivo, melhorar FROM reembolso_feedback WHERE usuario_id = 'u1'")
-    assert f == {"motivo": "dificil", "melhorar": "Não achei o plugin"}
+    f = banco.um("SELECT motivo, melhorar, uso_plugin FROM reembolso_feedback WHERE usuario_id = 'u1'")
+    assert (f["motivo"], f["melhorar"]) == ("dificil", "Não achei o plugin")
+    import json
+
+    uso = json.loads(f["uso_plugin"])
+    assert uso["baixou"] is False and uso["perguntas"] == 0 and uso["ias"] == []
 
 
 def test_reembolso_recusa_motivo_desconhecido(api):

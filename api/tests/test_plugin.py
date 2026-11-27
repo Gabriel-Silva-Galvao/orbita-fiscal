@@ -97,3 +97,27 @@ def test_uso_desligado_sem_segredo_e_simulacao_so_no_dev(api, monkeypatch):
     assert http.get("/plugin/status").json()["conectado"] is True
     monkeypatch.setattr(get_settings(), "asaas_sim_enabled", False)
     assert http.post("/plugin/simular-conexao").status_code == 404
+
+
+def test_resumo_de_uso_conta_perguntas_ias_e_downloads(api, monkeypatch):
+    """Base da foto de uso guardada no pedido de reembolso: perguntas por IA e downloads feitos."""
+    from app.config import get_settings
+    from app.plugin import resumo_de_uso
+    from tests.conftest import entrar as entrar_com
+
+    http, _, banco = api
+    monkeypatch.setattr(get_settings(), "plugin_servidor_token", SEGREDO)
+    entrar_com(http, banco, email="bia@exemplo.test")
+    uid = banco.um("SELECT id FROM usuarios WHERE email = 'bia@exemplo.test'")["id"]
+    r = assinar(http, "pix")
+    confirmar(http, r.json()["cobrancas"][0]["id"])
+    url = caminho(http.post("/plugin/link").json()["url"])
+    http.get(url)
+    http.get(url)  # download retomado conta de novo: são duas transferências
+    cab = {"X-Orbita-Servidor": SEGREDO}
+    for ia in ("claude", "claude", "chatgpt", "inventada"):
+        assert http.post("/plugin/uso", json={"email": "bia@exemplo.test", "ia": ia}, headers=cab).status_code == 204
+    uso = resumo_de_uso(banco, uid)
+    assert uso["baixou"] is True and uso["downloads"] == 2
+    assert uso["conectou"] is True and uso["perguntas"] == 4
+    assert {i["ia"]: i["perguntas"] for i in uso["ias"]} == {"claude": 2, "chatgpt": 1, "outra": 1}

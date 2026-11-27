@@ -14,6 +14,7 @@ só com a simulação ligada,
 from __future__ import annotations
 
 import hmac
+import json
 import sqlite3
 import time
 from contextlib import contextmanager
@@ -412,12 +413,14 @@ def criar_router() -> APIRouter:
                 "UPDATE assinaturas SET status_acesso = 'reembolsado', reembolso_em = ?, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?",
                 date.today().isoformat(), usuario_id,
             )
+            from app.plugin import resumo_de_uso  # import local: plugin.py importa deste módulo
+
             melhorar = " ".join((pedido.melhorar or "").split()) if pedido else ""
-            if pedido and (pedido.motivo or melhorar):
-                banco.executar(
-                    "INSERT INTO reembolso_feedback (usuario_id, motivo, melhorar) VALUES (?, ?, ?)",
-                    usuario_id, pedido.motivo, melhorar or None,
-                )
+            uso = json.dumps(resumo_de_uso(banco, usuario_id), ensure_ascii=False)
+            banco.executar(
+                "INSERT INTO reembolso_feedback (usuario_id, motivo, melhorar, uso_plugin) VALUES (?, ?, ?, ?)",
+                usuario_id, pedido.motivo if pedido else None, melhorar or None, uso,
+            )
             return {"usuario_id": usuario_id, "status_acesso": "reembolsado", "cobrancas_estornadas": [c["id"] for c in pagas]}
 
     @router.post("/billing/assinatura/simular-pagamento")

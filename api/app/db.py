@@ -31,12 +31,14 @@ CREATE TABLE IF NOT EXISTS operacoes_cobranca (
     usuario_id  TEXT PRIMARY KEY,
     iniciada    REAL NOT NULL
 );
--- Questionário opcional do pedido de reembolso: por que saiu e o que podemos melhorar.
+-- Uma linha por reembolso: o questionário opcional (por que saiu, o que melhorar) e a foto do uso do plugin
+-- naquele momento (JSON de plugin.resumo_de_uso), para a equipe analisar.
 CREATE TABLE IF NOT EXISTS reembolso_feedback (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id  TEXT NOT NULL,
     motivo      TEXT,
     melhorar    TEXT,
+    uso_plugin  TEXT,
     criado_em   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 -- Idempotência: cada evento do Asaas é processado uma vez só (entrega "pelo menos uma vez").
@@ -63,6 +65,8 @@ class Banco:
             # Item 9: endereço da nota fiscal.
             if "endereco" not in {r[1] for r in self.con.execute("PRAGMA table_info(assinantes)")}:
                 self.con.execute("ALTER TABLE assinantes ADD COLUMN endereco TEXT")
+            if "uso_plugin" not in {r[1] for r in self.con.execute("PRAGMA table_info(reembolso_feedback)")}:
+                self.con.execute("ALTER TABLE reembolso_feedback ADD COLUMN uso_plugin TEXT")
             self.con.commit()
 
     def um(self, sql: str, *args) -> dict | None:
