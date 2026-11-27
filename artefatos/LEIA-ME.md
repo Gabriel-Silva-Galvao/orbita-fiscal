@@ -10,6 +10,7 @@ Cópia de todos os artefatos publicados no claude.ai, exportada em 24/11/2026.
 | `04-painel-de-progresso/` | Progresso do site Órbita Fiscal (painel interativo) | https://claude.ai/artifact/ExDnSrxKMBgHBUrDG3Xskm | HTML + dados em JSON |
 | `05-design-system/` | Design system Órbita Fiscal (Limiar Esmeralda) | https://claude.ai/artifact/RvyazHgvww5Zk3qzojPFYA | Markdown, JSON, prévias HTML, SVG e PNG |
 | `06-vulnerabilidades/` | Vulnerabilidades da Órbita (registro de segurança, revisões ARES 001 a 005 + ZAP, conferido no commit 0c608a3 em 26/11/2026) | https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD | HTML + dados em JSON |
+| `../docs/seguranca/` | Segurança da Órbita (registro único por situação e checklist de nova funcionalidade, desde 27/11/2026; substitui o 06 no dia a dia) | https://claude.ai/artifact/HPpHTMdkdzKGD2T5Xr41d6 | HTML + `registro.json` |
 
 ## Observações
 

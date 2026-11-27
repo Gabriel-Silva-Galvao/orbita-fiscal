@@ -1,0 +1,261 @@
+<title>Segurança da Órbita</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: um livro-razão de riscos. Resumo por situação no topo (os quatro filtros), filtros finos, lista de fichas
+     com faixa de gravidade à esquerda; a aba "Nova funcionalidade" é o checklist usado antes de construir. */
+  :root {
+    --bg: #f4f7f5; --surface: #ffffff; --ink: #14211c; --mute: #5b6b64; --line: #d9e2dd;
+    --brand: #0f7a55; --brand-soft: #e1f1ea;
+    --crit: #b3261e; --alta: #c8560f; --media: #a67c00; --baixa: #3b6fb6; --info: #6b7a74;
+    --c-corrigida: #0f7a55; --c-observacao: #b86a00; --c-nao: #6b7a74; --c-futura: #5a4fcf;
+    --f-display: "Fraunces", Georgia, serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0d1714; --surface: #13211c; --ink: #e6efe9; --mute: #94a69e; --line: #24372f;
+    --brand: #5fd3a3; --brand-soft: #173a2d;
+    --crit: #ff8a80; --alta: #ffab6b; --media: #f2cc5c; --baixa: #8fb4ff; --info: #9aa9a2;
+    --c-corrigida: #5fd3a3; --c-observacao: #f2b35c; --c-nao: #9aa9a2; --c-futura: #a99cff; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #0d1714; --surface: #13211c; --ink: #e6efe9; --mute: #94a69e; --line: #24372f;
+    --brand: #5fd3a3; --brand-soft: #173a2d;
+    --crit: #ff8a80; --alta: #ffab6b; --media: #f2cc5c; --baixa: #8fb4ff; --info: #9aa9a2;
+    --c-corrigida: #5fd3a3; --c-observacao: #f2b35c; --c-nao: #9aa9a2; --c-futura: #a99cff; color-scheme: dark }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 32px 64px; display: grid; gap: 24px; }
+  header h1 { font: 600 clamp(1.8rem, 4vw, 2.6rem)/1.1 var(--f-display); margin: 0; text-wrap: balance; }
+  header p { margin: 8px 0 0; color: var(--mute); max-width: 68ch; }
+  .meta { font: 500 12px var(--f-mono); color: var(--mute); letter-spacing: .02em; }
+  .abas { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .abas button { border: 0; background: none; color: var(--mute); font: 600 14px var(--f-body); padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .abas button[aria-selected="true"] { color: var(--ink); border-color: var(--brand); }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .resumo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 720px) { .resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .cat { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 14px 16px; cursor: pointer; display: grid; gap: 2px; border-top: 4px solid var(--cor); transition: transform .15s, box-shadow .15s; }
+  .cat:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgb(0 0 0 / .06); }
+  .cat[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--cor); }
+  .cat b { font: 600 2rem/1 var(--f-display); font-variant-numeric: tabular-nums; color: var(--cor); }
+  .cat span { font-weight: 600; }
+  .cat small { color: var(--mute); font-size: 12.5px; line-height: 1.4; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .filtros input, .filtros select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+  .filtros input { flex: 1 1 240px; min-width: 0; }
+  .filtros .limpar { border: 0; background: none; color: var(--brand); font-weight: 600; cursor: pointer; padding: 8px; }
+  .contagem { color: var(--mute); font-size: 13px; }
+  .lista { display: grid; gap: 8px; }
+  details.ficha { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--grav); border-radius: 10px; }
+  details.ficha summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: baseline; }
+  details.ficha summary::-webkit-details-marker { display: none; }
+  .id { font: 500 12.5px var(--f-mono); color: var(--mute); white-space: nowrap; }
+  .tit { font-weight: 600; min-width: 0; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .chip { font: 600 11.5px var(--f-body); letter-spacing: .03em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid currentColor; }
+  .area { grid-column: 2 / -1; color: var(--mute); font-size: 13px; }
+  @media (max-width: 560px) { details.ficha summary { grid-template-columns: 1fr; } .chips { justify-content: flex-start; } .area { grid-column: auto; } }
+  .corpo { padding: 0 16px 16px; display: grid; gap: 10px; border-top: 1px dashed var(--line); padding-top: 12px; margin: 0 16px; padding-inline: 0; }
+  .corpo dl { margin: 0; display: grid; grid-template-columns: 9.5em 1fr; gap: 6px 14px; }
+  .corpo dt { color: var(--mute); font-size: 13px; }
+  .corpo dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+  .corpo code { font: 500 12.5px var(--f-mono); background: var(--brand-soft); padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 560px) { .corpo dl { grid-template-columns: 1fr; } .corpo dt { margin-top: 6px; } }
+  .ligada { border: 0; background: none; color: var(--brand); font: 500 12.5px var(--f-mono); cursor: pointer; padding: 0 6px 0 0; text-decoration: underline; }
+  .vazio { padding: 32px; text-align: center; color: var(--mute); border: 1px dashed var(--line); border-radius: 12px; }
+  .doc { display: grid; gap: 18px; max-width: 76ch; }
+  .doc h2 { font: 600 1.35rem var(--f-display); margin: 8px 0 0; }
+  .doc ol, .doc ul { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+  .doc .bloco { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .doc label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .doc input[type=checkbox] { accent-color: var(--brand); width: 18px; height: 18px; margin-top: 3px; flex: none; }
+  .doc code { font: 500 12.5px var(--f-mono); background: var(--brand-soft); padding: 1px 5px; border-radius: 4px; }
+  .doc .pre { font: 500 12.5px/1.6 var(--f-mono); background: var(--brand-soft); border-radius: 10px; padding: 12px 14px; overflow-x: auto; white-space: pre; }
+  @media (prefers-reduced-motion: reduce) { .cat { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="meta" id="meta">Registro de segurança</div>
+    <h1>Segurança da Órbita</h1>
+    <p>Cada vulnerabilidade encontrada no site, na API e no plugin, com a situação de hoje. Clique numa situação para filtrar e numa ficha para ver o problema, a correção e o teste.</p>
+  </header>
+
+  <nav class="abas" role="tablist" aria-label="Seções">
+    <button role="tab" id="aba-registro" aria-selected="true" aria-controls="painel-registro">Vulnerabilidades</button>
+    <button role="tab" id="aba-nova" aria-selected="false" aria-controls="painel-nova">Nova funcionalidade</button>
+    <button role="tab" id="aba-como" aria-selected="false" aria-controls="painel-como">Como registrar</button>
+  </nav>
+
+  <section id="painel-registro" role="tabpanel" aria-labelledby="aba-registro" style="display:grid;gap:18px">
+    <div class="resumo" id="resumo"></div>
+    <div class="filtros">
+      <input id="busca" type="search" aria-label="Buscar no registro" placeholder="Buscar por id, título, arquivo ou teste" autocomplete="off">
+      <select id="f-grav" aria-label="Gravidade"><option value="">Toda gravidade</option></select>
+      <select id="f-area" aria-label="Área"><option value="">Toda área</option></select>
+      <button class="limpar" id="limpar" type="button">Limpar filtros</button>
+      <span class="contagem" id="contagem" aria-live="polite"></span>
+    </div>
+    <div class="lista" id="lista"><div class="vazio">Carregando o registro…</div></div>
+  </section>
+
+  <section id="painel-nova" role="tabpanel" aria-labelledby="aba-nova" hidden>
+    <div class="doc">
+      <p>Use antes de construir qualquer funcionalidade nova. O mesmo checklist está em <code>docs/ciberseguranca.md</code>, seção 0. Marcar aqui fica só no seu navegador; serve para acompanhar uma funcionalidade por vez.</p>
+      <div class="bloco" id="checklist"></div>
+      <button class="limpar" id="limpar-check" type="button" style="justify-self:start">Desmarcar tudo</button>
+    </div>
+  </section>
+
+  <section id="painel-como" role="tabpanel" aria-labelledby="aba-como" hidden>
+    <div class="doc">
+      <h2>De onde vêm os dados</h2>
+      <p>O registro fica no repositório, em <code>docs/seguranca/registro.json</code>. Esta página lê esse arquivo; cada mudança nele é commitada junto com a correção e a página é republicada no mesmo link.</p>
+      <h2>As quatro situações</h2>
+      <ul id="defs"></ul>
+      <h2>Quando aparece uma vulnerabilidade nova</h2>
+      <ol>
+        <li>Criar a ficha com a situação <b>Em observação</b>: id, título, gravidade, área, problema, onde e de onde veio.</li>
+        <li>Corrigir com um teste que falha no código antigo, num commit próprio.</li>
+        <li>Mudar para <b>Corrigida</b>, com o teste e o commit, e acrescentar a linha em <code>docs/ciberseguranca.md</code>.</li>
+        <li>Duplicata ou falso positivo vira <b>Não necessária</b>, apontando para a ficha certa em "ligadas".</li>
+      </ol>
+      <h2>Ids</h2>
+      <ul>
+        <li><code>S1</code> a <code>S18</code>: riscos da revisão interna (<code>docs/backend-e-seguranca.md</code>).</li>
+        <li><code>ARES-…</code>: revisão automática ARES (histórico completo no artefato antigo de vulnerabilidades).</li>
+        <li><code>CAND-…</code>: achados ao revisar o código. <code>F-…</code>: riscos de funcionalidades futuras. <code>N-…</code>: riscos aceitos. <code>DEV-…</code>: só no ambiente local.</li>
+      </ul>
+      <h2>Formato de uma ficha</h2>
+      <div class="pre">{"id": "S19", "titulo": "…", "categoria": "observacao",
+ "gravidade": "alta", "area": "Cobrança",
+ "problema": "…", "acao": "…", "onde": "api/app/…",
+ "teste": "", "commit": "", "origem": "Revisão interna",
+ "encontrada": "27/11/2026", "atualizada": "27/11/2026", "ligadas": []}</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const CAT = {
+    observacao: { nome: 'Em observação', cor: 'var(--c-observacao)' },
+    futura: { nome: 'Futuras', cor: 'var(--c-futura)' },
+    corrigida: { nome: 'Corrigidas', cor: 'var(--c-corrigida)' },
+    nao_necessaria: { nome: 'Não necessárias', cor: 'var(--c-nao)' },
+  };
+  const GRAV = { critica: ['Crítica', 'var(--crit)'], alta: ['Alta', 'var(--alta)'], media: ['Média', 'var(--media)'], baixa: ['Baixa', 'var(--baixa)'], info: ['Informativa', 'var(--info)'] };
+  const ORDEM_G = ['critica', 'alta', 'media', 'baixa', 'info'];
+  const CHECK = [
+    ['Entrada', 'Todo campo novo tem tamanho máximo (max_length) e tipo fechado (Literal) quando a lista é conhecida.'],
+    ['Entrada', 'Nenhuma regex com quantificador aninhado sobre texto do usuário; testar com 100 mil caracteres.'],
+    ['Autorização', 'O dono e o plano saem da sessão; nenhuma rota aceita id de usuário vindo de fora.'],
+    ['Autorização', 'Regra de plano ou de papel conferida na API; a tela só esconde.'],
+    ['Autorização', 'Testes: sem sessão (401), outra conta (403/404), plano ou papel errado (403), campo gigante (422), corpo gigante (413).'],
+    ['Cobrança', 'Rota que confere o estado e chama o Asaas roda em uma_operacao_por_vez, com teste de pedidos em paralelo.'],
+    ['Segredos', 'Segredo só no api/.env, comparado com hmac.compare_digest; nunca no código, log ou chat.'],
+    ['Navegador', 'Valor de fora entra na tela por textContent; formulário com dado pessoal usa method="post".'],
+    ['Navegador', 'Redirecionamento passa por caminhoSeguro; nada de dado pessoal no endereço.'],
+    ['Ambiente', 'Rota de simulação ou de teste só com ASAAS_SIM_ENABLED ou ORBITA_ENV=development, e entra em problemas_de_producao se for perigosa.'],
+    ['Dados', 'Guardar só o necessário (LGPD): o que é dado pessoal, quem vê, por quanto tempo fica.'],
+    ['Dados', 'Pedido repetido ou simultâneo não duplica nada (idempotência ou UNIQUE).'],
+    ['Revisão', 'Cobrança, login, plugin, admin ou suporte: rodar a revisão de segurança antes do commit.'],
+    ['Registro', 'Riscos novos entram no registro (futura ou em observação) e a ficha vai no mesmo commit.'],
+  ];
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, props = {}, ...filhos) => { const e = document.createElement(tag); Object.assign(e, props); filhos.forEach((f) => f != null && e.append(f)); return e; };
+  const ler = (k, padrao) => { try { return JSON.parse(localStorage.getItem(k)) ?? padrao; } catch { return padrao; } };
+  const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+  // Abas
+  const abas = ['registro', 'nova', 'como'];
+  const abrir = (n) => abas.forEach((a) => { $('#aba-' + a).setAttribute('aria-selected', String(a === n)); $('#painel-' + a).hidden = a !== n; });
+  abas.forEach((a) => $('#aba-' + a).addEventListener('click', () => { abrir(a); gravar('seg-aba', a); }));
+  abrir(ler('seg-aba', 'registro'));
+
+  // Checklist
+  const marcados = new Set(ler('seg-check', []));
+  const box = $('#checklist');
+  let grupo = '';
+  CHECK.forEach(([g, t], i) => {
+    if (g !== grupo) { grupo = g; box.append(el('strong', { textContent: g, style: 'margin-top:4px' })); }
+    const cb = el('input', { type: 'checkbox', id: 'ck' + i, checked: marcados.has(i) });
+    cb.addEventListener('change', () => { cb.checked ? marcados.add(i) : marcados.delete(i); gravar('seg-check', [...marcados]); });
+    box.append(el('label', { htmlFor: 'ck' + i }, cb, el('span', { textContent: t })));
+  });
+  $('#limpar-check').addEventListener('click', () => { marcados.clear(); gravar('seg-check', []); box.querySelectorAll('input').forEach((c) => (c.checked = false)); });
+
+  // Registro
+  const estado = { cat: '', grav: '', area: '', q: '' };
+  let itens = [];
+  const chip = (texto, cor) => el('span', { className: 'chip', textContent: texto, style: 'color:' + cor });
+  function ficha(x) {
+    const [gNome, gCor] = GRAV[x.gravidade] ?? GRAV.info;
+    const sum = el('summary', {},
+      el('span', { className: 'id', textContent: x.id }),
+      el('span', { className: 'tit', textContent: x.titulo }),
+      el('span', { className: 'chips' }, chip(gNome, gCor), chip(CAT[x.categoria].nome.replace(/s$/, ''), CAT[x.categoria].cor)),
+      el('span', { className: 'area', textContent: x.area + (x.encontrada ? ' · desde ' + x.encontrada : '') }));
+    const dl = el('dl');
+    const linha = (rot, val, mono) => { if (!val) return; dl.append(el('dt', { textContent: rot }), el('dd', {}, mono ? el('code', { textContent: val }) : val)); };
+    linha('Problema', x.problema);
+    linha(x.categoria === 'corrigida' ? 'Correção' : 'O que fazer', x.acao);
+    linha('Onde', x.onde, true);
+    linha('Teste', x.teste, true);
+    linha('Commit', x.commit, true);
+    linha('Origem', x.origem);
+    linha('Atualizada', x.atualizada);
+    if (x.ligadas?.length) {
+      const dd = el('dd');
+      x.ligadas.forEach((id) => { const b = el('button', { type: 'button', className: 'ligada', textContent: id }); b.addEventListener('click', () => irPara(id)); dd.append(b); });
+      dl.append(el('dt', { textContent: 'Ligadas' }), dd);
+    }
+    const d = el('details', { className: 'ficha', id: 'v-' + x.id }, sum, el('div', { className: 'corpo' }, dl));
+    d.style.setProperty('--grav', gCor);
+    return d;
+  }
+  function irPara(id) {
+    if (!itens.some((x) => x.id === id)) return;
+    Object.assign(estado, { cat: '', grav: '', area: '', q: '' }); $('#busca').value = ''; $('#f-grav').value = ''; $('#f-area').value = '';
+    render();
+    const d = document.getElementById('v-' + id);
+    if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); d.querySelector('summary').focus(); }
+  }
+  function render() {
+    document.querySelectorAll('.cat').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cat === estado.cat)));
+    const q = estado.q.toLowerCase();
+    const vis = itens.filter((x) => (!estado.cat || x.categoria === estado.cat) && (!estado.grav || x.gravidade === estado.grav) && (!estado.area || x.area === estado.area)
+      && (!q || [x.id, x.titulo, x.problema, x.acao, x.onde, x.teste, x.commit].join(' ').toLowerCase().includes(q)));
+    const lista = $('#lista');
+    lista.replaceChildren(...(vis.length ? vis.map(ficha) : [el('div', { className: 'vazio', textContent: 'Nenhuma vulnerabilidade com esses filtros.' })]));
+    $('#contagem').textContent = vis.length === itens.length ? `${itens.length} no registro` : `${vis.length} de ${itens.length}`;
+  }
+  function montar(dados) {
+    itens = dados.vulnerabilidades;
+    $('#meta').textContent = `Registro de segurança · atualizado em ${dados.atualizado}`;
+    const resumo = $('#resumo');
+    Object.entries(CAT).forEach(([k, c]) => {
+      const n = itens.filter((x) => x.categoria === k).length;
+      const b = el('button', { type: 'button', className: 'cat' }, el('b', { textContent: String(n) }), el('span', { textContent: c.nome }), el('small', { textContent: (dados.categorias[k] ?? '').replace(/^[^:]+:\s*/, '') }));
+      b.dataset.cat = k; b.style.setProperty('--cor', c.cor);
+      b.addEventListener('click', () => { estado.cat = estado.cat === k ? '' : k; render(); });
+      resumo.append(b);
+    });
+    ORDEM_G.filter((g) => itens.some((x) => x.gravidade === g)).forEach((g) => $('#f-grav').append(el('option', { value: g, textContent: GRAV[g][0] })));
+    [...new Set(itens.map((x) => x.area))].sort().forEach((a) => $('#f-area').append(el('option', { value: a, textContent: a })));
+    const defs = $('#defs');
+    Object.entries(dados.categorias).forEach(([k, t]) => defs.append(el('li', { textContent: t })));
+    render();
+  }
+  $('#busca').addEventListener('input', (e) => { estado.q = e.target.value.trim(); render(); });
+  $('#f-grav').addEventListener('change', (e) => { estado.grav = e.target.value; render(); });
+  $('#f-area').addEventListener('change', (e) => { estado.area = e.target.value; render(); });
+  $('#limpar').addEventListener('click', () => { Object.assign(estado, { cat: '', grav: '', area: '', q: '' }); $('#busca').value = ''; $('#f-grav').value = ''; $('#f-area').value = ''; render(); });
+
+  fetch('registro.json', { cache: 'no-store' })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(montar)
+    .catch(() => $('#lista').replaceChildren(el('div', { className: 'vazio', textContent: 'Não foi possível ler o registro.json. Abra esta página pelo link publicado ou por um servidor local.' })));
+})();
+</script>

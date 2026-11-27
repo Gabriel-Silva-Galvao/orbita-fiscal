@@ -7,6 +7,53 @@ consideramos, os riscos em aberto e o plano de testes. O detalhe técnico de cad
 Próximas partes deste documento: a revisão da assinatura com o Asaas (item 37) e a segurança das áreas de suporte e de
 administração (itens 51 e 52), que terão regras mais duras que o resto do site.
 
+## 0. Como funciona o sistema de segurança (desde 27/11/2026)
+
+A segurança da Órbita é documentada em três lugares que andam juntos:
+
+| Onde | Para quê |
+|---|---|
+| `docs/seguranca/registro.json` | **Fonte única** de todas as vulnerabilidades: uma ficha por achado, com id, situação, gravidade, área, problema, ação, onde, teste, commit e origem. |
+| [Painel de segurança](https://claude.ai/artifact/HPpHTMdkdzKGD2T5Xr41d6) (`docs/seguranca/painel.html`) | Visualização interativa do registro: contagem por situação, filtros, busca, fichas ligadas, checklist de nova funcionalidade. Lê o `registro.json` publicado junto. |
+| Este documento | Visão geral: o que protegemos, ameaças, controles que já existem, decisões pendentes, incidentes e regras. |
+
+**As quatro situações de uma ficha**
+- **Corrigida:** tem correção no código e, quando dá, um teste que falha no código antigo.
+- **Em observação:** o risco existe e está aceito por ora; depende de uma decisão (seção 4.2) ou da produção (proxy, servidor, Sandbox).
+- **Não necessária:** duplicata, falso positivo ou risco aceito sem ação; aponta para a ficha certa em `ligadas`.
+- **Futura:** risco analisado antes de construir a funcionalidade (admin, suporte, plugin real, envio de alertas).
+
+**Quando aparece uma vulnerabilidade nova**
+1. Criar a ficha em `registro.json` como `observacao` (ids: `S…` revisão interna, `ARES-…` revisão automática,
+   `CAND-…` revisão do código, `F-…` futura, `N-…` risco aceito, `DEV-…` só no ambiente local).
+2. Corrigir num commit próprio, com teste de regressão.
+3. Mudar a ficha para `corrigida` com o teste e o commit, e acrescentar a linha na seção 5.1 (ou um incidente na 5).
+4. Republicar o painel no mesmo link (publicar `docs/seguranca/painel.html` com o `registro.json` junto) e commitar
+   o registro com a correção.
+
+O histórico completo da revisão ARES (evidências, verificadores, ZAP) continua no artefato antigo
+[Vulnerabilidades da Órbita](https://claude.ai/artifact/UqJWvjZsAcGB94uDhCssjD) (`artefatos/06-vulnerabilidades/`).
+
+### 0.1 Checklist de toda nova funcionalidade
+
+Antes de construir, a funcionalidade passa por esta lista (a mesma da aba "Nova funcionalidade" do painel). O que não
+puder ser cumprido agora vira ficha `futura` ou `observacao` no registro, no mesmo commit.
+
+- **Entrada:** todo campo novo com `max_length` e, quando a lista é conhecida, `Literal`; nenhuma regex com
+  quantificador aninhado sobre texto do usuário (testar com 100 mil caracteres).
+- **Autorização:** dono e plano saem da sessão; regra de plano ou de papel conferida na API.
+- **Testes mínimos de cada rota:** sem sessão (401), outra conta (403/404), plano ou papel errado (403), campo
+  gigante (422), corpo gigante (413).
+- **Cobrança:** rota que confere o estado e chama o Asaas roda em `uma_operacao_por_vez`, com teste em paralelo.
+- **Segredos:** só no `api/.env`, comparados com `hmac.compare_digest`.
+- **Navegador:** valor de fora por `textContent`; formulário com dado pessoal em `method="post"`; redirecionamento por
+  `caminhoSeguro`; nada de dado pessoal no endereço.
+- **Ambiente:** rota de simulação ou teste só com `ASAAS_SIM_ENABLED` ou `ORBITA_ENV=development`, e em
+  `problemas_de_producao` se for perigosa.
+- **Dados (LGPD):** guardar só o necessário; dizer o que é pessoal, quem vê e por quanto tempo.
+- **Repetição:** pedido repetido ou simultâneo não duplica nada (idempotência ou `UNIQUE`).
+- **Revisão:** cobrança, login, plugin, admin ou suporte passam pela revisão de segurança antes do commit.
+
 ---
 
 ## 1. O que protegemos
