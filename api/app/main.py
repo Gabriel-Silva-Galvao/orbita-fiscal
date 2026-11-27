@@ -19,6 +19,7 @@ from app.asaas_sim.router import criar_router, erro
 from app.asaas_sim.store import SimError, Store
 from app.config import get_settings, problemas_de_producao
 from app.db import Banco
+from app.servicos.base import ErroDeNegocio
 
 # Eventos que a Órbita assina no webhook do Asaas.
 EVENTOS_WEBHOOK = [
@@ -160,6 +161,11 @@ def create_app(store: Store | None = None, banco: Banco | None = None, asaas: As
         allow_headers=["Content-Type"],
     )
     app.state.asaas = asaas or AsaasClient(settings.asaas_base_url, settings.asaas_api_key)
+
+    # Passo 2 da preparação: erro das regras de negócio (app/servicos) vira a mesma resposta das HTTPException de antes.
+    @app.exception_handler(ErroDeNegocio)
+    async def _erro_de_negocio(_: Request, exc: ErroDeNegocio) -> JSONResponse:
+        return JSONResponse(status_code=exc.status, content={"detail": {"codigo": exc.codigo, "mensagem": exc.mensagem}})
 
     @app.exception_handler(SimError)
     async def _sim_error(_: Request, exc: SimError) -> JSONResponse:

@@ -177,6 +177,8 @@ Cada passo é um commit testado; nenhum muda o que o cliente vê, exceto o 6.
    hoje, completando bancos antigos), `PRAGMA journal_mode=WAL` e `busy_timeout=5000` em `db.py`; testes em
    `tests/test_migracoes.py`.
 2. Camada de serviços para `billing` (com `ator`), sem mudar as rotas.
+   **Feito em 27/11/2026:** `api/app/servicos/base.py` (`Ator`, `ErroDeNegocio`) e `api/app/servicos/assinaturas.py`;
+   `billing.py` ficou só com as rotas; testes em `tests/test_servicos_assinaturas.py`.
 3. Camada de serviços para `auth` e `plugin`; situação da conta e `ultima_atividade`.
 4. `historico_conta` e o serviço de auditoria (ainda sem a equipe gravar nada).
 5. Fila de e-mail e o processo de rotinas (começando pela limpeza do S12).

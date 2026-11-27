@@ -22,7 +22,8 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
 - **Site:** Astro 7 (páginas públicas estáticas; Portal e Checkout no servidor Node), ilhas React só quando
   preciso, GSAP e Lenis no movimento. Pastas: `src/pages`, `src/components`, `src/layouts`, `src/scripts`, `src/data`.
 - **API:** Python + FastAPI em `api/`, SQLite em modo WAL. Mudança no banco = nova migração numerada em
-  `api/app/migracoes.py` (nunca editar uma publicada). Toda regra de negócio fica na API; o Astro só protege rotas
+  `api/app/migracoes.py` (nunca editar uma publicada). Regra de negócio nova vai para `api/app/servicos/` (sem FastAPI,
+  recebendo o `Ator` de `servicos/base.py`); as rotas só validam a entrada e chamam o serviço. Toda regra de negócio fica na API; o Astro só protege rotas
   (`src/middleware.ts`) e repassa.
 - **Cobrança:** Asaas. Hoje roda a **simulação local** (`api/app/asaas_sim`), guardada em `api/orbita-dev-asaas-sim.json`.
 - **Rodar:** pelo `.claude/launch.json`, iniciar **"api"** e **"site-com-api"** (o "site" sozinho é modo
@@ -30,7 +31,7 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   reiniciar o "api".
 - **Conta de teste:** `fetch` em `/auth/cadastro` e `/auth/codigo` (o `codigo_dev` vem na resposta no
   desenvolvimento); `POST /billing/assinatura` com Pix e `POST /billing/assinatura/simular-pagamento`.
-- **Testes da API** (140 passando): em `api/`,
+- **Testes da API** (145 passando): em `api/`,
   `.venv/Scripts/python -m pytest -q -p no:cacheprovider --basetemp="$TEMP/orbita-pt-$RANDOM$RANDOM" -W ignore`
   (sempre um `basetemp` novo; reaproveitar dá erro no Windows).
 - **Testes do site:** `npm run test:site`.
@@ -81,8 +82,9 @@ trabalhar aqui e em que ponto o projeto está. **Mantenha-o atualizado** (seçã
   reembolso aprovado pela equipe.
 
 **Próximo passo:** preparar o app atual para a equipe, na ordem de `docs/preparacao-suporte-admin.md`, seção 11.
-Feito: passo 1 (migrações numeradas e WAL). Próximo: passo 2 (camada de serviços de cobrança com `ator`); depois situação da conta, histórico, fila de
-e-mail e rotinas, reembolso como pedido, origens e cookies. Depois, o login da equipe (`docs/admin.md`, seção 9).
+Feito: passo 1 (migrações numeradas e WAL) e passo 2 (regras de cobrança em `api/app/servicos/assinaturas.py`, com
+`Ator`). Próximo: passo 3 (serviços de conta e plugin, situação da conta); depois histórico, fila de e-mail e rotinas,
+reembolso como pedido, origens e cookies. Depois, o login da equipe (`docs/admin.md`, seção 9).
 
 **Pendências que dependem de terceiros ou de decisão**
 - Sandbox do Asaas (item 29) e o resto do item 37; cartão por página ou tokenização do Asaas (S3).
