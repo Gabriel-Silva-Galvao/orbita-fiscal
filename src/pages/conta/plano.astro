@@ -101,6 +101,22 @@ const upgrades = JSON.stringify(
       Você recebe o valor integral de volta, pela mesma forma de pagamento, e não precisa explicar o motivo.{' '}
       <strong>A assinatura é encerrada e o acesso à Órbita termina.</strong> Sua conta continua existindo.
     </p>
+    <!-- Questionário opcional: ajuda a melhorar e mostra uma saída para o problema antes do reembolso.
+         Não é condição: o reembolso em 7 dias (CDC, art. 49) sai com ou sem resposta. -->
+    <fieldset class="reemb-q">
+      <legend>Antes de ir: o que aconteceu? <span class="mute">(opcional)</span></legend>
+      <div class="reemb-motivos" role="radiogroup">
+        <label><input type="radio" name="reemb-motivo" value="caro" /> Ficou caro para mim</label>
+        <label><input type="radio" name="reemb-motivo" value="nao_usei" /> Não tive tempo de usar</label>
+        <label><input type="radio" name="reemb-motivo" value="dificil" /> Não consegui instalar ou usar</label>
+        <label><input type="radio" name="reemb-motivo" value="resultado" /> As respostas não me ajudaram</label>
+        <label><input type="radio" name="reemb-motivo" value="outra_ferramenta" /> Vou usar outra ferramenta</label>
+        <label><input type="radio" name="reemb-motivo" value="outro" /> Outro motivo</label>
+      </div>
+      <p class="reemb-dica small" data-reemb-dica aria-live="polite" hidden></p>
+      <label class="reemb-melhorar small" for="reemb-melhorar">O que podemos melhorar?</label>
+      <textarea id="reemb-melhorar" rows="3" maxlength="1000" placeholder="Conte em poucas palavras, se quiser." data-reemb-melhorar></textarea>
+    </fieldset>
     <div class="acoes">
       <button type="button" class="btn-alt" data-reemb-voltar>Não, manter minha assinatura</button>
       <button type="button" class="btn-main" data-reemb-seguir>Sim, quero o reembolso</button>
@@ -242,6 +258,62 @@ const upgrades = JSON.stringify(
     justify-content: flex-end;
     gap: var(--space-2);
     margin-top: var(--space-4);
+  }
+  .reemb-q {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg, 12px);
+    display: grid;
+    gap: var(--space-2);
+  }
+  .reemb-q legend {
+    padding: 0 6px;
+    font-weight: 600;
+  }
+  .reemb-motivos {
+    display: grid;
+    gap: 2px;
+  }
+  .reemb-motivos label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    cursor: pointer;
+  }
+  .reemb-motivos input {
+    accent-color: var(--brand);
+    width: 18px;
+    height: 18px;
+  }
+  .reemb-dica {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--brand) 12%, transparent);
+  }
+  .reemb-dica a {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .reemb-melhorar {
+    font-weight: 600;
+  }
+  .reemb-q textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong, var(--line));
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+  }
+  .reemb-q textarea:focus-visible,
+  .reemb-motivos input:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
   }
   .trilha {
     margin: 0;
@@ -425,6 +497,30 @@ const upgrades = JSON.stringify(
     dlg1.close();
     voltarAoLink();
   });
+  // Para cada motivo, uma saída antes do reembolso (sem impedir o pedido).
+  const DICAS: Record<string, [string, string, string]> = {
+    caro: ['O Bronze custa menos e mantém as pesquisas na base. ', '/conta/suporte', 'Fale com a equipe para trocar de plano'],
+    nao_usei: ['Você ainda está dentro do prazo: dá para testar com calma. ', '/conta/plugin', 'Veja como começar em 2 minutos'],
+    dificil: ['A instalação tem um passo a passo para cada IA, e a equipe ajuda. ', '/conta/suporte', 'Pedir ajuda para instalar'],
+    resultado: ['Conte qual pergunta não funcionou: a equipe olha a busca com você. ', '/conta/suporte', 'Mandar a pergunta para a equipe'],
+  };
+  const dica = $('[data-reemb-dica]');
+  document.querySelectorAll<HTMLInputElement>('input[name="reemb-motivo"]').forEach((r) =>
+    r.addEventListener('change', () => {
+      const d = DICAS[r.value];
+      dica.hidden = !d;
+      if (!d) return;
+      const a = document.createElement('a');
+      a.href = d[1];
+      a.textContent = d[2];
+      dica.replaceChildren(d[0], a, '.');
+    }),
+  );
+  const feedback = () => {
+    const motivo = document.querySelector<HTMLInputElement>('input[name="reemb-motivo"]:checked')?.value ?? null;
+    const melhorar = $<HTMLTextAreaElement>('[data-reemb-melhorar]').value.trim() || null;
+    return motivo || melhorar ? { motivo, melhorar } : undefined;
+  };
   $('[data-reemb-seguir]').addEventListener('click', () => {
     dlg1.close();
     dlg2.showModal();
@@ -438,7 +534,7 @@ const upgrades = JSON.stringify(
     const b = e.currentTarget as HTMLButtonElement;
     b.disabled = true;
     b.textContent = 'Enviando…';
-    await agir('reembolso');
+    await agir('reembolso', feedback());
     b.disabled = false;
     b.textContent = 'Confirmar reembolso';
     dlg2.close();

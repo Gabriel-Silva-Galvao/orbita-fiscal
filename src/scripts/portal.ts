@@ -164,7 +164,7 @@ export function avisar(texto: string, tipo: 'erro' | 'info' = 'erro') {
  * Ações sobre a assinatura. Na demonstração, mudam o que está guardado no navegador;
  * com a API, cada uma vira a rota correspondente. Devolve true se deu certo.
  */
-export async function agir(acao: 'cancelar' | 'reativar' | 'reembolso'): Promise<boolean> {
+export async function agir(acao: 'cancelar' | 'reativar' | 'reembolso', corpo?: unknown): Promise<boolean> {
   if (!billing) {
     const sub = getSub();
     if (!sub) return false;
@@ -183,7 +183,7 @@ export async function agir(acao: 'cancelar' | 'reativar' | 'reembolso'): Promise
   } as const;
   try {
     const [path, method] = rotas[acao];
-    const r = await call(billing, path, method);
+    const r = await call(billing, path, method, corpo);
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));
       avisar(e.detail?.mensagem ?? e.descricao ?? 'Não conseguimos concluir agora. Tente de novo em instantes.');

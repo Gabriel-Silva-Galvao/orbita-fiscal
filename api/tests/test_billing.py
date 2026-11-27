@@ -134,6 +134,24 @@ def test_reembolso_dentro_de_7_dias(api):
     assert status(http) == "reembolsado"
 
 
+def test_reembolso_guarda_o_questionario_opcional(api):
+    http, _, banco = api
+    entrar(http, api[2])
+    assinar(http, "cartao", cartao=CARTAO)
+    r = http.post("/billing/assinatura/reembolso", json={"motivo": "dificil", "melhorar": "  Não achei   o plugin "})
+    assert r.status_code == 200
+    f = banco.um("SELECT motivo, melhorar FROM reembolso_feedback WHERE usuario_id = 'u1'")
+    assert f == {"motivo": "dificil", "melhorar": "Não achei o plugin"}
+
+
+def test_reembolso_recusa_motivo_desconhecido(api):
+    http, *_ = api
+    entrar(http, api[2])
+    assinar(http, "cartao", cartao=CARTAO)
+    assert http.post("/billing/assinatura/reembolso", json={"motivo": "qualquer"}).status_code == 422
+    assert status(http) != "reembolsado"
+
+
 def test_reembolso_fora_do_prazo(api):
     http, _, banco = api
     entrar(http, api[2])

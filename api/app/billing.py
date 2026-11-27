@@ -100,6 +100,12 @@ class TrocaPlano(BaseModel):
 ORDEM = ["bronze", "prata", "ouro"]
 
 
+class PedidoReembolso(BaseModel):
+    """Questionário do reembolso: tudo opcional. O reembolso em 7 dias (CDC, art. 49) não depende de motivo."""
+    motivo: Literal["caro", "nao_usei", "dificil", "resultado", "outra_ferramenta", "outro"] | None = None
+    melhorar: str | None = Field(default=None, max_length=1000)
+
+
 class TrocaForma(BaseModel):
     forma: Literal["pix", "boleto"]
 
@@ -383,7 +389,7 @@ def criar_router() -> APIRouter:
             return _resumo(banco, asaas, u["id"])
 
     @router.post("/billing/assinatura/reembolso")
-    def reembolsar(u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
+    def reembolsar(pedido: PedidoReembolso | None = None, u: dict = Depends(usuario_logado), banco: Banco = Depends(get_banco), asaas: AsaasClient = Depends(get_asaas)):
         with uma_operacao_por_vez(banco, u["id"]):  # CAND-01 a 03: uma operação de cobrança por vez
             usuario_id = u["id"]
             a = banco.um("SELECT * FROM assinaturas WHERE usuario_id = ?", usuario_id)
@@ -406,6 +412,12 @@ def criar_router() -> APIRouter:
                 "UPDATE assinaturas SET status_acesso = 'reembolsado', reembolso_em = ?, acesso_ate = NULL, atualizado_em = datetime('now') WHERE usuario_id = ?",
                 date.today().isoformat(), usuario_id,
             )
+            melhorar = " ".join((pedido.melhorar or "").split()) if pedido else ""
+            if pedido and (pedido.motivo or melhorar):
+                banco.executar(
+                    "INSERT INTO reembolso_feedback (usuario_id, motivo, melhorar) VALUES (?, ?, ?)",
+                    usuario_id, pedido.motivo, melhorar or None,
+                )
             return {"usuario_id": usuario_id, "status_acesso": "reembolsado", "cobrancas_estornadas": [c["id"] for c in pagas]}
 
     @router.post("/billing/assinatura/simular-pagamento")

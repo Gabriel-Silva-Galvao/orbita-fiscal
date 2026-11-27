@@ -31,6 +31,14 @@ CREATE TABLE IF NOT EXISTS operacoes_cobranca (
     usuario_id  TEXT PRIMARY KEY,
     iniciada    REAL NOT NULL
 );
+-- Questionário opcional do pedido de reembolso: por que saiu e o que podemos melhorar.
+CREATE TABLE IF NOT EXISTS reembolso_feedback (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id  TEXT NOT NULL,
+    motivo      TEXT,
+    melhorar    TEXT,
+    criado_em   TEXT NOT NULL DEFAULT (datetime('now'))
+);
 -- Idempotência: cada evento do Asaas é processado uma vez só (entrega "pelo menos uma vez").
 CREATE TABLE IF NOT EXISTS eventos_webhook (
     id           TEXT PRIMARY KEY,
